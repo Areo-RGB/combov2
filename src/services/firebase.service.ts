@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { initializeApp, getApp, getApps, FirebaseApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, set, onValue, off, Database } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
+import { getDatabase, ref, set, onValue, off, Database } from 'firebase/database';
 import { firebaseConfig } from '../firebase.config';
 
 @Injectable({

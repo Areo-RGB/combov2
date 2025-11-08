@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Match } from '../sprint-duels.types';
-import { initializeApp, getApp, getApps, FirebaseApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getDatabase, ref, set, get, query, orderByChild, remove, Database } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
+import { getDatabase, ref, set, get, query, orderByChild, remove, Database } from 'firebase/database';
 import { firebaseConfig } from '../../firebase.config';
 
 @Injectable({ 
