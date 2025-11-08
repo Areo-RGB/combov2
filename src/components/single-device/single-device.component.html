@@ -1,0 +1,82 @@
+<div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-7xl mx-auto">
+  <!-- Header -->
+  <div class="w-full flex justify-start items-center mb-6">
+    <button (click)="onGoBack()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+      &larr; Back to Modes
+    </button>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Left Column: Detector -->
+    <div class="min-w-0">
+      <app-detector [sessionId]="sessionId()" [showBackButton]="false" (motionDetected)="handleMotion()"></app-detector>
+    </div>
+
+    <!-- Right Column: Display & Settings -->
+    <div class="flex flex-col gap-6">
+      <div #displayContainer class="w-full aspect-video min-h-[300px] lg:min-h-0 relative rounded-lg overflow-hidden border-2 border-gray-700" (dblclick)="toggleFullscreen()">
+        <!-- Fullscreen button -->
+        <button 
+          (click)="toggleFullscreen()" 
+          title="Toggle Fullscreen"
+          class="absolute top-3 right-3 z-20 bg-gray-900 bg-opacity-40 hover:bg-opacity-60 text-white p-2 rounded-full transition-opacity">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2H4a2 2 0 0 0-2 2v4m20 0V4a2 2 0 0 0-2-2h-4m0 20h4a2 2 0 0 0 2-2v-4M8 22H4a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <app-display [signal]="motionSignal()" [lingerDuration]="lingerDuration()"></app-display>
+      </div>
+
+       <!-- Display Settings Panel -->
+       <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Display Settings</h3>
+        <div class="flex flex-col gap-4">
+          <!-- Display Type -->
+          <div>
+            <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
+            <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
+              <button (click)="onDisplayContentChange('color')" [class.bg-yellow-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" [class.text-gray-900]="displayContentType() === 'color'" [class.text-white]="displayContentType() !== 'color'" class="w-full font-semibold py-2 rounded-md transition-colors">Colors</button>
+              <button (click)="onDisplayContentChange('math')" [class.bg-yellow-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" [class.text-gray-900]="displayContentType() === 'math'" [class.text-white]="displayContentType() !== 'math'" class="w-full font-semibold py-2 rounded-md transition-colors">Math Game</button>
+              <button (click)="onDisplayContentChange('wechsel')" [class.bg-yellow-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" [class.text-gray-900]="displayContentType() === 'wechsel'" [class.text-white]="displayContentType() !== 'wechsel'" class="w-full font-semibold py-2 rounded-md transition-colors">Wechsel</button>
+              <button (click)="onDisplayContentChange('counter')" [class.bg-yellow-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" [class.text-gray-900]="displayContentType() === 'counter'" [class.text-white]="displayContentType() !== 'counter'" class="w-full font-semibold py-2 rounded-md transition-colors">Counter</button>
+            </div>
+          </div>
+          <!-- Linger Duration -->
+          <div>
+            <label for="lingerDurationSingle" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-yellow-300">{{ lingerDuration() / 1000 }}s</span></label>
+            <input id="lingerDurationSingle" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+          </div>
+          <!-- Max Operations (for Math Game) -->
+          @if (displayContentType() === 'math') {
+            <div>
+              <label for="maxOperationsSingle" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-yellow-300">{{ maxOperations() }}</span></label>
+              <input id="maxOperationsSingle" type="range" min="1" max="20" step="1" [value]="maxOperations()" (input)="onMaxOperationsChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Action Button / Status -->
+      <div class="w-full flex flex-col items-center">
+        @if (detectorComponent().status() === 'ready') {
+          <button (click)="detectorComponent().startDetection()" class="w-full max-w-xs bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
+            Start Detection
+          </button>
+        }
+        @if (detectorComponent().status() === 'detecting') {
+          <div class="text-center">
+            <p class="text-lg text-green-400 flex items-center">
+              <span class="relative flex h-3 w-3 mr-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              Actively detecting motion...
+            </p>
+            @if (detectorComponent().lastMotionSignal(); as signalText) {
+              <p class="text-yellow-400 mt-2 animate-pulse">{{ signalText }}</p>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

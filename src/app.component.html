@@ -1,0 +1,212 @@
+<div class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-4">
+  <header class="text-center mb-8">
+    <h1 class="text-5xl font-bold text-white tracking-tight">QuoVadis</h1>
+    <p class="text-lg text-gray-400 mt-2">lorem ipsum txt beneath</p>
+  </header>
+
+  <main class="w-full max-w-4xl">
+    @switch (mode()) {
+      @case ('selection') {
+        <!-- Motion Signal Games Card -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8">
+          <div class="flex flex-col items-center justify-center p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Motion Signal Games</h2>
+            <p class="text-gray-300 text-center mb-6">Use camera motion to interact with various display modes.</p>
+            <button (click)="mode.set('motion-games')" class="w-full max-w-md bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
+              Launch Games
+            </button>
+          </div>
+        </div>
+
+        <!-- Sprint Duels Card -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in">
+          <div class="flex flex-col items-center justify-center p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-400">Sprint Duels</h2>
+            <p class="text-gray-300 text-center mb-6">Manage, track, and rank players in head-to-head sprint competitions.</p>
+            <button (click)="mode.set('sprint-duels')" class="w-full max-w-md bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+              Launch Sprint Duels
+            </button>
+          </div>
+        </div>
+      }
+      @case ('motion-games') {
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-4xl mx-auto">
+          <!-- Header -->
+          <div class="w-full flex justify-between items-center mb-6">
+            <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+              &larr; Back
+            </button>
+            <h2 class="text-2xl font-semibold text-white">Motion Signal Games</h2>
+            <div class="w-20"></div> <!-- Spacer for centering -->
+          </div>
+          
+          <!-- Content from old collapsible -->
+          <div class="w-full">
+            <div class="grid md:grid-cols-2 gap-8">
+              <!-- Detector Card -->
+              <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Create a Session</h2>
+                <p class="text-gray-300 text-center mb-6">Use this device's camera to detect motion and send signals.</p>
+                <button (click)="startDetector()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
+                  Start Detecting
+                </button>
+              </div>
+      
+              <!-- Display Card -->
+              <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-purple-400">Join a Session</h2>
+                <p class="text-gray-300 text-center mb-6">Enter a session ID to receive motion signals and display them visually.</p>
+                <div class="w-full flex flex-col items-center">
+                  <input 
+                    type="text" 
+                    [value]="inputSessionId()"
+                    (input)="handleSessionIdInput($event)"
+                    placeholder="Enter 6-digit Session ID"
+                    maxlength="6"
+                    class="w-full text-center bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 mb-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 uppercase tracking-widest"
+                  >
+                  @if (errorMessage()) {
+                    <p class="text-red-400 text-sm mb-4">{{ errorMessage() }}</p>
+                  }
+                  <button (click)="joinDisplay()" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300">
+                    Join & Display
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Single Device Mode Card -->
+            <div class="mt-8 pt-8 border-t border-gray-700 flex flex-col items-center justify-center p-6 rounded-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Single Device Mode</h2>
+                <p class="text-gray-300 text-center mb-6">Use this single device to both detect motion and display the signals simultaneously.</p>
+                <button (click)="startSingleDeviceMode()" class="w-full max-w-md bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-300">
+                  Start Single Device Mode
+                </button>
+            </div>
+          </div>
+        </div>
+      }
+      @case ('detector') {
+        <app-detector [sessionId]="sessionId()" (goBack)="goBackToSelection()" (motionDetected)="handleMotion()"></app-detector>
+      }
+      @case ('display') {
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 flex flex-col items-center animate-fade-in w-full max-w-3xl mx-auto">
+          <div class="w-full flex justify-between items-center mb-6">
+            <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+              &larr; Back
+            </button>
+            <div class="text-center">
+              <h2 class="text-2xl font-semibold text-purple-400">Display Mode</h2>
+              <p class="text-lg font-mono bg-gray-900 px-3 py-1 rounded-md text-purple-300">Session ID: {{ sessionId() }}</p>
+            </div>
+            <div class="w-20"></div> <!-- Spacer for centering -->
+          </div>
+      
+          <!-- Display Area -->
+          <div #displayContainer class="w-full aspect-video bg-black rounded-lg overflow-hidden relative border-2 border-gray-700 mb-6" (dblclick)="toggleFullscreen()">
+            <!-- Fullscreen button -->
+            <button 
+              (click)="toggleFullscreen()" 
+              title="Toggle Fullscreen"
+              class="absolute top-3 right-3 z-20 bg-gray-900 bg-opacity-40 hover:bg-opacity-60 text-white p-2 rounded-full transition-opacity">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2H4a2 2 0 0 0-2 2v4m20 0V4a2 2 0 0 0-2-2h-4m0 20h4a2 2 0 0 0 2-2v-4M8 22H4a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+            <app-display [signal]="motionSignal()" [lingerDuration]="lingerDuration()"></app-display>
+          </div>
+      
+          <!-- Settings -->
+          <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+            <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Display Settings</h3>
+            <div class="flex flex-col gap-6">
+              <!-- Display Type -->
+              <div>
+                <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
+                <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
+                  <button (click)="onDisplayContentChange('color')" [class.bg-purple-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Colors</button>
+                  <button (click)="onDisplayContentChange('math')" [class.bg-purple-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Math Game</button>
+                  <button (click)="onDisplayContentChange('wechsel')" [class.bg-purple-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Wechsel</button>
+                  <button (click)="onDisplayContentChange('counter')" [class.bg-purple-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Counter</button>
+                </div>
+              </div>
+              <!-- Linger Duration -->
+              <div>
+                <label for="lingerDuration" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-purple-300">{{ lingerDuration() / 1000 }}s</span></label>
+                <input id="lingerDuration" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
+              </div>
+               <!-- Max Operations (for Math Game) -->
+              @if (displayContentType() === 'math') {
+                <div>
+                  <label for="maxOperations" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-purple-300">{{ maxOperations() }}</span></label>
+                  <input id="maxOperations" type="range" min="1" max="20" step="1" [value]="maxOperations()" (input)="onMaxOperationsChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+      @case ('single') {
+        <app-single-device [sessionId]="sessionId()" (goBack)="goBackToSelection()"></app-single-device>
+      }
+      @case('sprint-duels') {
+        <app-sprint-duels (goBack)="goBackToSelection()"></app-sprint-duels>
+      }
+    }
+  </main>
+  
+  <!-- Global Fullscreen Button -->
+  <button (click)="toggleAppFullscreen()" 
+          [title]="isAppFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen'" 
+          class="fixed bottom-5 right-5 z-50 bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-transform transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500">
+      @if (!isAppFullScreen()) {
+        <!-- Enter Fullscreen Icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 512 512"
+          xml:space="preserve"
+          class="h-6 w-6"
+          fill="currentColor">
+          <g>
+            <path d="M0,0v512h512V0H0z M477.867,477.867H34.133V34.133h443.733V477.867z" />
+          </g>
+          <g>
+            <polygon points="126.533,102.4 199.111,102.4 199.111,68.267 68.267,68.267 68.267,199.111 102.4,199.111 102.4,126.538 198.422,222.558 222.556,198.423" />
+          </g>
+          <g>
+            <polygon points="222.557,313.581 198.422,289.445 102.4,385.467 102.4,312.889 68.267,312.889 68.267,443.733 199.111,443.733 199.111,409.6 126.538,409.6" />
+          </g>
+          <g>
+            <polygon points="409.6,312.889 409.6,385.467 313.578,289.444 289.444,313.578 385.462,409.6 312.889,409.6 312.889,443.733 443.733,443.733 443.733,312.889" />
+          </g>
+          <g>
+            <polygon points="312.889,68.267 312.889,102.4 385.467,102.4 289.444,198.423 313.578,222.558 409.6,126.538 409.6,199.111 443.733,199.111 443.733,68.267" />
+          </g>
+        </svg>
+      } @else {
+        <!-- Exit Fullscreen Icon -->
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 512 512"
+          class="h-6 w-6"
+          fill="currentColor">
+          <g>
+              <path d="M0,0v512h512V0H0z M477.867,477.867H34.133V34.133h443.733V477.867z" />
+          </g>
+          <g>
+              <polygon points="68.267,68.267 199.111,68.267 199.111,102.4 102.4,102.4 102.4,199.111 68.267,199.111" />
+              <polygon points="443.733,68.267 312.889,68.267 312.889,102.4 409.6,102.4 409.6,199.111 443.733,199.111" />
+              <polygon points="68.267,443.733 68.267,312.889 102.4,312.889 102.4,409.6 199.111,409.6 199.111,443.733" />
+              <polygon points="443.733,443.733 443.733,312.889 409.6,312.889 409.6,409.6 312.889,409.6 312.889,443.733" />
+          </g>
+        </svg>
+      }
+  </button>
+</div>
+<style>
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out forwards;
+  }
+</style>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Motion Signal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for a more modern look */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1a202c; /* dark gray */
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #4a5568; /* medium gray */
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #718096; /* light gray */
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://aistudiocdn.com/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://aistudiocdn.com/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://aistudiocdn.com/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.3.10?external=rxjs",
+    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.10?external=rxjs",
+    "@angular/core": "https://next.esm.sh/@angular/core@^20.3.10?external=rxjs",
+    "@angular/common": "https://next.esm.sh/@angular/common@^20.3.10?external=rxjs"
+  }
+}
+</script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+  <app-root></app-root>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-WdiDLQAHeHg9UYrZxJnnJadPz33_1m8",
+      authDomain: "db-motion-1.firebaseapp.com",
+      databaseURL: "https://db-motion-1-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "db-motion-1",
+      storageBucket: "db-motion-1.appspot.com",
+      messagingSenderId: "611585824193",
+      appId: "1:611585824193:web:567fc857724dd1ffcb8b40"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+  </script>
+</body>
+</html>

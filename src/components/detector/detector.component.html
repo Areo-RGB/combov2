@@ -1,0 +1,161 @@
+<div class="bg-gray-800 rounded-lg shadow-2xl p-8 flex flex-col animate-fade-in w-full max-w-3xl mx-auto"
+     [class.justify-between]="showBackButton()"
+     [class.min-h-[80vh]]="showBackButton()">
+  <!-- Wrapper for all content except the action button, to allow for justify-between layout -->
+  <div>
+    @if (showBackButton()) {
+      <div class="w-full flex justify-between items-center mb-6">
+        <button (click)="onGoBack()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+          &larr; Back
+        </button>
+        <div class="text-center">
+          <h2 class="text-2xl font-semibold text-cyan-400">Detector Mode</h2>
+          <p class="text-lg font-mono bg-gray-900 px-3 py-1 rounded-md text-cyan-300">Session ID: {{ sessionId() }}</p>
+        </div>
+        <div class="w-20"></div> <!-- Spacer -->
+      </div>
+    }
+
+    <div class="w-full aspect-video bg-black rounded-lg overflow-hidden relative border-2 border-gray-700 mb-6">
+      <video #video playsinline autoplay muted class="w-full h-full object-cover"></video>
+      <canvas #overlayCanvas class="absolute top-0 left-0 w-full h-full pointer-events-none"></canvas>
+      <!-- Hidden canvas for processing -->
+      <canvas #canvas [width]="CANVAS_WIDTH" [height]="CANVAS_HEIGHT" class="hidden"></canvas>
+
+      @if (status() !== 'ready' && status() !== 'detecting') {
+        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white">
+          @switch (status()) {
+            @case ('initializing') { <p>Initializing camera...</p> }
+            @case ('no_camera') { <p class="text-red-400">Camera not found. Please check your device.</p> }
+            @case ('error') { <p class="text-red-400">Could not access camera. Please grant permission.</p> }
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Configuration section -->
+    @if (status() === 'ready' || status() === 'detecting') {
+      <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Detection Settings</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Sensitivity Slider -->
+          <div class="flex flex-col justify-center">
+            <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300">Sensitivity: <span class="font-bold text-cyan-300">{{ sensitivity() }}</span></label>
+            <input id="sensitivity" type="range" min="1" max="10" [value]="sensitivity()" (input)="onSensitivityChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+          </div>
+          <!-- Detection Zone Controls -->
+          <div class="flex flex-col justify-center gap-4">
+            <div>
+              <label for="zoneWidth" class="block mb-2 text-sm font-medium text-gray-300">
+                Zone Width:
+                <span class="font-bold text-cyan-300">
+                  @if (useFullScreenDetection()) {
+                    Full Screen
+                  } @else if (zoneWidthPercent() > 0) {
+                    {{ zoneWidthPercent() }}%
+                  } @else {
+                    Off
+                  }
+                </span>
+              </label>
+              <input 
+                id="zoneWidth" 
+                type="range" 
+                min="0" 
+                max="100" 
+                [value]="zoneWidthPercent()" 
+                (input)="onZoneWidthChange($event)"
+                [disabled]="useFullScreenDetection()"
+                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            </div>
+             <div>
+              <label for="zonePosition" class="block mb-2 text-sm font-medium text-gray-300">Zone Position</label>
+              <input 
+                  id="zonePosition" 
+                  type="range" 
+                  min="0" 
+                  max="100" 
+                  step="1"
+                  [value]="zonePositionPercent()" 
+                  (input)="onZonePositionChange($event)"
+                  [disabled]="useFullScreenDetection()"
+                  class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            </div>
+            <div class="flex items-center gap-3">
+              <label for="fullscreen-toggle" class="text-sm font-medium text-gray-300">Use Full Screen</label>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="fullscreen-toggle" class="sr-only peer" [checked]="useFullScreenDetection()" (change)="onFullScreenToggleChange($event)">
+                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Camera Selection Dropdown -->
+          @if (availableCameras().length > 1) {
+            <div class="flex flex-col justify-center md:col-span-2">
+              <label for="camera" class="block mb-2 text-sm font-medium text-gray-300">Camera</label>
+              <select 
+                id="camera" 
+                [value]="selectedCameraId()" 
+                (change)="onCameraChange($event)"
+                class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                @for (camera of availableCameras(); track camera.deviceId) {
+                  <option [value]="camera.deviceId">{{ camera.label || 'Camera ' + ($index + 1) }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <!-- Cooldown Input -->
+          <div class="flex flex-col justify-center">
+            <label for="cooldown" class="block mb-2 text-sm font-medium text-gray-300">Minimum Delay (ms)</label>
+            <input 
+              id="cooldown" 
+              type="number" 
+              min="0"
+              step="50"
+              [value]="motionCooldown()" 
+              (input)="onCooldownChange($event)" 
+              class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+          </div>
+          <!-- Signal Cadence Input -->
+          <div class="flex flex-col justify-center">
+            <label for="signalCadence" class="block mb-2 text-sm font-medium text-gray-300">Signal every Nth detection</label>
+            <input 
+              id="signalCadence" 
+              type="number" 
+              min="1"
+              step="1"
+              [value]="signalCadence()" 
+              (input)="onSignalCadenceChange($event)" 
+              class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  @if (showBackButton()) {
+    <div class="w-full flex flex-col items-center pt-6">
+      @if (status() === 'ready') {
+        <button (click)="startDetection()" class="w-full max-w-xs bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
+          Start Detection
+        </button>
+      }
+      @if (status() === 'detecting') {
+        <div class="text-center">
+          <p class="text-lg text-green-400 flex items-center">
+            <span class="relative flex h-3 w-3 mr-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            Actively detecting motion...
+          </p>
+          @if (lastMotionSignal(); as signalText) {
+            <p class="text-yellow-400 mt-2 animate-pulse">{{ signalText }}</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
