@@ -47,33 +47,14 @@
     "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.3.10?external=rxjs",
     "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.10?external=rxjs",
     "@angular/core": "https://next.esm.sh/@angular/core@^20.3.10?external=rxjs",
-    "@angular/common": "https://next.esm.sh/@angular/common@^20.3.10?external=rxjs"
+    "@angular/common": "https://next.esm.sh/@angular/common@^20.3.10?external=rxjs",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"
   }
 }
 </script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans antialiased">
   <app-root></app-root>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-  <script>
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-WdiDLQAHeHg9UYrZxJnnJadPz33_1m8",
-      authDomain: "db-motion-1.firebaseapp.com",
-      databaseURL: "https://db-motion-1-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "db-motion-1",
-      storageBucket: "db-motion-1.appspot.com",
-      messagingSenderId: "611585824193",
-      appId: "1:611585824193:web:567fc857724dd1ffcb8b40"
-    };
-
-    // Initialize Firebase
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-  </script>
 </body>
 </html>

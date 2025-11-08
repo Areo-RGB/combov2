@@ -1,26 +1,28 @@
 import { Injectable } from '@angular/core';
-
-declare const firebase: any;
+import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
+import { getDatabase, ref, set, onValue, off, Database } from 'firebase/database';
+import { firebaseConfig } from '../firebase.config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class FirebaseService {
-  private db: any;
+  private app: FirebaseApp;
+  private db: Database;
 
   constructor() {
-    if (typeof firebase !== 'undefined' && firebase.database) {
-      this.db = firebase.database();
+    if (!getApps().length) {
+      this.app = initializeApp(firebaseConfig);
     } else {
-      console.error('Firebase is not initialized. Make sure the Firebase scripts are included in index.html and configured correctly.');
+      this.app = getApp();
     }
+    this.db = getDatabase(this.app);
   }
 
   writeMotion(sessionId: string): void {
-    if (!this.db) return;
     try {
-      const motionRef = this.db.ref(`sessions/${sessionId}`);
-      motionRef.set({
+      const motionRef = ref(this.db, `sessions/${sessionId}`);
+      set(motionRef, {
         timestamp: Date.now(),
       });
     } catch (error) {
@@ -29,19 +31,17 @@ export class FirebaseService {
   }
 
   listenForMotion(sessionId: string, callback: (data: { timestamp: number } | null) => void): void {
-    if (!this.db) return;
-    const motionRef = this.db.ref(`sessions/${sessionId}`);
-    motionRef.on('value', (snapshot: any) => {
+    const motionRef = ref(this.db, `sessions/${sessionId}`);
+    onValue(motionRef, (snapshot) => {
       callback(snapshot.val());
-    }, (error: any) => {
+    }, (error) => {
       console.error("Error listening to Firebase:", error);
       callback(null);
     });
   }
 
   cleanupListener(sessionId: string): void {
-    if (!this.db) return;
-    const motionRef = this.db.ref(`sessions/${sessionId}`);
-    motionRef.off('value');
+    const motionRef = ref(this.db, `sessions/${sessionId}`);
+    off(motionRef, 'value');
   }
 }
