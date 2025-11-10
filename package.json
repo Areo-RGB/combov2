@@ -6,22 +6,32 @@
   "scripts": {
     "dev": "ng serve",
     "build": "ng build",
-    "preview": "ng serve --configuration=production"
+    "preview": "ng serve --configuration=production",
+    "cap:init": "npx cap init MotionSignal com.motionsignal.app --web-dir=dist",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npx cap sync android",
+    "open:android": "npx cap open android",
+    "build:android": "ng build && npx cap sync android"
   },
   "dependencies": {
+    "@angular/build": "^20.3.9",
+    "@angular/cli": "^20.3.9",
+    "@angular/common": "^20.3.10",
+    "@angular/compiler": "^20.3.10",
+    "@angular/compiler-cli": "^20.3.10",
+    "@angular/core": "^20.3.10",
+    "@angular/platform-browser": "^20.3.10",
+    "@capacitor-community/bluetooth-le": "^7.2.0",
+    "@capacitor/camera": "^7.0.2",
+    "@capacitor/core": "^7.4.4",
     "rxjs": "^7.8.2",
-    "@angular/platform-browser": "^20.3.0",
-    "@angular/compiler": "^20.3.0",
-    "@angular/core": "^20.3.0",
-    "@angular/common": "^20.3.0",
-    "@angular/build": "^20.3.0",
-    "@angular/cli": "^20.3.0",
-    "@angular/compiler-cli": "^20.3.0",
     "tailwindcss": "latest"
   },
   "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@types/node": "^22.19.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.4.1"
   }
 }

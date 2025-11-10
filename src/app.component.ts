@@ -6,6 +6,9 @@ import { SingleDeviceComponent } from './components/single-device/single-device.
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
+import { RtcService } from './services/rtc.service';
+import { SignalingService } from './services/signaling.service';
+import { CameraService } from './services/camera.service';
 
 // Define the shape of signals for the display component
 type DisplaySignal = 
@@ -29,6 +32,8 @@ export class AppComponent implements OnDestroy, OnInit {
   errorMessage = signal('');
   lingerDuration = signal(1000);
   displayContentType = signal<'color' | 'math' | 'wechsel' | 'counter'>('color');
+  useRtc = signal(true);
+  lastPhotoDataUrl = signal<string | null>(null);
 
   // Math game state
   maxOperations = signal(5);
@@ -40,6 +45,9 @@ export class AppComponent implements OnDestroy, OnInit {
   detectionCount = signal(0);
 
   private firebaseService = inject(FirebaseService);
+  private rtc = inject(RtcService);
+  private signaling = inject(SignalingService);
+  private camera = inject(CameraService);
   motionSignal = signal<DisplaySignal>(null);
   private currentSessionIdForListener: string | null = null;
   private readonly colors = ['#ef4444', '#22c55e', '#3b82f6', '#f1f5f9', '#facc15', '#a855f7', '#22d3ee'];
@@ -56,8 +64,11 @@ export class AppComponent implements OnDestroy, OnInit {
         const sid = this.sessionId();
         const contentType = this.displayContentType();
 
-        // If we enter display mode with a valid session ID, start listening.
+        // If we enter display mode with a valid session ID, start listening / advertising (RTC or Firebase)
         if (mode === 'display' && sid) {
+            if (this.useRtc()) {
+              this.signaling.startDisplayHandshake(sid).catch(() => {});
+            }
             this.currentSessionIdForListener = sid;
             this.firebaseService.listenForMotion(sid, (data) => {
                 if (data) {
@@ -84,11 +95,30 @@ export class AppComponent implements OnDestroy, OnInit {
                 }
             });
         }
+
+        // If we enter detector mode with a session ID, start discovery/signaling for RTC
+        if (mode === 'detector' && sid && this.useRtc()) {
+          this.signaling.startDetectorHandshake(sid).catch(() => {});
+        }
     });
   }
   
   ngOnInit(): void {
     this.document.addEventListener('fullscreenchange', this.onFullscreenChange);
+    // Hook RTC messages to trigger display actions when in display mode
+    this.rtc.onMessage((msg) => {
+      if (!msg || msg.t !== 'motion') return;
+      this.handleRtcTrigger(msg.intensity ?? 20, msg.ts ?? Date.now());
+    });
+  }
+
+  async capturePhoto(): Promise<void> {
+    try {
+      const photo = await this.camera.takePhotoToDataUrl(70);
+      this.lastPhotoDataUrl.set(photo.dataUrl ?? null);
+    } catch {
+      // ignore cancellation/errors
+    }
   }
 
   private runMathGameStep(intensity?: number) {
@@ -193,6 +223,10 @@ export class AppComponent implements OnDestroy, OnInit {
   }
 
   handleMotion(intensity: number) {
+    if (this.useRtc()) {
+      this.rtc.sendMotion(intensity);
+      return;
+    }
     this.firebaseService.writeMotion(this.sessionId(), intensity);
   }
 
@@ -222,6 +256,23 @@ export class AppComponent implements OnDestroy, OnInit {
     this.operationsDone.set(0);
     this.detectionCount.set(0);
     this.motionSignal.set(null);
+  }
+
+  private handleRtcTrigger(intensity: number, timestamp: number): void {
+    if (this.mode() !== 'display') return;
+    const contentType = this.displayContentType();
+    if (contentType === 'color') {
+      const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+      this.motionSignal.set({ type: 'color', value: randomColor, timestamp, intensity });
+    } else if (contentType === 'math') {
+      this.runMathGameStep(intensity);
+    } else if (contentType === 'counter') {
+      this.detectionCount.update(c => c + 1);
+      this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp, intensity });
+    } else { // 'wechsel'
+      const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
+      this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp, intensity });
+    }
   }
 
   toggleFullscreen(): void {

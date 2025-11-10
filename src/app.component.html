@@ -94,6 +94,21 @@
                   Start Single Device Mode
                 </button>
             </div>
+
+            <!-- Device Camera quick test -->
+            <div class="mt-8 p-4 border border-gray-700 rounded-lg">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-gray-200">Device Camera</h3>
+                <button (click)="capturePhoto()" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+                  Open Camera
+                </button>
+              </div>
+              @if (lastPhotoDataUrl()) {
+                <div class="mt-2">
+                  <img [src]="lastPhotoDataUrl()!" alt="Last capture" class="max-h-60 rounded-md border border-gray-700 object-contain">
+                </div>
+              }
+            </div>
           </div>
         </div>
       }

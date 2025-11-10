@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MotionSignal</string>
+    <string name="title_activity_main">MotionSignal</string>
+    <string name="package_name">com.motionsignal.app</string>
+    <string name="custom_url_scheme">com.motionsignal.app</string>
+</resources>

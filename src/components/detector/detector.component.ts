@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, output, viewChild, input, signal, AfterViewInit, effect, inject, NgZone, Injector, runInInjectionContext } from '@angular/core';
+import { Camera } from '@capacitor/camera';
 
 @Component({
   selector: 'app-detector',
@@ -136,6 +137,20 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     try {
+      // Ensure Android runtime permission for camera is granted
+      try {
+        const perm = await Camera.checkPermissions();
+        if (perm.camera !== 'granted') {
+          const res = await Camera.requestPermissions({ permissions: ['camera'] as any });
+          if (res.camera !== 'granted') {
+            this.status.set('error');
+            return;
+          }
+        }
+      } catch {
+        // If Camera plugin not available on web, ignore and proceed
+      }
+
       if (!navigator.mediaDevices?.getUserMedia) {
         this.status.set('no_camera');
         return;
