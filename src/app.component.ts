@@ -5,6 +5,7 @@ import { DisplayComponent } from './components/display/display.component';
 import { SingleDeviceComponent } from './components/single-device/single-device.component';
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
+import { TeamDuelsComponent } from './team-duels/team-duels.component';
 
 // Define the shape of signals for the display component
 type DisplaySignal = 
@@ -19,10 +20,10 @@ type DisplaySignal =
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintDuelsComponent],
+  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintDuelsComponent, TeamDuelsComponent],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-duels'>('selection');
+  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-duels' | 'team-duels'>('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');

@@ -19,12 +19,23 @@
         </div>
 
         <!-- Sprint Duels Card -->
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in">
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8">
           <div class="flex flex-col items-center justify-center p-6">
             <h2 class="text-2xl font-semibold mb-4 text-blue-400">Sprint Duels</h2>
             <p class="text-gray-300 text-center mb-6">Manage, track, and rank players in head-to-head sprint competitions.</p>
             <button (click)="mode.set('sprint-duels')" class="w-full max-w-md bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
               Launch Sprint Duels
+            </button>
+          </div>
+        </div>
+        
+        <!-- Team Duels Card -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in">
+          <div class="flex flex-col items-center justify-center p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-green-400">Team Duels</h2>
+            <p class="text-gray-300 text-center mb-6">A motion-based timer game to test your reaction and speed.</p>
+            <button (click)="mode.set('team-duels')" class="w-full max-w-md bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300">
+              Launch Team Duels
             </button>
           </div>
         </div>
@@ -149,6 +160,9 @@
       }
       @case('sprint-duels') {
         <app-sprint-duels (goBack)="goBackToSelection()"></app-sprint-duels>
+      }
+      @case('team-duels') {
+        <app-team-duels (goBack)="goBackToSelection()"></app-team-duels>
       }
     }
   </main>
