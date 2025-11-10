@@ -9,10 +9,12 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   sessionId = input.required<string>();
   goBack = output<void>();
   showBackButton = input<boolean>(true);
-  motionDetected = output<void>();
+  motionDetected = output<number>();
 
   private videoRef = viewChild.required<ElementRef<HTMLVideoElement>>('video');
+  // FIX: Corrected typo from `viewchild` to `viewChild`.
   private canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
+  // FIX: Corrected typo from `viewchild` to `viewChild`.
   private overlayCanvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('overlayCanvas');
   
   status = signal<'idle' | 'initializing' | 'ready' | 'detecting' | 'error' | 'no_camera'>('idle');
@@ -237,7 +239,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         const now = Date.now();
         if (now - this.lastMotionTime > this.motionCooldown()) {
           this.lastMotionTime = now;
-          this.zone.run(() => this.handleMotionDetected());
+          this.zone.run(() => this.handleMotionDetected(changedPct));
         }
       }
     }
@@ -272,12 +274,12 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     return (changed / sampledPixels) * 100;
   }
 
-  private handleMotionDetected(): void {
+  private handleMotionDetected(intensity: number): void {
     this.detectionCounter++;
     
     if (this.detectionCounter >= this.signalCadence()) {
       this.detectionCounter = 0; // Reset counter
-      this.motionDetected.emit();
+      this.motionDetected.emit(intensity);
       this.lastMotionSignal.set('Motion signal sent!');
       
       setTimeout(() => this.lastMotionSignal.set(null), 2000);

@@ -98,7 +98,7 @@
         </div>
       }
       @case ('detector') {
-        <app-detector [sessionId]="sessionId()" (goBack)="goBackToSelection()" (motionDetected)="handleMotion()"></app-detector>
+        <app-detector [sessionId]="sessionId()" (goBack)="goBackToSelection()" (motionDetected)="handleMotion($event)"></app-detector>
       }
       @case ('display') {
         <div class="bg-gray-800 rounded-lg shadow-2xl p-8 flex flex-col items-center animate-fade-in w-full max-w-3xl mx-auto">
@@ -119,24 +119,24 @@
             <button 
               (click)="toggleFullscreen()" 
               title="Toggle Fullscreen"
-              class="absolute top-3 right-3 z-20 bg-gray-900 bg-opacity-40 hover:bg-opacity-60 text-white p-2 rounded-full transition-opacity">
+              class="absolute top-3 right-3 z-20 bg-gray-900 bg-opacity-40 hover:bg-opacity-60 text-white p-2 rounded-full">
               <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2H4a2 2 0 0 0-2 2v4m20 0V4a2 2 0 0 0-2-2h-4m0 20h4a2 2 0 0 0 2-2v-4M8 22H4a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             </button>
             <app-display [signal]="motionSignal()" [lingerDuration]="lingerDuration()"></app-display>
           </div>
-      
-          <!-- Settings -->
+
+          <!-- Display Settings Panel -->
           <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
             <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Display Settings</h3>
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
               <!-- Display Type -->
               <div>
                 <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
                 <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
-                  <button (click)="onDisplayContentChange('color')" [class.bg-purple-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Colors</button>
-                  <button (click)="onDisplayContentChange('math')" [class.bg-purple-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Math Game</button>
-                  <button (click)="onDisplayContentChange('wechsel')" [class.bg-purple-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Wechsel</button>
-                  <button (click)="onDisplayContentChange('counter')" [class.bg-purple-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" class="w-full text-white font-semibold py-2 rounded-md transition-colors">Counter</button>
+                  <button (click)="onDisplayContentChange('color')" [class.bg-purple-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" [class.text-white]="displayContentType() === 'color'" class="w-full font-semibold py-2 rounded-md transition-colors">Colors</button>
+                  <button (click)="onDisplayContentChange('math')" [class.bg-purple-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" [class.text-white]="displayContentType() === 'math'" class="w-full font-semibold py-2 rounded-md transition-colors">Math Game</button>
+                  <button (click)="onDisplayContentChange('wechsel')" [class.bg-purple-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" [class.text-white]="displayContentType() === 'wechsel'" class="w-full font-semibold py-2 rounded-md transition-colors">Wechsel</button>
+                  <button (click)="onDisplayContentChange('counter')" [class.bg-purple-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" [class.text-white]="displayContentType() === 'counter'" class="w-full font-semibold py-2 rounded-md transition-colors">Counter</button>
                 </div>
               </div>
               <!-- Linger Duration -->
@@ -144,7 +144,7 @@
                 <label for="lingerDuration" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-purple-300">{{ lingerDuration() / 1000 }}s</span></label>
                 <input id="lingerDuration" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
               </div>
-               <!-- Max Operations (for Math Game) -->
+              <!-- Max Operations (for Math Game) -->
               @if (displayContentType() === 'math') {
                 <div>
                   <label for="maxOperations" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-purple-300">{{ maxOperations() }}</span></label>
@@ -158,69 +158,12 @@
       @case ('single') {
         <app-single-device [sessionId]="sessionId()" (goBack)="goBackToSelection()"></app-single-device>
       }
-      @case('sprint-duels') {
+      @case ('sprint-duels') {
         <app-sprint-duels (goBack)="goBackToSelection()"></app-sprint-duels>
       }
-      @case('team-duels') {
+      @case ('team-duels') {
         <app-team-duels (goBack)="goBackToSelection()"></app-team-duels>
       }
     }
   </main>
-  
-  <!-- Global Fullscreen Button -->
-  <button (click)="toggleAppFullscreen()" 
-          [title]="isAppFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen'" 
-          class="fixed bottom-5 right-5 z-50 bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full shadow-lg transition-transform transform hover:scale-110 focus:outline-none focus:ring-4 focus:ring-blue-500">
-      @if (!isAppFullScreen()) {
-        <!-- Enter Fullscreen Icon -->
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 512 512"
-          xml:space="preserve"
-          class="h-6 w-6"
-          fill="currentColor">
-          <g>
-            <path d="M0,0v512h512V0H0z M477.867,477.867H34.133V34.133h443.733V477.867z" />
-          </g>
-          <g>
-            <polygon points="126.533,102.4 199.111,102.4 199.111,68.267 68.267,68.267 68.267,199.111 102.4,199.111 102.4,126.538 198.422,222.558 222.556,198.423" />
-          </g>
-          <g>
-            <polygon points="222.557,313.581 198.422,289.445 102.4,385.467 102.4,312.889 68.267,312.889 68.267,443.733 199.111,443.733 199.111,409.6 126.538,409.6" />
-          </g>
-          <g>
-            <polygon points="409.6,312.889 409.6,385.467 313.578,289.444 289.444,313.578 385.462,409.6 312.889,409.6 312.889,443.733 443.733,443.733 443.733,312.889" />
-          </g>
-          <g>
-            <polygon points="312.889,68.267 312.889,102.4 385.467,102.4 289.444,198.423 313.578,222.558 409.6,126.538 409.6,199.111 443.733,199.111 443.733,68.267" />
-          </g>
-        </svg>
-      } @else {
-        <!-- Exit Fullscreen Icon -->
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 512 512"
-          class="h-6 w-6"
-          fill="currentColor">
-          <g>
-              <path d="M0,0v512h512V0H0z M477.867,477.867H34.133V34.133h443.733V477.867z" />
-          </g>
-          <g>
-              <polygon points="68.267,68.267 199.111,68.267 199.111,102.4 102.4,102.4 102.4,199.111 68.267,199.111" />
-              <polygon points="443.733,68.267 312.889,68.267 312.889,102.4 409.6,102.4 409.6,199.111 443.733,199.111" />
-              <polygon points="68.267,443.733 68.267,312.889 102.4,312.889 102.4,409.6 199.111,409.6 199.111,443.733" />
-              <polygon points="443.733,443.733 443.733,312.889 409.6,312.889 409.6,409.6 312.889,409.6 312.889,443.733" />
-          </g>
-        </svg>
-      }
-  </button>
 </div>
-<style>
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
-  }
-</style>

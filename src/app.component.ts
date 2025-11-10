@@ -9,11 +9,11 @@ import { TeamDuelsComponent } from './team-duels/team-duels.component';
 
 // Define the shape of signals for the display component
 type DisplaySignal = 
-  | { type: 'color', value: string, timestamp: number } 
-  | { type: 'math_op', op: string, sum: number, timestamp: number }
-  | { type: 'math_result', sum: number, timestamp: number }
-  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number }
-  | { type: 'counter', count: number, timestamp: number }
+  | { type: 'color', value: string, timestamp: number, intensity?: number } 
+  | { type: 'math_op', op: string, sum: number, timestamp: number, intensity?: number }
+  | { type: 'math_result', sum: number, timestamp: number, intensity?: number }
+  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number, intensity?: number }
+  | { type: 'counter', count: number, timestamp: number, intensity?: number }
   | null;
 
 @Component({
@@ -61,17 +61,18 @@ export class AppComponent implements OnDestroy, OnInit {
             this.currentSessionIdForListener = sid;
             this.firebaseService.listenForMotion(sid, (data) => {
                 if (data) {
+                    const intensity = data.intensity ?? 20; // Use a default intensity if none is provided
                     if (contentType === 'color') {
                         const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
-                        this.motionSignal.set({ type: 'color', value: randomColor, timestamp: data.timestamp });
+                        this.motionSignal.set({ type: 'color', value: randomColor, timestamp: data.timestamp, intensity });
                     } else if (contentType === 'math') {
-                        this.runMathGameStep();
+                        this.runMathGameStep(intensity);
                     } else if (contentType === 'counter') {
                         this.detectionCount.update(c => c + 1);
-                        this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp: data.timestamp });
+                        this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp: data.timestamp, intensity });
                     } else { // 'wechsel'
                         const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
-                        this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp: data.timestamp });
+                        this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp: data.timestamp, intensity });
                     }
                 }
             });
@@ -90,7 +91,7 @@ export class AppComponent implements OnDestroy, OnInit {
     this.document.addEventListener('fullscreenchange', this.onFullscreenChange);
   }
 
-  private runMathGameStep() {
+  private runMathGameStep(intensity?: number) {
     if (this.resultTimeoutId) {
       clearTimeout(this.resultTimeoutId);
       this.resultTimeoutId = null;
@@ -127,7 +128,8 @@ export class AppComponent implements OnDestroy, OnInit {
       type: 'math_op',
       op: `${operator} ${value}`,
       sum: sum,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      intensity
     });
 
     if (done >= max) {
@@ -139,7 +141,8 @@ export class AppComponent implements OnDestroy, OnInit {
           this.motionSignal.set({
             type: 'math_result',
             sum: this.currentSum(),
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            intensity
           });
         }
         this.resultTimeoutId = null;
@@ -189,8 +192,8 @@ export class AppComponent implements OnDestroy, OnInit {
     this.inputSessionId.set(inputElement.value);
   }
 
-  handleMotion() {
-    this.firebaseService.writeMotion(this.sessionId());
+  handleMotion(intensity: number) {
+    this.firebaseService.writeMotion(this.sessionId(), intensity);
   }
 
   onLingerDurationChange(event: Event) {

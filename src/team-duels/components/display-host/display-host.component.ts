@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, input, OnDestroy, OnInit, signal, viewChild, ElementRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, OnDestroy, OnInit, signal, viewChild, ElementRef, inject, computed } from '@angular/core';
 import { DOCUMENT, CommonModule } from '@angular/common';
 import { TeamDuelsFirebaseService, GameClientState, GameState } from '../../services/team-duels-firebase.service';
+import { WebRTCService, Message } from '../../services/webrtc.service';
 
 interface DisplayClient extends GameClientState {
   deviceId: string;
+  connectionState: RTCPeerConnectionState;
 }
 
 @Component({
@@ -19,10 +21,13 @@ export class DisplayHostComponent implements OnInit, OnDestroy {
   gameState = signal<GameState>({ status: 'idle', initialLivepool: 60 });
   
   private clientListenerCleanup?: () => void;
+  private firebaseSignalListenerCleanup?: () => void;
   
   // Audio state
   private startSoundAudio = new Audio();
   private announcementAudio = new Audio();
+  private warningAudioPlayers = new Map<string, HTMLAudioElement>();
+  private warningPlayedFlags = new Map<string, boolean>();
   private announcedThresholds = new Map<string, Set<number>>(); // deviceId -> Set of announced thresholds
   availableVoices = signal<SpeechSynthesisVoice[]>([]);
 
@@ -56,37 +61,132 @@ export class DisplayHostComponent implements OnInit, OnDestroy {
   private document: Document = inject(DOCUMENT);
   container = viewChild.required<ElementRef>('container');
   isFullScreen = signal(!!this.document.fullscreenElement);
+  private firebaseService = inject(TeamDuelsFirebaseService);
+  private webrtcService = inject(WebRTCService);
 
-  constructor(private firebaseService: TeamDuelsFirebaseService) {
+  webrtcStatus = computed(() => {
+    const clients = this.clients();
+    if (clients.length === 0) {
+      return { text: 'Awaiting players', color: 'text-gray-400', bgColor: 'bg-gray-500', isPinging: false };
+    }
+
+    const failed = clients.some(c => ['failed', 'closed'].includes(c.connectionState));
+    if (failed) {
+      return { text: 'Connection Issue', color: 'text-red-400', bgColor: 'bg-red-500', isPinging: false };
+    }
+
+    const disconnected = clients.some(c => c.connectionState === 'disconnected');
+    if (disconnected) {
+      return { text: 'Reconnecting...', color: 'text-yellow-400', bgColor: 'bg-yellow-500', isPinging: true };
+    }
+    
+    const connecting = clients.some(c => c.connectionState === 'connecting' || c.connectionState === 'new');
+    if (connecting) {
+      return { text: 'Connecting...', color: 'text-yellow-400', bgColor: 'bg-yellow-500', isPinging: true };
+    }
+    
+    return { text: 'Connections Stable', color: 'text-green-400', bgColor: 'bg-green-500', isPinging: false };
+  });
+
+  constructor() {
       this.document.addEventListener('fullscreenchange', this.onFullscreenChange);
   }
   
   ngOnInit(): void {
     this.loadVoices();
-    // FIX: Explicitly type `clientsData` to prevent `newState` from being inferred as `unknown`.
-    this.clientListenerCleanup = this.firebaseService.listenForClients(this.sessionId(), (clientsData: { [key: string]: GameClientState }) => {
-        const previousClients = new Map(this.clients().map(c => [c.deviceId, c]));
-        const clientList: DisplayClient[] = [];
+    this.setupWebRTCListeners();
 
-        for (const deviceId in clientsData) {
-            const newState = clientsData[deviceId];
-            const oldState = previousClients.get(deviceId);
-            
-            if (oldState) {
-                this.checkAndAnnounceThresholds(deviceId, oldState.livepool, newState);
-            }
-            clientList.push({ deviceId, ...newState });
-        }
-        this.clients.set(clientList.sort((a,b) => a.deviceId.localeCompare(b.deviceId)));
+    // Listen for new clients joining the lobby
+    this.clientListenerCleanup = this.firebaseService.listenForClients(this.sessionId(), (deviceId) => {
+      // This callback fires once per new client.
+      if (!this.clients().some(c => c.deviceId === deviceId)) {
+        console.log(`New client detected: ${deviceId}. Initiating WebRTC connection.`);
+        this.webrtcService.createConnectionAndOffer(deviceId);
+        // Add a placeholder to our clients list
+        this.clients.update(clients => [...clients, { deviceId, livepool: 0, lastReactionTime: 0, connectionState: 'new' }]);
+      }
     });
-    // Set initial game state in Firebase
+
+    // Set initial game state in Firebase for any new clients to see
     this.firebaseService.setGameState(this.sessionId(), this.gameState());
+  }
+
+  private setupWebRTCListeners(): void {
+    const hostId = 'display-host'; 
+    
+    // Setup signaling callbacks
+    this.webrtcService.onSdpOffer = (targetId, sdp) => {
+      this.firebaseService.sendSignal(this.sessionId(), targetId, { from: hostId, type: 'offer', data: sdp.toJSON() });
+    };
+    this.webrtcService.onIceCandidate = (targetId, candidate) => {
+      this.firebaseService.sendSignal(this.sessionId(), targetId, { from: hostId, type: 'ice-candidate', data: candidate.toJSON() });
+    };
+
+    // Firebase listener for incoming signals from clients
+    this.firebaseSignalListenerCleanup = this.firebaseService.listenForSignals(this.sessionId(), hostId, (signal) => {
+        if (signal.type === 'answer') {
+            this.webrtcService.handleAnswer(signal.from, signal.data);
+        } else if (signal.type === 'ice-candidate') {
+            this.webrtcService.addIceCandidate(signal.from, signal.data);
+        }
+    });
+
+    // Handle messages received over data channels
+    this.webrtcService.onMessageReceived = (peerId, message) => {
+        this.handleClientMessage(peerId, message);
+    };
+
+    // Handle connection state changes
+    this.webrtcService.onConnectionStateChange = (peerId, state) => {
+        console.log(`Connection state with ${peerId} changed to ${state}`);
+        this.clients.update(clients =>
+            clients.map(c => c.deviceId === peerId ? { ...c, connectionState: state } : c)
+        );
+
+        // Keep disconnected clients in the list to allow for reconnection attempts.
+        // Remove only if permanently failed or closed.
+        if (state === 'failed' || state === 'closed') {
+            // Use a timeout to allow the UI to show the final state before removal.
+            setTimeout(() => {
+                this.clients.update(currentClients => currentClients.filter(c => c.deviceId !== peerId));
+                this.webrtcService.closeConnection(peerId);
+            }, 3000);
+        }
+    };
+  }
+
+  private handleClientMessage(deviceId: string, message: Message): void {
+    if (message.type === 'clientStateUpdate') {
+      const newState: GameClientState = message.payload;
+      const oldState = this.clients().find(c => c.deviceId === deviceId);
+
+      if (oldState) {
+          this.checkAndAnnounceThresholds(deviceId, oldState.livepool, newState);
+          const hasPlayedWarning = this.warningPlayedFlags.get(deviceId) ?? false;
+          if (newState.livepool < 10 && !hasPlayedWarning) {
+              this.playWarningSoundForDevice(deviceId);
+              this.warningPlayedFlags.set(deviceId, true);
+          }
+          if (newState.livepool <= 0) {
+              this.stopWarningSoundForDevice(deviceId);
+          }
+      }
+
+      this.clients.update(clients => 
+        clients.map(c => c.deviceId === deviceId ? { ...c, ...newState, deviceId } : c).sort((a,b) => a.deviceId.localeCompare(b.deviceId))
+      );
+    }
   }
   
   ngOnDestroy(): void {
     this.clientListenerCleanup?.();
+    this.firebaseSignalListenerCleanup?.();
+    this.webrtcService.closeAllConnections();
+
     this.startSoundAudio.pause();
     this.announcementAudio.pause();
+    this.stopAllWarningSounds();
+    this.warningAudioPlayers.forEach(player => player.src = '');
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       window.speechSynthesis.onvoiceschanged = null;
@@ -99,7 +199,8 @@ export class DisplayHostComponent implements OnInit, OnDestroy {
     this.resetGameInternals();
     const newState: GameState = { ...this.gameState(), status: 'running' };
     this.gameState.set(newState);
-    this.firebaseService.setGameState(this.sessionId(), newState);
+    this.firebaseService.setGameState(this.sessionId(), newState); // For late joiners
+    this.webrtcService.broadcastMessage({ type: 'gameStateUpdate', payload: newState });
     this.playStartSound();
   }
 
@@ -107,32 +208,51 @@ export class DisplayHostComponent implements OnInit, OnDestroy {
     const newState: GameState = { ...this.gameState(), status: 'paused' };
     this.gameState.set(newState);
     this.firebaseService.setGameState(this.sessionId(), newState);
+    this.webrtcService.broadcastMessage({ type: 'gameStateUpdate', payload: newState });
   }
 
   resumeGame(): void {
     const newState: GameState = { ...this.gameState(), status: 'running' };
     this.gameState.set(newState);
     this.firebaseService.setGameState(this.sessionId(), newState);
+    this.webrtcService.broadcastMessage({ type: 'gameStateUpdate', payload: newState });
   }
 
   resetGame(): void {
     this.resetGameInternals();
     const newState: GameState = { ...this.gameState(), status: 'idle' };
     this.gameState.set(newState);
-    // Setting the global game state is sufficient.
-    // Clients listen for this change and will reset their own state.
     this.firebaseService.setGameState(this.sessionId(), newState);
+    this.webrtcService.broadcastMessage({ type: 'gameStateUpdate', payload: newState });
   }
 
   private resetGameInternals(): void {
     this.announcedThresholds.clear();
+    this.stopAllWarningSounds();
+    this.warningPlayedFlags.clear();
   }
 
   getLivepoolPercentage(client: DisplayClient): number {
     const initialPool = client.initialLivepool ?? this.gameState().initialLivepool;
-    if (initialPool === 0) return 0;
+    if (initialPool <= 0) return 0;
     const percentage = (client.livepool / initialPool) * 100;
     return Math.max(0, Math.min(100, percentage));
+  }
+
+  getClientBorderColor(state: RTCPeerConnectionState): string {
+    switch (state) {
+      case 'connected':
+        return 'border-green-500';
+      case 'connecting':
+      case 'new':
+        return 'border-yellow-500';
+      case 'disconnected':
+      case 'failed':
+      case 'closed':
+        return 'border-red-500';
+      default:
+        return 'border-gray-700';
+    }
   }
 
   toggleFullscreen(): void {
@@ -165,6 +285,34 @@ export class DisplayHostComponent implements OnInit, OnDestroy {
   private playStartSound(): void {
     this.startSoundAudio.src = 'https://video-idea.fra1.cdn.digitaloceanspaces.com/beeps/start-sound-beep-102201.mp3';
     this.startSoundAudio.play().catch(err => console.error("Audio playback failed:", err));
+  }
+
+  private playWarningSoundForDevice(deviceId: string): void {
+    let player = this.warningAudioPlayers.get(deviceId);
+    if (!player) {
+      player = new Audio();
+      this.warningAudioPlayers.set(deviceId, player);
+    }
+    player.src = 'https://video-idea.fra1.cdn.digitaloceanspaces.com/warning-alarm-loop-1-279206.mp3';
+    player.loop = true;
+    player.play().catch(err => console.error(`Warning audio playback failed for ${deviceId}:`, err));
+  }
+
+  private stopWarningSoundForDevice(deviceId: string): void {
+    const player = this.warningAudioPlayers.get(deviceId);
+    if (player && !player.paused) {
+      player.pause();
+      player.currentTime = 0;
+    }
+  }
+
+  private stopAllWarningSounds(): void {
+    this.warningAudioPlayers.forEach(player => {
+      if (!player.paused) {
+        player.pause();
+        player.currentTime = 0;
+      }
+    });
   }
 
   private speak(text: string, voiceURI: string): void {

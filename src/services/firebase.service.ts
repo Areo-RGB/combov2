@@ -19,18 +19,19 @@ export class FirebaseService {
     this.db = getDatabase(this.app);
   }
 
-  writeMotion(sessionId: string): void {
+  writeMotion(sessionId: string, intensity: number): void {
     try {
       const motionRef = ref(this.db, `sessions/${sessionId}`);
       set(motionRef, {
         timestamp: Date.now(),
+        intensity: intensity,
       });
     } catch (error) {
       console.error("Error writing to Firebase:", error);
     }
   }
 
-  listenForMotion(sessionId: string, callback: (data: { timestamp: number } | null) => void): void {
+  listenForMotion(sessionId: string, callback: (data: { timestamp: number, intensity?: number } | null) => void): void {
     const motionRef = ref(this.db, `sessions/${sessionId}`);
     onValue(motionRef, (snapshot) => {
       callback(snapshot.val());

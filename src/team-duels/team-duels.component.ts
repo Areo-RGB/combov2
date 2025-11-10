@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, output, signal, viewChild, OnDestroy, inject, NgZone, OnInit } from '@angular/core';
+// FIX: Import `NgZone` to resolve 'Cannot find name' error.
+import { ChangeDetectionStrategy, Component, output, signal, viewChild, OnDestroy, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DetectorComponent } from '../components/detector/detector.component';
 import { TeamDuelsLobbyComponent } from './components/lobby/lobby.component';
 import { GameClientComponent } from './components/game-client/game-client.component';
 import { DisplayHostComponent } from './components/display-host/display-host.component';
 import { TeamDuelsFirebaseService } from './services/team-duels-firebase.service';
+import { WebRTCService } from './services/webrtc.service';
 
 @Component({
   selector: 'app-team-duels',
@@ -17,7 +19,7 @@ import { TeamDuelsFirebaseService } from './services/team-duels-firebase.service
     GameClientComponent,
     DisplayHostComponent
   ],
-  providers: [TeamDuelsFirebaseService] // Scope service to this feature
+  providers: [TeamDuelsFirebaseService, WebRTCService] // Scope services to this feature
 })
 export class TeamDuelsComponent implements OnDestroy, OnInit {
   goBack = output<void>();
@@ -41,6 +43,8 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   // Audio state for single-device mode
   private startSoundAudio = new Audio();
   private announcementAudio = new Audio();
+  private warningSoundAudio = new Audio();
+  warningSoundPlayed = signal<boolean>(false);
   private announcedThresholds = signal<Set<number>>(new Set());
   availableVoices = signal<SpeechSynthesisVoice[]>([]);
   selectedVoiceURI = signal<string>('default');
@@ -97,6 +101,8 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
     this.startSoundAudio.src = '';
     this.announcementAudio.pause();
     this.announcementAudio.src = '';
+    this.stopWarningSound();
+    this.warningSoundAudio.src = '';
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       window.speechSynthesis.onvoiceschanged = null;
@@ -149,6 +155,19 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   private playStartSound(): void {
     this.startSoundAudio.src = 'https://video-idea.fra1.cdn.digitaloceanspaces.com/beeps/start-sound-beep-102201.mp3';
     this.startSoundAudio.play().catch(err => console.error("Audio playback failed:", err));
+  }
+
+  private playWarningSound(): void {
+    this.warningSoundAudio.src = 'https://video-idea.fra1.cdn.digitaloceanspaces.com/warning-alarm-loop-1-279206.mp3';
+    this.warningSoundAudio.loop = true;
+    this.warningSoundAudio.play().catch(err => console.error("Warning audio playback failed:", err));
+  }
+
+  private stopWarningSound(): void {
+    if (!this.warningSoundAudio.paused) {
+      this.warningSoundAudio.pause();
+      this.warningSoundAudio.currentTime = 0;
+    }
   }
 
   private speak(text: string): void {
@@ -241,6 +260,15 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
       const oldPool = this.livepool();
       const newPool = oldPool - reactionTime;
       this.livepool.set(newPool);
+
+      if (newPool < 10 && !this.warningSoundPlayed()) {
+        this.playWarningSound();
+        this.warningSoundPlayed.set(true);
+      }
+      if (newPool <= 0) {
+        this.stopWarningSound();
+      }
+
       this.checkAndAnnounceThresholds(oldPool, newPool);
       this.timerStartTime.set(null);
     }
@@ -270,6 +298,8 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
     this.lastReactionTime.set(null);
     this.gameState.set('idle');
     this.announcedThresholds.set(new Set());
+    this.stopWarningSound();
+    this.warningSoundPlayed.set(false);
   }
   
   onInitialLivepoolChange(event: Event) {

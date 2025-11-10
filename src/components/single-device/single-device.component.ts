@@ -4,11 +4,11 @@ import { DisplayComponent } from '../display/display.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
 type DisplaySignal = 
-  | { type: 'color', value: string, timestamp: number } 
-  | { type: 'math_op', op: string, sum: number, timestamp: number }
-  | { type: 'math_result', sum: number, timestamp: number }
-  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number }
-  | { type: 'counter', count: number, timestamp: number }
+  | { type: 'color', value: string, timestamp: number, intensity?: number } 
+  | { type: 'math_op', op: string, sum: number, timestamp: number, intensity?: number }
+  | { type: 'math_result', sum: number, timestamp: number, intensity?: number }
+  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number, intensity?: number }
+  | { type: 'counter', count: number, timestamp: number, intensity?: number }
   | null;
 
 @Component({
@@ -63,22 +63,22 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
     this.goBack.emit();
   }
 
-  handleMotion() {
+  handleMotion(intensity: number) {
     if (this.displayContentType() === 'color') {
       const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
-      this.motionSignal.set({ type: 'color', value: randomColor, timestamp: Date.now() });
+      this.motionSignal.set({ type: 'color', value: randomColor, timestamp: Date.now(), intensity });
     } else if (this.displayContentType() === 'math') {
-      this.runMathGameStep();
+      this.runMathGameStep(intensity);
     } else if (this.displayContentType() === 'counter') {
       this.detectionCount.update(c => c + 1);
-      this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp: Date.now() });
+      this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp: Date.now(), intensity });
     } else { // 'wechsel'
       const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
-      this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp: Date.now() });
+      this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp: Date.now(), intensity });
     }
   }
 
-  private runMathGameStep() {
+  private runMathGameStep(intensity?: number) {
     if (this.resultTimeoutId) {
       clearTimeout(this.resultTimeoutId);
       this.resultTimeoutId = null;
@@ -115,7 +115,8 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
       type: 'math_op',
       op: `${operator} ${value}`,
       sum: sum,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      intensity
     });
 
     if (done >= max) {
@@ -127,7 +128,8 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
           this.motionSignal.set({
             type: 'math_result',
             sum: this.currentSum(),
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            intensity
           });
         }
         this.resultTimeoutId = null;

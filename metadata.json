@@ -1,5 +1,5 @@
 {
-  "name": "Combo-V1",
+  "name": "v6",
   "description": "An application that uses your device's camera to detect motion and sends a real-time signal to other connected devices, which visualize the signal on a colored grid.",
   "requestFramePermissions": [
     "camera"

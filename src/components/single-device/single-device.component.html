@@ -10,7 +10,7 @@
   <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Left Column: Detector -->
     <div class="min-w-0">
-      <app-detector [sessionId]="sessionId()" [showBackButton]="false" (motionDetected)="handleMotion()"></app-detector>
+      <app-detector [sessionId]="sessionId()" [showBackButton]="false" (motionDetected)="handleMotion($event)"></app-detector>
     </div>
 
     <!-- Right Column: Display & Settings -->
