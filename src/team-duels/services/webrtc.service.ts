@@ -150,6 +150,9 @@ export class WebRTCService {
     pc.onconnectionstatechange = () => {
         if (this.peerConnections.has(peerId)) { // Avoid callback on closed connections
             this.onConnectionStateChange(peerId, pc.connectionState);
+            if (pc.connectionState === 'connected') {
+                this.logSelectedCandidatePair(pc, peerId);
+            }
         }
     };
 
@@ -157,6 +160,54 @@ export class WebRTCService {
     return pc;
   }
   
+  private async logSelectedCandidatePair(pc: RTCPeerConnection, peerId: string): Promise<void> {
+    // This helper provides debug information to the console about the connection path.
+    // It helps verify if a direct local network connection ('host' to 'host') was established.
+    if (typeof pc.getStats !== 'function') {
+        console.log('getStats() is not supported in this browser.');
+        return;
+    }
+    try {
+        const stats = await pc.getStats();
+        let activePair: any;
+        // The 'transport' report gives us the ID of the selected candidate pair.
+        stats.forEach(report => {
+            if (report.type === 'transport' && report.selectedCandidatePairId) {
+                activePair = stats.get(report.selectedCandidatePairId);
+            }
+        });
+
+        if (activePair && activePair.localCandidateId && activePair.remoteCandidateId) {
+            const localCandidate = stats.get(activePair.localCandidateId);
+            const remoteCandidate = stats.get(activePair.remoteCandidateId);
+            if (localCandidate && remoteCandidate) {
+                let connectionType = 'Unknown';
+                if (localCandidate.candidateType === 'host' && remoteCandidate.candidateType === 'host') {
+                    connectionType = 'Direct LAN connection. Ideal for local networks.';
+                } else if (localCandidate.candidateType.includes('flx') || remoteCandidate.candidateType.includes('flx')) {
+                    connectionType = 'NAT traversal (STUN). Connection over the internet.';
+                } else if (localCandidate.candidateType === 'relay' || remoteCandidate.candidateType === 'relay') {
+                    connectionType = 'Relayed (TURN). Connection is not peer-to-peer.';
+                }
+
+                console.log(
+`%cWebRTC Connection with ${peerId} Established%c
+-> Path: %c${localCandidate.candidateType}%c (local) to %c${remoteCandidate.candidateType}%c (remote)
+-> Type: %c${connectionType}%c
+-> Local Address: ${localCandidate.address}:${localCandidate.port}
+-> Remote Address: ${remoteCandidate.address}:${remoteCandidate.port}`,
+'font-weight: bold; color: #22c55e;', '',
+'font-weight: bold;', '',
+'font-weight: bold;', '',
+'font-weight: bold;', ''
+                );
+            }
+        }
+    } catch (error) {
+        console.warn('Could not retrieve WebRTC connection stats:', error);
+    }
+  }
+
   private setupDataChannel(peerId: string, channel: RTCDataChannel): void {
       channel.onopen = () => {
           console.log(`Data channel with ${peerId} is open`);
