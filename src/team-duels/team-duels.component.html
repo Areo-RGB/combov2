@@ -21,13 +21,35 @@
         </div>
 
         <!-- Multi Device Card -->
-        <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg opacity-50 cursor-not-allowed">
-          <h2 class="text-2xl font-semibold mb-4 text-gray-500">Multi Device</h2>
-          <p class="text-gray-300 text-center mb-6">Connect multiple devices to compete online. (Coming Soon)</p>
-          <button disabled class="w-full bg-gray-600 text-gray-400 font-bold py-3 px-6 rounded-lg cursor-not-allowed">
+        <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
+          <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Multi Device</h2>
+          <p class="text-gray-300 text-center mb-6">Connect multiple devices to compete online.</p>
+          <button (click)="startMultiDeviceMode()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
             Start Online Game
           </button>
         </div>
+      </div>
+    }
+    @case ('lobby') {
+      <app-team-duels-lobby (goBack)="goBackToSelection()" (sessionStarted)="onSessionStarted($event)"></app-team-duels-lobby>
+    }
+    @case ('display-host') {
+      @if (sessionId(); as sid) {
+        <app-display-host [sessionId]="sid"></app-display-host>
+      }
+    }
+    @case ('game-client') {
+      <div class="w-full">
+        <div class="w-full flex justify-between items-center mb-6">
+          <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+            &larr; Leave Game
+          </button>
+          <h2 class="text-2xl font-semibold text-cyan-400">Game Client</h2>
+          <div class="text-sm font-mono bg-gray-900 px-2 py-1 rounded-md text-cyan-300">Player ID: {{ deviceId().substring(0,6) }}</div>
+        </div>
+        @if (sessionId(); as sid) {
+          <app-game-client [sessionId]="sid" [deviceId]="deviceId()"></app-game-client>
+        }
       </div>
     }
     @case ('single-device') {
@@ -87,6 +109,26 @@
              <div>
                 <label for="livepool-start" class="block mb-2 text-sm font-medium text-gray-300">Initial Live Pool: <span class="font-bold text-green-300">{{ initialLivepool() }}</span></label>
                 <input id="livepool-start" type="range" min="10" max="300" step="10" [value]="initialLivepool()" (input)="onInitialLivepoolChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500">
+              </div>
+              <div class="mt-4">
+                <label for="voice-select" class="block mb-2 text-sm font-medium text-gray-300">Announcement Voice</label>
+                <select id="voice-select" 
+                        class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5"
+                        [value]="selectedVoiceURI()"
+                        (change)="onVoiceChange($event)">
+                    <optgroup label="Custom Audio">
+                        @for (voice of preRecordedVoiceOptions; track voice.key) {
+                            <option [value]="voice.key">{{ voice.name }}</option>
+                        }
+                    </optgroup>
+                    @if (availableVoices().length > 0) {
+                        <optgroup label="Browser Voices (German)">
+                            @for (voice of availableVoices(); track voice.voiceURI) {
+                                <option [value]="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
               </div>
           </div>
 
