@@ -24,6 +24,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   
   status = signal<'idle' | 'initializing' | 'ready' | 'detecting' | 'error' | 'no_camera'>('idle');
   lastMotionSignal = signal<string | null>(null);
+  settingsExpanded = signal<boolean>(true); // Settings expanded by default
   sensitivity = signal<number>(5);
   motionCooldown = signal<number>(500); // Minimum delay between detections in ms
   signalCadence = signal<number>(1); // Signal on every Nth detection
@@ -685,6 +686,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     const selectedId = (event.target as HTMLSelectElement).value;
     this.selectedCameraId.set(selectedId);
     this.startCamera();
+  }
+
+  toggleSettings(): void {
+    this.settingsExpanded.update(expanded => !expanded);
   }
 
   onDetectionMethodChange(method: 'motion' | 'pose'): void {

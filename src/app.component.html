@@ -1,16 +1,13 @@
 <div class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-4">
   <header class="text-center mb-8">
-    <h1 class="text-5xl font-bold text-white tracking-tight">QuoVadis</h1>
-    <p class="text-lg text-gray-400 mt-2">lorem ipsum txt beneath</p>
   </header>
 
   <main class="w-full max-w-4xl">
     @switch (mode()) {
       @case ('selection') {
-        <!-- Motion Signal Games Card -->
         <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8">
           <div class="flex flex-col items-center justify-center p-6">
-            <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Motion Signal Games</h2>
+            <h2 class="text-2xl font-semibold mb-4 text-cyan-400"></h2>
             <p class="text-gray-300 text-center mb-6">Use camera motion to interact with various display modes.</p>
             <button (click)="mode.set('motion-games')" class="w-full max-w-md bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
               Launch Games
@@ -55,10 +52,12 @@
         <div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-4xl mx-auto">
           <!-- Header -->
           <div class="w-full flex justify-between items-center mb-6">
-            <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-              &larr; Back
+            <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-            <h2 class="text-2xl font-semibold text-white">Motion Signal Games</h2>
+            <h2 class="text-2xl font-semibold text-white"></h2>
             <div class="w-20"></div> <!-- Spacer for centering -->
           </div>
           
@@ -105,21 +104,6 @@
                   Start Single Device Mode
                 </button>
             </div>
-
-            <!-- Device Camera quick test -->
-            <div class="mt-8 p-4 border border-gray-700 rounded-lg">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-semibold text-gray-200">Device Camera</h3>
-                <button (click)="capturePhoto()" class="bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-                  Open Camera
-                </button>
-              </div>
-              @if (lastPhotoDataUrl()) {
-                <div class="mt-2">
-                  <img [src]="lastPhotoDataUrl()!" alt="Last capture" class="max-h-60 rounded-md border border-gray-700 object-contain">
-                </div>
-              }
-            </div>
           </div>
         </div>
       }
@@ -129,14 +113,16 @@
       @case ('display') {
         <div class="bg-gray-800 rounded-lg shadow-2xl p-8 flex flex-col items-center animate-fade-in w-full max-w-3xl mx-auto">
           <div class="w-full flex justify-between items-center mb-6">
-            <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-              &larr; Back
+            <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
             <div class="text-center">
               <h2 class="text-2xl font-semibold text-purple-400">Display Mode</h2>
               <p class="text-lg font-mono bg-gray-900 px-3 py-1 rounded-md text-purple-300">Session ID: {{ sessionId() }}</p>
             </div>
-            <div class="w-20"></div> <!-- Spacer for centering -->
+            <div class="w-12 h-12"></div> <!-- Spacer to balance the button -->
           </div>
       
           <!-- Display Area -->
@@ -188,11 +174,13 @@
         <div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-4xl mx-auto">
           <!-- Header -->
           <div class="w-full flex justify-between items-center mb-6">
-            <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-              &larr; Back
+            <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
             <h2 class="text-2xl font-semibold text-white">Sprint Timing</h2>
-            <div class="w-20"></div> <!-- Spacer for centering -->
+            <div class="w-12 h-12"></div> <!-- Spacer to balance the button -->
           </div>
 
           <!-- Sprint Timing Modes -->

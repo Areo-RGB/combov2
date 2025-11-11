@@ -47,6 +47,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   private timerInterval: any = null;
   private lastDetectionTime = 0;
   private fullscreenChangeListener!: () => void;
+  private detectionStartTimeout: ReturnType<typeof setTimeout> | null = null;
 
   detectorComponent = viewChild.required(DetectorComponent);
   private displayContainer = viewChild.required<ElementRef>('displayContainer');
@@ -71,6 +72,9 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
     }
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
+    }
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
     }
     if (!this.isSingleDevice()) {
       this.sprintService.cleanupSession(this.sessionId());
@@ -132,23 +136,66 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   handleManualStart(): void {
     if (this.isTiming() || this.deviceRole() !== DeviceRole.Start) return;
 
-    this.playStartBeep();
-    const now = Date.now();
-    this.startTime.set(now);
-    this.isTiming.set(true);
-    this.isArmed.set(false);
-    this.lapCounter.set(0);
-
-    // Broadcast to other devices
-    if (!this.isSingleDevice()) {
-      this.sprintService.publishMessage(this.sessionId(), MessageType.Start, {});
+    // Start detection after 1 second delay
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
     }
+    
+    const detector = this.detectorComponent();
+    if (detector && detector.status() === 'ready') {
+      this.detectionStartTimeout = setTimeout(() => {
+        if (detector.status() === 'ready') {
+          detector.startDetection();
+        }
+        // Start timer immediately after detection starts
+        this.playStartBeep();
+        const now = Date.now();
+        this.startTime.set(now);
+        this.isTiming.set(true);
+        this.isArmed.set(false);
+        this.lapCounter.set(0);
 
-    this.startTimer();
+        // Broadcast to other devices
+        if (!this.isSingleDevice()) {
+          this.sprintService.publishMessage(this.sessionId(), MessageType.Start, {});
+        }
+
+        this.startTimer();
+      }, 1000);
+    } else {
+      // If detector is already detecting or not ready, start timer immediately
+      this.playStartBeep();
+      const now = Date.now();
+      this.startTime.set(now);
+      this.isTiming.set(true);
+      this.isArmed.set(false);
+      this.lapCounter.set(0);
+
+      // Broadcast to other devices
+      if (!this.isSingleDevice()) {
+        this.sprintService.publishMessage(this.sessionId(), MessageType.Start, {});
+      }
+
+      this.startTimer();
+    }
   }
 
   handleArm(): void {
     this.isArmed.set(true);
+    
+    // Start detection after 1 second delay for flying start mode
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
+    }
+    
+    const detector = this.detectorComponent();
+    if (detector && detector.status() === 'ready') {
+      this.detectionStartTimeout = setTimeout(() => {
+        if (detector.status() === 'ready') {
+          detector.startDetection();
+        }
+      }, 1000);
+    }
   }
 
   handleMotion(intensity: number): void {
@@ -249,6 +296,18 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
     this.isArmed.set(this.startMode() === 'flying' && this.deviceRole() === DeviceRole.Start);
     this.lastDetectionTime = 0;
     this.lapCounter.set(0);
+    
+    // Stop detection if it was started
+    const detector = this.detectorComponent();
+    if (detector && detector.status() === 'detecting') {
+      detector.stopDetection();
+    }
+    
+    // Clear any pending detection start timeout
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
+      this.detectionStartTimeout = null;
+    }
   }
 
   clearHistory(): void {

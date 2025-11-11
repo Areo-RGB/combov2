@@ -3,8 +3,10 @@
     @case ('selection') {
       <!-- Header -->
       <div class="w-full flex justify-between items-center mb-6">
-        <button (click)="onGoBackToMenu()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-          &larr; Back
+        <button (click)="onGoBackToMenu()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
         <h2 class="text-3xl font-bold text-white">Team Duels</h2>
         <div class="w-20"></div> <!-- Spacer for centering -->
@@ -35,10 +37,12 @@
     }
     @case ('display-host') {
       <div class="w-full flex justify-between items-center mb-6">
-        <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-          &larr; Back to Menu
+        <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
-        <div class="w-20"></div>
+        <div class="w-12 h-12"></div>
       </div>
       @if (sessionId(); as sid) {
         <app-display-host [sessionId]="sid"></app-display-host>
@@ -47,8 +51,10 @@
     @case ('game-client') {
       <div class="w-full">
         <div class="w-full flex justify-between items-center mb-6">
-          <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-            &larr; Leave Game
+          <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
           <h2 class="text-2xl font-semibold text-cyan-400">Game Client</h2>
           <div class="text-sm font-mono bg-gray-900 px-2 py-1 rounded-md text-cyan-300">Player ID: {{ deviceId().substring(0,6) }}</div>
@@ -61,8 +67,10 @@
     @case ('single-device') {
       <!-- Game Header -->
       <div class="w-full flex justify-between items-center mb-6">
-        <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-          &larr; Back to Modes
+        <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
         <h2 class="text-2xl font-semibold text-green-400">Single Device Mode</h2>
          <button (click)="resetGame()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-2 px-4 rounded-lg transition">

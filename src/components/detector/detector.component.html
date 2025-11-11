@@ -5,8 +5,10 @@
   <div>
     @if (showBackButton()) {
       <div class="w-full flex justify-between items-center mb-6">
-        <button (click)="onGoBack()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
-          &larr; Back
+        <button (click)="onGoBack()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
         </button>
         <div class="text-center">
           <h2 class="text-2xl font-semibold text-cyan-400">Detector Mode</h2>
@@ -33,204 +35,246 @@
       }
     </div>
 
-    <!-- Configuration section -->
-    @if (status() === 'ready' || status() === 'detecting') {
-      <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-        <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Detection Settings</h3>
-
-        <!-- Detection Method Selector -->
-        <div class="mb-6">
-          <label class="block mb-2 text-sm font-medium text-gray-300">Detection Method</label>
-          <div class="flex flex-wrap gap-4">
-            <label class="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="detectionMethod"
-                value="motion"
-                [checked]="detectionMethod() === 'motion'"
-                (change)="onDetectionMethodChange('motion')"
-                class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
-              <span class="ml-2 text-sm text-gray-300">Motion Detection</span>
-            </label>
-            <label class="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                name="detectionMethod"
-                value="pose"
-                [checked]="detectionMethod() === 'pose'"
-                (change)="onDetectionMethodChange('pose')"
-                class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
-              <span class="ml-2 text-sm text-gray-300">Body Pose Detection</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- Pose Library Selector (only visible when pose detection is selected) -->
-        @if (detectionMethod() === 'pose') {
-          <div class="mb-6">
-            <label for="poseLibrary" class="block mb-2 text-sm font-medium text-gray-300">Pose Detection Library</label>
-            <select
-              id="poseLibrary"
-              [value]="poseLibrary()"
-              (change)="onPoseLibraryChange($event)"
-              class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-              <option value="mediapipe">MediaPipe</option>
-              <option value="movenet">MoveNet (TensorFlow.js)</option>
-            </select>
-          </div>
-
-          <!-- MediaPipe Model Selector -->
-          @if (poseLibrary() === 'mediapipe') {
-            <div class="mb-6">
-              <label for="poseModel" class="block mb-2 text-sm font-medium text-gray-300">MediaPipe Model</label>
-              <select
-                id="poseModel"
-                [value]="poseModel()"
-                (change)="onPoseModelChange($event)"
-                class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-                <option value="lite">Lite (Fastest, least accurate)</option>
-                <option value="full">Full (Balanced speed and accuracy)</option>
-                <option value="heavy">Heavy (Slowest, most accurate)</option>
-              </select>
-            </div>
+    <!-- Buttons Card -->
+    @if (showBackButton() && (status() === 'ready' || status() === 'detecting')) {
+      <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 p-4 mb-6">
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Start Detection Button -->
+          @if (status() === 'ready') {
+            <button 
+              (click)="startDetection()" 
+              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
+              Start Detection
+            </button>
+          } @else if (status() === 'detecting') {
+            <button 
+              (click)="stopDetection()" 
+              class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
+              Stop Detection
+            </button>
           }
-
-          <!-- MoveNet Model Selector -->
-          @if (poseLibrary() === 'movenet') {
-            <div class="mb-6">
-              <label for="moveNetModel" class="block mb-2 text-sm font-medium text-gray-300">MoveNet Model</label>
-              <select
-                id="moveNetModel"
-                [value]="moveNetModel()"
-                (change)="onMoveNetModelChange($event)"
-                class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-                <option value="lightning">SinglePose Lightning (Fastest)</option>
-                <option value="thunder">SinglePose Thunder (Most accurate)</option>
-                <option value="multipose">MultiPose Lightning (Multiple people)</option>
-              </select>
-            </div>
-          }
-        }
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Sensitivity Slider -->
-          <div class="flex flex-col justify-center">
-            <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300">Sensitivity: <span class="font-bold text-cyan-300">{{ sensitivity() }}</span></label>
-            <input id="sensitivity" type="range" min="1" max="10" [value]="sensitivity()" (input)="onSensitivityChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500">
-          </div>
-          <!-- Detection Zone Controls -->
-          <div class="flex flex-col justify-center gap-4">
-            <div>
-              <label for="zoneWidth" class="block mb-2 text-sm font-medium text-gray-300">
-                Zone Width:
-                <span class="font-bold text-cyan-300">
-                  @if (useFullScreenDetection()) {
-                    Full Screen
-                  } @else if (zoneWidthPercent() > 0) {
-                    {{ zoneWidthPercent() }}%
-                  } @else {
-                    Off
-                  }
+          
+          <!-- Status Indicator -->
+          @if (status() === 'detecting') {
+            <div class="flex items-center justify-center bg-gray-600/50 rounded-lg px-4">
+              <p class="text-sm text-green-400 flex items-center">
+                <span class="relative flex h-3 w-3 mr-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                 </span>
-              </label>
-              <input 
-                id="zoneWidth" 
-                type="range" 
-                min="0" 
-                max="100" 
-                [value]="zoneWidthPercent()" 
-                (input)="onZoneWidthChange($event)"
-                [disabled]="useFullScreenDetection()"
-                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                Detecting...
+              </p>
             </div>
-             <div>
-              <label for="zonePosition" class="block mb-2 text-sm font-medium text-gray-300">Zone Position</label>
-              <input 
-                  id="zonePosition" 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  step="1"
-                  [value]="zonePositionPercent()" 
-                  (input)="onZonePositionChange($event)"
-                  [disabled]="useFullScreenDetection()"
-                  class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
-            </div>
-            <div class="flex items-center gap-3">
-              <label for="fullscreen-toggle" class="text-sm font-medium text-gray-300">Use Full Screen</label>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" id="fullscreen-toggle" class="sr-only peer" [checked]="useFullScreenDetection()" (change)="onFullScreenToggleChange($event)">
-                <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Camera Selection Dropdown -->
-          @if (availableCameras().length > 1) {
-            <div class="flex flex-col justify-center md:col-span-2">
-              <label for="camera" class="block mb-2 text-sm font-medium text-gray-300">Camera</label>
-              <select 
-                id="camera" 
-                [value]="selectedCameraId()" 
-                (change)="onCameraChange($event)"
-                class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-                @for (camera of availableCameras(); track camera.deviceId) {
-                  <option [value]="camera.deviceId">{{ camera.label || 'Camera ' + ($index + 1) }}</option>
-                }
-              </select>
+          } @else {
+            <div class="flex items-center justify-center bg-gray-600/50 rounded-lg px-4">
+              <p class="text-sm text-gray-400">Ready</p>
             </div>
           }
-
-          <!-- Cooldown Input -->
-          <div class="flex flex-col justify-center">
-            <label for="cooldown" class="block mb-2 text-sm font-medium text-gray-300">Minimum Delay (ms)</label>
-            <input 
-              id="cooldown" 
-              type="number" 
-              min="0"
-              step="50"
-              [value]="motionCooldown()" 
-              (input)="onCooldownChange($event)" 
-              class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-          </div>
-          <!-- Signal Cadence Input -->
-          <div class="flex flex-col justify-center">
-            <label for="signalCadence" class="block mb-2 text-sm font-medium text-gray-300">Signal every Nth detection</label>
-            <input 
-              id="signalCadence" 
-              type="number" 
-              min="1"
-              step="1"
-              [value]="signalCadence()" 
-              (input)="onSignalCadenceChange($event)" 
-              class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-          </div>
         </div>
+        @if (status() === 'detecting' && lastMotionSignal(); as signalText) {
+          <p class="text-yellow-400 mt-3 text-center text-sm animate-pulse">{{ signalText }}</p>
+        }
+      </div>
+    }
+
+    <!-- Configuration section - Only show when showBackButton is true -->
+    @if (showBackButton() && (status() === 'ready' || status() === 'detecting')) {
+      <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+        <!-- Collapsible Header -->
+        <button
+          (click)="toggleSettings()"
+          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+          <h3 class="text-lg font-semibold text-gray-200">Detection Settings</h3>
+          <svg 
+            class="w-5 h-5 text-gray-300 transition-transform duration-200"
+            [class.rotate-180]="settingsExpanded()"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+
+        <!-- Collapsible Content -->
+        @if (settingsExpanded()) {
+          <div class="px-4 pb-4 space-y-6">
+            <!-- Detection Method Selector -->
+            <div>
+              <label class="block mb-2 text-sm font-medium text-gray-300">Detection Method</label>
+              <div class="flex flex-wrap gap-4">
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="detectionMethod"
+                    value="motion"
+                    [checked]="detectionMethod() === 'motion'"
+                    (change)="onDetectionMethodChange('motion')"
+                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
+                  <span class="ml-2 text-sm text-gray-300">Motion Detection</span>
+                </label>
+                <label class="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="detectionMethod"
+                    value="pose"
+                    [checked]="detectionMethod() === 'pose'"
+                    (change)="onDetectionMethodChange('pose')"
+                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
+                  <span class="ml-2 text-sm text-gray-300">Body Pose Detection</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Pose Library Selector (only visible when pose detection is selected) -->
+            @if (detectionMethod() === 'pose') {
+              <div>
+                <label for="poseLibrary" class="block mb-2 text-sm font-medium text-gray-300">Pose Detection Library</label>
+                <select
+                  id="poseLibrary"
+                  [value]="poseLibrary()"
+                  (change)="onPoseLibraryChange($event)"
+                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                  <option value="mediapipe">MediaPipe</option>
+                  <option value="movenet">MoveNet (TensorFlow.js)</option>
+                </select>
+              </div>
+
+                <!-- MediaPipe Model Selector -->
+                @if (poseLibrary() === 'mediapipe') {
+                  <div>
+                    <label for="poseModel" class="block mb-2 text-sm font-medium text-gray-300">MediaPipe Model</label>
+                    <select
+                      id="poseModel"
+                      [value]="poseModel()"
+                      (change)="onPoseModelChange($event)"
+                      class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                      <option value="lite">Lite (Fastest, least accurate)</option>
+                      <option value="full">Full (Balanced speed and accuracy)</option>
+                      <option value="heavy">Heavy (Slowest, most accurate)</option>
+                    </select>
+                  </div>
+                }
+
+                <!-- MoveNet Model Selector -->
+                @if (poseLibrary() === 'movenet') {
+                  <div>
+                    <label for="moveNetModel" class="block mb-2 text-sm font-medium text-gray-300">MoveNet Model</label>
+                    <select
+                      id="moveNetModel"
+                      [value]="moveNetModel()"
+                      (change)="onMoveNetModelChange($event)"
+                      class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                      <option value="lightning">SinglePose Lightning (Fastest)</option>
+                      <option value="thunder">SinglePose Thunder (Most accurate)</option>
+                      <option value="multipose">MultiPose Lightning (Multiple people)</option>
+                    </select>
+                  </div>
+                }
+            }
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Sensitivity Slider -->
+              <div class="flex flex-col justify-center">
+                <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300">Sensitivity: <span class="font-bold text-cyan-300">{{ sensitivity() }}</span></label>
+                <input id="sensitivity" type="range" min="1" max="10" [value]="sensitivity()" (input)="onSensitivityChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+              </div>
+              <!-- Detection Zone Controls -->
+              <div class="flex flex-col justify-center gap-4">
+                <div>
+                  <label for="zoneWidth" class="block mb-2 text-sm font-medium text-gray-300">
+                    Zone Width:
+                    <span class="font-bold text-cyan-300">
+                      @if (useFullScreenDetection()) {
+                        Full Screen
+                      } @else if (zoneWidthPercent() > 0) {
+                        {{ zoneWidthPercent() }}%
+                      } @else {
+                        Off
+                      }
+                    </span>
+                  </label>
+                  <input 
+                    id="zoneWidth" 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    [value]="zoneWidthPercent()" 
+                    (input)="onZoneWidthChange($event)"
+                    [disabled]="useFullScreenDetection()"
+                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                </div>
+                 <div>
+                  <label for="zonePosition" class="block mb-2 text-sm font-medium text-gray-300">Zone Position</label>
+                  <input 
+                      id="zonePosition" 
+                      type="range" 
+                      min="0" 
+                      max="100" 
+                      step="1"
+                      [value]="zonePositionPercent()" 
+                      (input)="onZonePositionChange($event)"
+                      [disabled]="useFullScreenDetection()"
+                      class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                </div>
+                <div class="flex items-center gap-3">
+                  <label for="fullscreen-toggle" class="text-sm font-medium text-gray-300">Use Full Screen</label>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="fullscreen-toggle" class="sr-only peer" [checked]="useFullScreenDetection()" (change)="onFullScreenToggleChange($event)">
+                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+              </div>
+
+                <!-- Camera Selection Dropdown -->
+                @if (availableCameras().length > 1) {
+                  <div class="flex flex-col justify-center md:col-span-2">
+                    <label for="camera" class="block mb-2 text-sm font-medium text-gray-300">Camera</label>
+                    <select 
+                      id="camera" 
+                      [value]="selectedCameraId()" 
+                      (change)="onCameraChange($event)"
+                      class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                      @for (camera of availableCameras(); track camera.deviceId) {
+                        <option [value]="camera.deviceId">{{ camera.label || 'Camera ' + ($index + 1) }}</option>
+                      }
+                    </select>
+                  </div>
+                }
+
+                <!-- Cooldown Input -->
+                <div class="flex flex-col justify-center">
+                  <label for="cooldown" class="block mb-2 text-sm font-medium text-gray-300">Minimum Delay (ms)</label>
+                  <input 
+                    id="cooldown" 
+                    type="number" 
+                    min="0"
+                    step="50"
+                    [value]="motionCooldown()" 
+                    (input)="onCooldownChange($event)" 
+                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                </div>
+                <!-- Signal Cadence Input -->
+                <div class="flex flex-col justify-center">
+                  <label for="signalCadence" class="block mb-2 text-sm font-medium text-gray-300">Signal every Nth detection</label>
+                  <input 
+                    id="signalCadence" 
+                    type="number" 
+                    min="1"
+                    step="1"
+                    [value]="signalCadence()" 
+                    (input)="onSignalCadenceChange($event)" 
+                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                </div>
+            </div>
+          </div>
+        }
       </div>
     }
   </div>
 
   @if (showBackButton()) {
     <div class="w-full flex flex-col items-center pt-6">
-      @if (status() === 'ready') {
-        <button (click)="startDetection()" class="w-full max-w-xs bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-transform transform hover:scale-105">
-          Start Detection
-        </button>
-      }
-      @if (status() === 'detecting') {
-        <div class="text-center h-16">
-          <p class="text-lg text-green-400 flex items-center">
-            <span class="relative flex h-3 w-3 mr-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            Actively detecting motion...
-          </p>
-          @if (lastMotionSignal(); as signalText) {
-            <p class="text-yellow-400 mt-2 animate-pulse">{{ signalText }}</p>
-          }
-        </div>
-      }
+      <!-- Back button area - empty now as buttons moved up -->
     </div>
   }
 </div>

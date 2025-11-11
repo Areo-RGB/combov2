@@ -34,6 +34,7 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
 
   private timerInterval: any = null;
   private lastDetectionTime = 0;
+  private detectionStartTimeout: ReturnType<typeof setTimeout> | null = null;
 
   detectorComponent = viewChild.required(DetectorComponent);
   private displayContainer = viewChild.required<ElementRef>('displayContainer');
@@ -52,6 +53,9 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
     }
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
+    }
   }
 
   onGoBack() {
@@ -64,12 +68,44 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
   handleManualStart() {
     if (this.isTiming()) return;
 
-    this.playStartBeep();
-    this.startTimer();
+    // Start detection after 1 second delay
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
+    }
+    
+    const detector = this.detectorComponent();
+    if (detector && detector.status() === 'ready') {
+      this.detectionStartTimeout = setTimeout(() => {
+        if (detector.status() === 'ready') {
+          detector.startDetection();
+        }
+        // Start timer immediately after detection starts
+        this.playStartBeep();
+        this.startTimer();
+      }, 1000);
+    } else {
+      // If detector is already detecting or not ready, start timer immediately
+      this.playStartBeep();
+      this.startTimer();
+    }
   }
 
   handleArm() {
     this.isArmed.set(true);
+    
+    // Start detection after 1 second delay for flying start mode
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
+    }
+    
+    const detector = this.detectorComponent();
+    if (detector && detector.status() === 'ready') {
+      this.detectionStartTimeout = setTimeout(() => {
+        if (detector.status() === 'ready') {
+          detector.startDetection();
+        }
+      }, 1000);
+    }
   }
 
   handleMotion(intensity: number) {
@@ -133,6 +169,18 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     this.elapsedTime.set(0);
     this.isArmed.set(this.startMode() === 'flying');
     this.lastDetectionTime = 0;
+    
+    // Stop detection if it was started
+    const detector = this.detectorComponent();
+    if (detector && detector.status() === 'detecting') {
+      detector.stopDetection();
+    }
+    
+    // Clear any pending detection start timeout
+    if (this.detectionStartTimeout) {
+      clearTimeout(this.detectionStartTimeout);
+      this.detectionStartTimeout = null;
+    }
   }
 
   clearHistory() {
