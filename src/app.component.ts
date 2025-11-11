@@ -4,6 +4,8 @@ import { DetectorComponent } from './components/detector/detector.component';
 import { DisplayComponent } from './components/display/display.component';
 import { SingleDeviceComponent } from './components/single-device/single-device.component';
 import { SprintTimingComponent } from './components/sprint-timing/sprint-timing.component';
+import { SprintMultiSetupComponent } from './components/sprint-multi-setup/sprint-multi-setup.component';
+import { SprintTimingMultiComponent } from './components/sprint-timing-multi/sprint-timing-multi.component';
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
@@ -24,10 +26,10 @@ type DisplaySignal =
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintDuelsComponent, TeamDuelsComponent],
+  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-duels' | 'team-duels'>('selection');
+  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels'>('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');
@@ -35,6 +37,8 @@ export class AppComponent implements OnDestroy, OnInit {
   displayContentType = signal<'color' | 'math' | 'wechsel' | 'counter'>('color');
   useRtc = signal(true);
   lastPhotoDataUrl = signal<string | null>(null);
+  multiDeviceConfig = signal<any>(null);
+  joinSprintSessionId = signal<string | null>(null);
 
   // Math game state
   maxOperations = signal(5);
@@ -217,6 +221,22 @@ export class AppComponent implements OnDestroy, OnInit {
     const newSessionId = this.generateSessionId();
     this.sessionId.set(newSessionId);
     this.mode.set('sprint-timing-flying');
+  }
+
+  startMultiDeviceSetup() {
+    this.joinSprintSessionId.set(null);
+    this.mode.set('sprint-multi-setup');
+  }
+
+  joinMultiDevice(sessionId: string) {
+    this.joinSprintSessionId.set(sessionId);
+    this.mode.set('sprint-multi-setup');
+  }
+
+  handleMultiDeviceStart(config: any) {
+    this.multiDeviceConfig.set(config);
+    this.sessionId.set(config.sessionId);
+    this.mode.set('sprint-multi-timing');
   }
 
   goBackToSelection() {
