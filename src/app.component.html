@@ -95,6 +95,15 @@
                 </button>
             </div>
 
+            <!-- FlyMotion Mode Card -->
+            <div class="mt-8 pt-8 border-t border-gray-700 flex flex-col items-center justify-center p-6 rounded-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-orange-400">FlyMotion Mode</h2>
+                <p class="text-gray-300 text-center mb-6">Watch flying particles respond to your motion with dynamic visual effects.</p>
+                <button (click)="startFlymotionMode()" class="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
+                  Start FlyMotion Mode
+                </button>
+            </div>
+
             <!-- Device Camera quick test -->
             <div class="mt-8 p-4 border border-gray-700 rounded-lg">
               <div class="flex items-center justify-between mb-3">
@@ -172,6 +181,9 @@
       }
       @case ('single') {
         <app-single-device [sessionId]="sessionId()" (goBack)="goBackToSelection()"></app-single-device>
+      }
+      @case ('flymotion') {
+        <app-flymotion [sessionId]="sessionId()" (goBack)="goBackToSelection()"></app-flymotion>
       }
       @case ('sprint-duels') {
         <app-sprint-duels (goBack)="goBackToSelection()"></app-sprint-duels>

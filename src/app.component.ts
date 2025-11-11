@@ -3,6 +3,7 @@ import { DOCUMENT } from '@angular/common';
 import { DetectorComponent } from './components/detector/detector.component';
 import { DisplayComponent } from './components/display/display.component';
 import { SingleDeviceComponent } from './components/single-device/single-device.component';
+import { FlymotionComponent } from './components/flymotion/flymotion.component';
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
@@ -23,10 +24,10 @@ type DisplaySignal =
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintDuelsComponent, TeamDuelsComponent],
+  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, FlymotionComponent, SprintDuelsComponent, TeamDuelsComponent],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-duels' | 'team-duels'>('selection');
+  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'flymotion' | 'sprint-duels' | 'team-duels'>('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');
@@ -204,6 +205,12 @@ export class AppComponent implements OnDestroy, OnInit {
     const newSessionId = this.generateSessionId();
     this.sessionId.set(newSessionId);
     this.mode.set('single');
+  }
+
+  startFlymotionMode() {
+    const newSessionId = this.generateSessionId();
+    this.sessionId.set(newSessionId);
+    this.mode.set('flymotion');
   }
 
   goBackToSelection() {
