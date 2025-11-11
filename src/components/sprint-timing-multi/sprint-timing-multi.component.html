@@ -12,17 +12,11 @@
     <!-- Overlay Controls -->
     <div class="absolute inset-0 bg-black bg-opacity-30 flex flex-col justify-between p-4 pointer-events-none">
       <!-- Top Bar -->
-      <div class="flex justify-between items-start pointer-events-auto">
-        <button
-          (click)="onGoBack()"
-          title="Back to App Selection"
-          class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition bg-opacity-80">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <div class="flex items-start gap-2">
+      <app-header 
+        [overlayMode]="true"
+        [layout]="'space-between'"
+        (goBack)="onGoBack()">
+        <div class="flex items-start gap-2 pointer-events-auto">
           <div class="bg-black bg-opacity-70 p-2 rounded-lg text-center">
             <div class="text-sm text-gray-300">
               Session: <span class="font-mono font-bold text-orange-400">{{ sessionId() }}</span>
@@ -41,7 +35,7 @@
             </svg>
           </button>
         </div>
-      </div>
+      </app-header>
 
       <!-- Detection Status Indicator -->
       @if (detectorComponent().status() === 'ready') {

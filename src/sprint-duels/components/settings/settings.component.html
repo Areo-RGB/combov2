@@ -1,12 +1,12 @@
-<div class="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 text-gray-200 animate-fade-in space-y-8">
-  <h2 class="text-2xl font-bold text-blue-400 border-b border-gray-700 pb-3">Settings</h2>
+<div class="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 text-gray-200 animate-fade-in space-y-8 border border-white border-opacity-20">
+  <h2 class="text-2xl font-bold text-cyan-400 border-b border-gray-700 pb-3">Settings</h2>
 
   <!-- Display Settings -->
   <div class="space-y-4">
     <h3 class="text-lg font-semibold text-gray-300">Display</h3>
     <div class="bg-gray-700/50 p-4 rounded-md flex items-center justify-between">
       <label for="fullscreen-toggle" class="font-medium text-white">Fullscreen Mode</label>
-      <button (click)="toggleFullscreen()" class="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold">
+      <button (click)="toggleFullscreen()" class="px-4 py-2 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold">
         {{ isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen' }}
       </button>
     </div>
@@ -21,7 +21,7 @@
         <input type="checkbox" id="audio-toggle" class="sr-only peer" 
                [checked]="audioService.isAudioEnabled()"
                (change)="onAudioToggle($event)">
-        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
       </label>
     </div>
   </div>

@@ -1,5 +1,5 @@
-<div class="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 text-gray-200 animate-fade-in">
-  <h2 class="text-2xl font-bold text-blue-400 mb-6 border-b border-gray-700 pb-3">Match History</h2>
+<div class="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 text-gray-200 animate-fade-in border border-white border-opacity-20">
+  <h2 class="text-2xl font-bold text-cyan-400 mb-6 border-b border-gray-700 pb-3">Match History</h2>
 
   @if (matchService.isLoading()) {
     <div class="text-center py-10 text-gray-400">Loading history...</div>
@@ -24,7 +24,7 @@
             <!-- Result -->
             <div class="text-center">
               @if (match.winnerId === match.player1Id) {
-                <span class="font-black text-xl text-blue-400">WIN</span>
+                <span class="font-black text-xl text-cyan-400">WIN</span>
               } @else if (match.winnerId === match.player2Id) {
                 <span class="font-black text-xl text-gray-400">LOSS</span>
               } @else {

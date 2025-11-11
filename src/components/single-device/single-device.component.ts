@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output, signal, viewChild, ElementRef, inject, Renderer2, OnInit, OnDestroy } from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
 import { DisplayComponent } from '../display/display.component';
+import { HeaderComponent } from '../header/header.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
 type DisplaySignal = 
@@ -15,7 +16,7 @@ type DisplaySignal =
   selector: 'app-single-device',
   templateUrl: './single-device.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DetectorComponent, DisplayComponent],
+  imports: [CommonModule, DetectorComponent, DisplayComponent, HeaderComponent],
 })
 export class SingleDeviceComponent implements OnInit, OnDestroy {
   sessionId = input.required<string>();

@@ -1,12 +1,9 @@
-<div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-7xl mx-auto">
+<div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-7xl mx-auto border border-white border-opacity-20">
   <!-- Header -->
-  <div class="w-full flex justify-start items-center mb-6">
-    <button (click)="onGoBack()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-      </svg>
-    </button>
-  </div>
+  <app-header 
+    [layout]="'left'"
+    (goBack)="onGoBack()">
+  </app-header>
 
   <!-- Main Content Grid -->
   <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-8">

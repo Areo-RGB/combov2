@@ -1,6 +1,6 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
   <!-- Left Column: Player Selection & Pairing -->
-  <div class="lg:col-span-1 bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col gap-6 h-fit lg:block" [class.hidden]="isArenaViewActive()">
+  <div class="lg:col-span-1 bg-gray-800 rounded-lg shadow-lg p-6 flex flex-col gap-6 h-fit lg:block border border-white border-opacity-20" [class.hidden]="isArenaViewActive()">
     
     @if (isTournamentActive()) {
        <div class="text-center p-4 bg-orange-900/50 border border-orange-700 rounded-lg">
@@ -13,14 +13,14 @@
     } @else {
       <!-- Player Selection -->
       <div>
-        <h3 class="text-xl font-bold text-blue-400 mb-4">Select Players</h3>
+        <h3 class="text-xl font-bold text-cyan-400 mb-4">Select Players</h3>
         <div class="max-h-60 overflow-y-auto pr-2 space-y-2">
           @for (player of playerService.players(); track player.id) {
             <label class="flex items-center justify-between bg-gray-700/60 p-2 rounded-md cursor-pointer hover:bg-gray-700">
               <span class="text-white">{{ player.name }} ({{player.jerseyNumber}})</span>
               <input 
                 type="checkbox" 
-                class="w-5 h-5 rounded text-blue-500 bg-gray-600 border-gray-500 focus:ring-blue-600 focus:ring-2"
+                class="w-5 h-5 rounded text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-600 focus:ring-2"
                 [checked]="player.isParticipating"
                 (change)="toggleParticipation(player, $event)"
                 [disabled]="isRoundInProgress()">
@@ -30,12 +30,12 @@
       </div>
       <!-- Pairing Generation -->
       <div class="border-t border-gray-700 pt-6">
-        <h3 class="text-xl font-bold text-blue-400 mb-4">Generate Duels</h3>
+        <h3 class="text-xl font-bold text-cyan-400 mb-4">Generate Duels</h3>
         <div class="flex flex-col gap-3">
           <button 
             (click)="generateRandomPairings()" 
             [disabled]="isRoundInProgress()"
-            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed">
+            class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-600 disabled:cursor-not-allowed">
             Random Pairings
           </button>
           <button 
@@ -67,15 +67,15 @@
     @if (duels().length > 0) {
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
         @for (duel of duels(); track duel.player1.id + duel.player2.id) {
-          <div class="bg-gray-800 rounded-lg shadow-lg p-5 flex flex-col gap-4 border-2 border-gray-700">
+          <div class="bg-gray-800 rounded-lg shadow-lg p-5 flex flex-col gap-4 border border-white border-opacity-20">
             <!-- Players -->
             <div class="flex justify-around items-center text-center">
               <!-- Player 1 -->
               <div class="flex-1 flex flex-col items-center">
-                <div (click)="speakName(duel.player1.name)" class="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center text-2xl font-black mb-2 border-2 border-blue-500 cursor-pointer hover:bg-gray-600 transition-colors">{{ duel.player1.jerseyNumber }}</div>
+                <div (click)="speakName(duel.player1.name)" class="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center text-2xl font-black mb-2 border-2 border-cyan-500 cursor-pointer hover:bg-gray-600 transition-colors">{{ duel.player1.jerseyNumber }}</div>
                 <h4 class="text-lg font-bold text-white">{{ duel.player1.name }}</h4>
                 <p class="text-sm text-gray-400 font-mono">Elo: {{ duel.player1.elo }}</p>
-                <p class="text-xs text-blue-400">Win Prob: {{ (eloService.calculateWinProbability(duel.player1.elo, duel.player2.elo) * 100).toFixed(0) }}%</p>
+                <p class="text-xs text-cyan-400">Win Prob: {{ (eloService.calculateWinProbability(duel.player1.elo, duel.player2.elo) * 100).toFixed(0) }}%</p>
               </div>
               
               <!-- VS & Beep Button -->
@@ -106,7 +106,7 @@
             <!-- Result Declaration -->
             <div class="border-t border-gray-700 pt-4 flex flex-col gap-3">
               <div class="flex gap-3">
-                <button (click)="declareWinner(duel, duel.player1)" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 rounded-md">Winner</button>
+                <button (click)="declareWinner(duel, duel.player1)" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold py-2 rounded-md">Winner</button>
                 <button (click)="declareWinner(duel, duel.player2)" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-semibold py-2 rounded-md">Winner</button>
               </div>
               @if (!isTournamentActive()) {
@@ -117,7 +117,7 @@
         }
       </div>
     } @else {
-      <div class="text-center bg-gray-800 rounded-lg p-10 flex flex-col items-center justify-center h-full">
+      <div class="text-center bg-gray-800 rounded-lg p-10 flex flex-col items-center justify-center h-full border border-white border-opacity-20">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
@@ -127,7 +127,7 @@
            <div class="mt-6 p-4 bg-orange-900/50 border border-orange-700 rounded-lg">
              <h3 class="text-xl font-bold text-orange-300">Tournament Finished!</h3>
              <p class="text-orange-400 text-lg">Winner: {{ tournamentService.tournament()?.winner?.name }}</p>
-              <button (click)="cancelTournament()" class="mt-4 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg text-sm">
+              <button (click)="cancelTournament()" class="mt-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded-lg text-sm">
                Start New Round
              </button>
            </div>
@@ -141,7 +141,7 @@
   <button 
     (click)="isArenaViewActive.set(!isArenaViewActive())"
     [title]="isArenaViewActive() ? 'Show Controls' : 'Arena View'"
-    class="lg:hidden fixed bottom-24 right-5 z-20 bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110">
+    class="lg:hidden fixed bottom-24 right-5 z-20 bg-cyan-600 hover:bg-cyan-500 text-white font-bold p-3 rounded-full shadow-lg flex items-center justify-center transition-transform hover:scale-110">
     @if (isArenaViewActive()) {
       <!-- Settings Icon for "Show Controls" -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

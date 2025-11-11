@@ -5,6 +5,7 @@ import { MatchMakerComponent } from './components/match-maker/match-maker.compon
 import { HistoryComponent } from './components/history/history.component';
 import { SettingsComponent } from './components/settings/settings.component';
 import { ToastComponent } from './components/toast/toast.component';
+import { HeaderComponent } from '../components/header/header.component';
 
 type ActiveTab = 'rankings' | 'match-maker' | 'history' | 'settings';
 
@@ -18,7 +19,8 @@ type ActiveTab = 'rankings' | 'match-maker' | 'history' | 'settings';
     MatchMakerComponent,
     HistoryComponent,
     SettingsComponent,
-    ToastComponent
+    ToastComponent,
+    HeaderComponent
   ],
 })
 export class SprintDuelsComponent {
@@ -36,7 +38,7 @@ export class SprintDuelsComponent {
 
   getTabClass(tab: ActiveTab): string {
     return this.activeTab() === tab
-      ? 'bg-blue-600 text-white'
+      ? 'bg-cyan-600 text-white'
       : 'text-gray-300 hover:text-white';
   }
 }

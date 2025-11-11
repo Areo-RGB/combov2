@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output, signal, viewChild, ElementRef, inject, Renderer2, OnInit, OnDestroy } from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
+import { HeaderComponent } from '../header/header.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { SprintTimingService, DeviceRole, MessageType, LapData } from '../../services/sprint-timing.service';
 
@@ -17,7 +18,7 @@ type LapResult = {
   selector: 'app-sprint-timing-multi',
   templateUrl: './sprint-timing-multi.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DetectorComponent],
+  imports: [CommonModule, DetectorComponent, HeaderComponent],
 })
 export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   sessionId = input.required<string>();

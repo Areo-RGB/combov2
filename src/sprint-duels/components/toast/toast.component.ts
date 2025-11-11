@@ -13,7 +13,7 @@ export class ToastComponent {
     switch(type) {
       case 'success': return 'bg-green-500';
       case 'error': return 'bg-red-500';
-      case 'info': return 'bg-blue-500';
+      case 'info': return 'bg-cyan-500';
     }
   }
 }

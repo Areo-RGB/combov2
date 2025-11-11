@@ -1,33 +1,33 @@
-<div class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-4">
+<div class="min-h-screen bg-gray-800 text-gray-100 flex flex-col p-4">
   <header class="text-center mb-8">
   </header>
 
-  <main class="w-full max-w-4xl">
+  <main class="w-full max-w-4xl mx-auto">
     @switch (mode()) {
       @case ('selection') {
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
           <div class="flex flex-col items-center justify-center p-6">
-            <h2 class="text-2xl font-semibold mb-4 text-cyan-400"></h2>
+            <h2 class="text-2xl font-semibold mb-4 text-purple-400">Games</h2>
             <p class="text-gray-300 text-center mb-6">Use camera motion to interact with various display modes.</p>
-            <button (click)="mode.set('motion-games')" class="w-full max-w-md bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
+            <button (click)="mode.set('motion-games')" class="w-full max-w-md bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300">
               Launch Games
             </button>
           </div>
         </div>
 
         <!-- Sprint Duels Card -->
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
           <div class="flex flex-col items-center justify-center p-6">
-            <h2 class="text-2xl font-semibold mb-4 text-blue-400">Sprint Duels</h2>
+            <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Sprint Duels</h2>
             <p class="text-gray-300 text-center mb-6">Manage, track, and rank players in head-to-head sprint competitions.</p>
-            <button (click)="mode.set('sprint-duels')" class="w-full max-w-md bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300">
+            <button (click)="mode.set('sprint-duels')" class="w-full max-w-md bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
               Launch Sprint Duels
             </button>
           </div>
         </div>
         
         <!-- Team Duels Card -->
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8">
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
           <div class="flex flex-col items-center justify-center p-6">
             <h2 class="text-2xl font-semibold mb-4 text-green-400">Team Duels</h2>
             <p class="text-gray-300 text-center mb-6">A motion-based timer game to test your reaction and speed.</p>
@@ -38,7 +38,7 @@
         </div>
 
         <!-- Sprint Timing Card -->
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in">
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in border border-white border-opacity-20">
           <div class="flex flex-col items-center justify-center p-6">
             <h2 class="text-2xl font-semibold mb-4 text-orange-400">Sprint Timing</h2>
             <p class="text-gray-300 text-center mb-6">Time sprints with single or multiple devices using motion detection.</p>
