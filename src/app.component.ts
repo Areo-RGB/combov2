@@ -29,7 +29,7 @@ type DisplaySignal =
   imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels'>('selection');
+  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-menu' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels'>('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');

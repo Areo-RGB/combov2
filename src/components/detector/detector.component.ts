@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, outp
 import { Camera } from '@capacitor/camera';
 import { PoseLandmarker, FilesetResolver, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import * as poseDetection from '@tensorflow-models/pose-detection';
+import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 
 @Component({
@@ -30,7 +31,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   zonePositionPercent = signal<number>(50); // Horizontal position, 50% is center
   useFullScreenDetection = signal<boolean>(false);
   detectionZone = signal<{ x: number; y: number; width: number; height: number } | null>(null);
-  detectionMethod = signal<'motion' | 'pose' | 'movenet'>('motion'); // Detection method selector
+  detectionMethod = signal<'motion' | 'pose'>('motion'); // Detection method selector
+  poseLibrary = signal<'mediapipe' | 'movenet'>('mediapipe'); // Pose detection library
+  poseModel = signal<'lite' | 'full' | 'heavy'>('lite'); // MediaPipe model selector
+  moveNetModel = signal<'lightning' | 'thunder' | 'multipose'>('lightning'); // MoveNet model selector
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
@@ -65,8 +69,6 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // MoveNet Pose Detection
   private moveNetDetector: poseDetection.PoseDetector | null = null;
-  private lastMoveNetDetectionTime = 0;
-  private previousMoveNetPersonDetected = false;
 
 
   constructor() {
@@ -75,10 +77,15 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.status.set('initializing');
-    await Promise.all([
-      this.initializeMediaPipe(),
-      this.initializeMoveNet()
-    ]);
+    await this.initializePoseDetection();
+  }
+
+  private async initializePoseDetection(): Promise<void> {
+    if (this.poseLibrary() === 'mediapipe') {
+      await this.initializeMediaPipe();
+    } else {
+      await this.initializeMoveNet();
+    }
   }
 
   private async initializeMediaPipe(): Promise<void> {
@@ -87,10 +94,12 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
       );
 
-      // Using the lite model for fastest performance
+      const modelName = this.poseModel();
+      const modelUrl = `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${modelName}/float16/1/pose_landmarker_${modelName}.task`;
+
       this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+          modelAssetPath: modelUrl,
           delegate: 'GPU'
         },
         runningMode: 'VIDEO',
@@ -107,19 +116,30 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async initializeMoveNet(): Promise<void> {
     try {
-      const detectorConfig: poseDetection.MoveNetModelConfig = {
-        modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
-        enableSmoothing: true,
-        minPoseScore: 0.3
-      };
+      const modelType = this.moveNetModel();
+      let model: poseDetection.SupportedModels;
+      let detectorConfig: poseDetection.MoveNetModelConfig;
 
-      this.moveNetDetector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
-        detectorConfig
-      );
+      if (modelType === 'multipose') {
+        model = poseDetection.SupportedModels.MoveNet;
+        detectorConfig = {
+          modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING,
+          enableTracking: true,
+          trackerType: poseDetection.TrackerType.BoundingBox
+        };
+      } else {
+        model = poseDetection.SupportedModels.MoveNet;
+        detectorConfig = {
+          modelType: modelType === 'lightning'
+            ? poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
+            : poseDetection.movenet.modelType.SINGLEPOSE_THUNDER
+        };
+      }
+
+      this.moveNetDetector = await poseDetection.createDetector(model, detectorConfig);
     } catch (error) {
       console.error('Failed to initialize MoveNet:', error);
-      // Continue without MoveNet detection
+      // Continue without pose detection, fall back to motion detection
     }
   }
 
@@ -295,8 +315,6 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.detectionMethod() === 'pose') {
       this.processPoseDetection();
-    } else if (this.detectionMethod() === 'movenet') {
-      this.processMoveNetDetection();
     } else {
       this.processMotionDetection();
     }
@@ -335,7 +353,15 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lastImageData = current;
   }
 
-  private processPoseDetection(): void {
+  private async processPoseDetection(): Promise<void> {
+    if (this.poseLibrary() === 'mediapipe') {
+      await this.processMediaPipePoseDetection();
+    } else {
+      await this.processMoveNetPoseDetection();
+    }
+  }
+
+  private processMediaPipePoseDetection(): void {
     if (!this.poseLandmarker) {
       console.warn('Pose landmarker not initialized');
       return;
@@ -368,13 +394,13 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.previousPersonDetected = personDetected;
 
       // Draw pose landmarks on overlay canvas
-      this.drawPoseLandmarks(result);
+      this.drawMediaPipeLandmarks(result);
     } catch (error) {
-      console.error('Pose detection error:', error);
+      console.error('MediaPipe pose detection error:', error);
     }
   }
 
-  private async processMoveNetDetection(): Promise<void> {
+  private async processMoveNetPoseDetection(): Promise<void> {
     if (!this.moveNetDetector) {
       console.warn('MoveNet detector not initialized');
       return;
@@ -387,87 +413,34 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       // Detect poses in the current video frame
       const poses = await this.moveNetDetector.estimatePoses(video);
 
-      // Check if a person is detected (with sufficient confidence)
-      const personDetected = poses.length > 0 && poses[0].score && poses[0].score > 0.3;
+      // Check if a person is detected
+      const personDetected = poses && poses.length > 0;
 
       // Detect motion when person enters the frame (transition from no person to person detected)
-      if (personDetected && !this.previousMoveNetPersonDetected) {
+      if (personDetected && !this.previousPersonDetected) {
         // Calculate confidence score as intensity (0-100)
-        const intensity = poses[0].score ? Math.min(100, poses[0].score * 100) : 0;
+        const avgScore = poses.length > 0
+          ? poses.reduce((sum, pose) => sum + (pose.score || 0), 0) / poses.length
+          : 0;
+        const intensity = Math.min(100, Math.round(avgScore * 100));
 
-        if (now - this.lastMoveNetDetectionTime > this.motionCooldown()) {
-          this.lastMoveNetDetectionTime = now;
+        if (now - this.lastPoseDetectionTime > this.motionCooldown()) {
+          this.lastPoseDetectionTime = now;
           this.zone.run(() => this.handleMotionDetected(intensity));
         }
       }
 
       // Update previous state
-      this.previousMoveNetPersonDetected = personDetected;
+      this.previousPersonDetected = personDetected;
 
       // Draw pose landmarks on overlay canvas
-      this.drawMoveNetLandmarks(poses);
+      this.drawMoveNetPoses(poses);
     } catch (error) {
-      console.error('MoveNet detection error:', error);
+      console.error('MoveNet pose detection error:', error);
     }
   }
 
-  private drawMoveNetLandmarks(poses: poseDetection.Pose[]): void {
-    if (!this.overlayCtx || !this.videoDimensions) return;
-
-    // Clear previous landmarks
-    this.clearOverlay();
-
-    // Redraw detection zone if in motion mode
-    if (this.detectionMethod() === 'motion') {
-      this.drawPersistentZone();
-      return;
-    }
-
-    const ctx = this.overlayCtx;
-    const { width, height } = this.videoDimensions;
-
-    // Draw landmarks for each detected person
-    for (const pose of poses) {
-      if (!pose.keypoints || pose.keypoints.length === 0) continue;
-
-      // Draw connections between keypoints
-      ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; // Cyan for MoveNet
-      ctx.lineWidth = 2;
-
-      // MoveNet connections (simplified skeleton)
-      const connections = [
-        [5, 6], [5, 7], [7, 9], [6, 8], [8, 10], // Arms
-        [5, 11], [6, 12], [11, 12], // Torso
-        [11, 13], [13, 15], [12, 14], [14, 16] // Legs
-      ];
-
-      // Draw connections
-      for (const [startIdx, endIdx] of connections) {
-        const startPoint = pose.keypoints[startIdx];
-        const endPoint = pose.keypoints[endIdx];
-
-        if (startPoint && endPoint && startPoint.score && endPoint.score &&
-            startPoint.score > 0.3 && endPoint.score > 0.3) {
-          ctx.beginPath();
-          ctx.moveTo(startPoint.x, startPoint.y);
-          ctx.lineTo(endPoint.x, endPoint.y);
-          ctx.stroke();
-        }
-      }
-
-      // Draw keypoint points
-      ctx.fillStyle = 'rgba(255, 0, 255, 0.8)'; // Magenta for MoveNet
-      for (const keypoint of pose.keypoints) {
-        if (keypoint.score && keypoint.score > 0.3) {
-          ctx.beginPath();
-          ctx.arc(keypoint.x, keypoint.y, 4, 0, 2 * Math.PI);
-          ctx.fill();
-        }
-      }
-    }
-  }
-
-  private drawPoseLandmarks(result: PoseLandmarkerResult): void {
+  private drawMediaPipeLandmarks(result: PoseLandmarkerResult): void {
     if (!this.overlayCtx || !this.videoDimensions) return;
 
     // Clear previous landmarks
@@ -514,6 +487,55 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         ctx.beginPath();
         ctx.arc(landmark.x * width, landmark.y * height, 4, 0, 2 * Math.PI);
         ctx.fill();
+      }
+    }
+  }
+
+  private drawMoveNetPoses(poses: poseDetection.Pose[]): void {
+    if (!this.overlayCtx || !this.videoDimensions) return;
+
+    // Clear previous landmarks
+    this.clearOverlay();
+
+    // Redraw detection zone if in motion mode
+    if (this.detectionMethod() === 'motion') {
+      this.drawPersistentZone();
+      return;
+    }
+
+    const ctx = this.overlayCtx;
+    const { width, height } = this.videoDimensions;
+
+    // Draw landmarks for each detected person
+    for (const pose of poses) {
+      // Define pose connections for MoveNet
+      const adjacentKeyPoints = poseDetection.util.getAdjacentPairs(poseDetection.SupportedModels.MoveNet);
+
+      // Draw connections
+      ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+      ctx.lineWidth = 2;
+
+      for (const [i, j] of adjacentKeyPoints) {
+        const kp1 = pose.keypoints[i];
+        const kp2 = pose.keypoints[j];
+
+        // Only draw if both keypoints have sufficient confidence
+        if (kp1 && kp2 && (kp1.score || 0) > 0.3 && (kp2.score || 0) > 0.3) {
+          ctx.beginPath();
+          ctx.moveTo(kp1.x, kp1.y);
+          ctx.lineTo(kp2.x, kp2.y);
+          ctx.stroke();
+        }
+      }
+
+      // Draw keypoint circles
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+      for (const keypoint of pose.keypoints) {
+        if ((keypoint.score || 0) > 0.3) {
+          ctx.beginPath();
+          ctx.arc(keypoint.x, keypoint.y, 4, 0, 2 * Math.PI);
+          ctx.fill();
+        }
       }
     }
   }
@@ -665,18 +687,72 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.startCamera();
   }
 
-  onDetectionMethodChange(method: 'motion' | 'pose' | 'movenet'): void {
+  onDetectionMethodChange(method: 'motion' | 'pose'): void {
     this.detectionMethod.set(method);
     // Reset detection state when switching methods
     this.lastImageData = null;
     this.previousPersonDetected = false;
-    this.previousMoveNetPersonDetected = false;
     this.lastMotionTime = 0;
     this.lastPoseDetectionTime = 0;
-    this.lastMoveNetDetectionTime = 0;
     this.detectionCounter = 0;
     // Clear and redraw overlay
     this.drawPersistentZone();
+  }
+
+  async onPoseLibraryChange(event: Event): Promise<void> {
+    const library = (event.target as HTMLSelectElement).value as 'mediapipe' | 'movenet';
+    this.poseLibrary.set(library);
+
+    // Clean up existing detectors
+    if (this.poseLandmarker) {
+      this.poseLandmarker.close();
+      this.poseLandmarker = null;
+    }
+    if (this.moveNetDetector) {
+      this.moveNetDetector.dispose();
+      this.moveNetDetector = null;
+    }
+
+    // Initialize the new library
+    await this.initializePoseDetection();
+
+    // Reset detection state
+    this.previousPersonDetected = false;
+    this.lastPoseDetectionTime = 0;
+  }
+
+  async onPoseModelChange(event: Event): Promise<void> {
+    const model = (event.target as HTMLSelectElement).value as 'lite' | 'full' | 'heavy';
+    this.poseModel.set(model);
+
+    // Reinitialize MediaPipe with the new model
+    if (this.poseLandmarker) {
+      this.poseLandmarker.close();
+      this.poseLandmarker = null;
+    }
+
+    await this.initializeMediaPipe();
+
+    // Reset detection state
+    this.previousPersonDetected = false;
+    this.lastPoseDetectionTime = 0;
+  }
+
+  async onMoveNetModelChange(event: Event): Promise<void> {
+    const model = (event.target as HTMLSelectElement).value as 'lightning' | 'thunder' | 'multipose';
+    this.moveNetModel.set(model);
+
+    // Reinitialize MoveNet with the new model
+    if (this.moveNetDetector) {
+      this.moveNetDetector.dispose();
+      this.moveNetDetector = null;
+    }
+
+    await this.initializeMoveNet();
+
+    // Reset detection state
+    this.previousPersonDetected = false;
+    this.lastPoseDetectionTime = 0;
   }
 
   private clearOverlay() {
