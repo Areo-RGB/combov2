@@ -29,6 +29,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   useFullScreenDetection = signal<boolean>(false);
   detectionZone = signal<{ x: number; y: number; width: number; height: number } | null>(null);
   detectionMethod = signal<'motion' | 'pose'>('motion'); // Detection method selector
+  poseModel = signal<'lite' | 'full' | 'heavy'>('lite'); // Pose model selector
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
@@ -77,10 +78,12 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
       );
 
-      // Using the lite model for fastest performance
+      const modelName = this.poseModel();
+      const modelUrl = `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${modelName}/float16/1/pose_landmarker_${modelName}.task`;
+
       this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+          modelAssetPath: modelUrl,
           delegate: 'GPU'
         },
         runningMode: 'VIDEO',
@@ -546,6 +549,23 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.detectionCounter = 0;
     // Clear and redraw overlay
     this.drawPersistentZone();
+  }
+
+  async onPoseModelChange(event: Event): Promise<void> {
+    const model = (event.target as HTMLSelectElement).value as 'lite' | 'full' | 'heavy';
+    this.poseModel.set(model);
+
+    // Reinitialize MediaPipe with the new model
+    if (this.poseLandmarker) {
+      this.poseLandmarker.close();
+      this.poseLandmarker = null;
+    }
+
+    await this.initializeMediaPipe();
+
+    // Reset detection state
+    this.previousPersonDetected = false;
+    this.lastPoseDetectionTime = 0;
   }
 
   private clearOverlay() {

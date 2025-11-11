@@ -65,6 +65,22 @@
           </div>
         </div>
 
+        <!-- Pose Model Selector (only visible when pose detection is selected) -->
+        @if (detectionMethod() === 'pose') {
+          <div class="mb-6">
+            <label for="poseModel" class="block mb-2 text-sm font-medium text-gray-300">Pose Detection Model</label>
+            <select
+              id="poseModel"
+              [value]="poseModel()"
+              (change)="onPoseModelChange($event)"
+              class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+              <option value="lite">Lite (Fastest, least accurate)</option>
+              <option value="full">Full (Balanced speed and accuracy)</option>
+              <option value="heavy">Heavy (Slowest, most accurate)</option>
+            </select>
+          </div>
+        }
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Sensitivity Slider -->
           <div class="flex flex-col justify-center">
