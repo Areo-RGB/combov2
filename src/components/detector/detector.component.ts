@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, output, viewChild, input, signal, AfterViewInit, effect, inject, NgZone, Injector, runInInjectionContext } from '@angular/core';
 import { Camera } from '@capacitor/camera';
+import { PoseLandmarker, FilesetResolver, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 
 @Component({
   selector: 'app-detector',
@@ -27,6 +28,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   zonePositionPercent = signal<number>(50); // Horizontal position, 50% is center
   useFullScreenDetection = signal<boolean>(false);
   detectionZone = signal<{ x: number; y: number; width: number; height: number } | null>(null);
+  detectionMethod = signal<'motion' | 'pose'>('motion'); // Detection method selector
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
@@ -54,13 +56,43 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private targetFps = 12;
   private lastProcessedTs = 0;
 
+  // MediaPipe Pose Detection
+  private poseLandmarker: PoseLandmarker | null = null;
+  private lastPoseDetectionTime = 0;
+  private previousPersonDetected = false;
+
 
   constructor() {
     // Effect moved to ngAfterViewInit to ensure viewChild refs are available.
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.status.set('initializing');
+    await this.initializeMediaPipe();
+  }
+
+  private async initializeMediaPipe(): Promise<void> {
+    try {
+      const vision = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
+      );
+
+      // Using the lite model for fastest performance
+      this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+          delegate: 'GPU'
+        },
+        runningMode: 'VIDEO',
+        numPoses: 2, // Detect up to 2 people (for duels)
+        minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+    } catch (error) {
+      console.error('Failed to initialize MediaPipe:', error);
+      // Continue without pose detection, fall back to motion detection
+    }
   }
 
   ngAfterViewInit(): void {
@@ -230,9 +262,20 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
   
   private processFrame(): void {
+    const video = this.videoRef().nativeElement;
+    if (!video || video.readyState < video.HAVE_ENOUGH_DATA) return;
+
+    if (this.detectionMethod() === 'pose') {
+      this.processPoseDetection();
+    } else {
+      this.processMotionDetection();
+    }
+  }
+
+  private processMotionDetection(): void {
     const ctx = this.ctx!;
     const video = this.videoRef().nativeElement;
-    if (!ctx || video.readyState < video.HAVE_ENOUGH_DATA) return;
+    if (!ctx) return;
 
     ctx.drawImage(video, 0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
 
@@ -249,7 +292,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.lastImageData && (current.width === this.lastImageData.width && current.height === this.lastImageData.height)) {
       const motionThreshold = 11 - this.sensitivity();
       const changedPct = this.calculateDifferenceFast(current.data, this.lastImageData.data, 30, motionThreshold, 2);
-      
+
       if (changedPct > motionThreshold) {
         const now = Date.now();
         if (now - this.lastMotionTime > this.motionCooldown()) {
@@ -260,6 +303,96 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.lastImageData = current;
+  }
+
+  private processPoseDetection(): void {
+    if (!this.poseLandmarker) {
+      console.warn('Pose landmarker not initialized');
+      return;
+    }
+
+    const video = this.videoRef().nativeElement;
+    const now = Date.now();
+
+    try {
+      // Detect poses in the current video frame
+      const result: PoseLandmarkerResult = this.poseLandmarker.detectForVideo(video, now);
+
+      // Check if a person is detected
+      const personDetected = result.landmarks && result.landmarks.length > 0;
+
+      // Detect motion when person enters the frame (transition from no person to person detected)
+      if (personDetected && !this.previousPersonDetected) {
+        // Calculate confidence score as intensity (0-100)
+        const intensity = result.landmarks.length > 0
+          ? Math.min(100, result.landmarks.length * 50) // Scale based on number of people detected
+          : 0;
+
+        if (now - this.lastPoseDetectionTime > this.motionCooldown()) {
+          this.lastPoseDetectionTime = now;
+          this.zone.run(() => this.handleMotionDetected(intensity));
+        }
+      }
+
+      // Update previous state
+      this.previousPersonDetected = personDetected;
+
+      // Draw pose landmarks on overlay canvas
+      this.drawPoseLandmarks(result);
+    } catch (error) {
+      console.error('Pose detection error:', error);
+    }
+  }
+
+  private drawPoseLandmarks(result: PoseLandmarkerResult): void {
+    if (!this.overlayCtx || !this.videoDimensions) return;
+
+    // Clear previous landmarks
+    this.clearOverlay();
+
+    // Redraw detection zone if in motion mode
+    if (this.detectionMethod() === 'motion') {
+      this.drawPersistentZone();
+      return;
+    }
+
+    const ctx = this.overlayCtx;
+    const { width, height } = this.videoDimensions;
+
+    // Draw landmarks for each detected person
+    for (const landmarks of result.landmarks) {
+      // Draw connections between landmarks
+      ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+      ctx.lineWidth = 2;
+
+      // Define pose connections (MediaPipe pose connections)
+      const connections = [
+        [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Arms
+        [11, 23], [12, 24], [23, 24], // Torso
+        [23, 25], [25, 27], [24, 26], [26, 28] // Legs
+      ];
+
+      // Draw connections
+      for (const [start, end] of connections) {
+        const startPoint = landmarks[start];
+        const endPoint = landmarks[end];
+
+        if (startPoint && endPoint) {
+          ctx.beginPath();
+          ctx.moveTo(startPoint.x * width, startPoint.y * height);
+          ctx.lineTo(endPoint.x * width, endPoint.y * height);
+          ctx.stroke();
+        }
+      }
+
+      // Draw landmark points
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+      for (const landmark of landmarks) {
+        ctx.beginPath();
+        ctx.arc(landmark.x * width, landmark.y * height, 4, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+    }
   }
 
   private calculateDifferenceFast(
@@ -316,6 +449,12 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.zoneEffectCleanup?.();
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined; // Explicitly clear reference
+
+    // Clean up MediaPipe resources
+    if (this.poseLandmarker) {
+      this.poseLandmarker.close();
+      this.poseLandmarker = null;
+    }
 
     const video = this.videoRef()?.nativeElement;
     if (video) {
@@ -395,6 +534,18 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     const selectedId = (event.target as HTMLSelectElement).value;
     this.selectedCameraId.set(selectedId);
     this.startCamera();
+  }
+
+  onDetectionMethodChange(method: 'motion' | 'pose'): void {
+    this.detectionMethod.set(method);
+    // Reset detection state when switching methods
+    this.lastImageData = null;
+    this.previousPersonDetected = false;
+    this.lastMotionTime = 0;
+    this.lastPoseDetectionTime = 0;
+    this.detectionCounter = 0;
+    // Clear and redraw overlay
+    this.drawPersistentZone();
   }
 
   private clearOverlay() {
