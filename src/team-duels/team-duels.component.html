@@ -34,6 +34,12 @@
       <app-team-duels-lobby (goBack)="goBackToSelection()" (sessionStarted)="onSessionStarted($event)"></app-team-duels-lobby>
     }
     @case ('display-host') {
+      <div class="w-full flex justify-between items-center mb-6">
+        <button (click)="goBackToSelection()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition">
+          &larr; Back to Menu
+        </button>
+        <div class="w-20"></div>
+      </div>
       @if (sessionId(); as sid) {
         <app-display-host [sessionId]="sid"></app-display-host>
       }
