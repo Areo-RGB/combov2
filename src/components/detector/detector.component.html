@@ -41,7 +41,7 @@
         <!-- Detection Method Selector -->
         <div class="mb-6">
           <label class="block mb-2 text-sm font-medium text-gray-300">Detection Method</label>
-          <div class="flex gap-4">
+          <div class="flex flex-wrap gap-4">
             <label class="flex items-center cursor-pointer">
               <input
                 type="radio"
@@ -60,7 +60,17 @@
                 [checked]="detectionMethod() === 'pose'"
                 (change)="onDetectionMethodChange('pose')"
                 class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
-              <span class="ml-2 text-sm text-gray-300">Body Pose Detection (MediaPipe)</span>
+              <span class="ml-2 text-sm text-gray-300">Body Pose (MediaPipe Lite)</span>
+            </label>
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="detectionMethod"
+                value="movenet"
+                [checked]="detectionMethod() === 'movenet'"
+                (change)="onDetectionMethodChange('movenet')"
+                class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
+              <span class="ml-2 text-sm text-gray-300">Body Pose (MoveNet Lightning) ⚡</span>
             </label>
           </div>
         </div>
