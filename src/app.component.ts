@@ -6,6 +6,7 @@ import { SingleDeviceComponent } from './components/single-device/single-device.
 import { SprintTimingComponent } from './components/sprint-timing/sprint-timing.component';
 import { SprintMultiSetupComponent } from './components/sprint-multi-setup/sprint-multi-setup.component';
 import { SprintTimingMultiComponent } from './components/sprint-timing-multi/sprint-timing-multi.component';
+import { HeaderComponent } from './components/header/header.component';
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
@@ -26,10 +27,10 @@ type DisplaySignal =
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent],
+  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent, HeaderComponent],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-menu' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels'>('selection');
+  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-menu' | 'sprint-timing-single-menu' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels'>('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');
@@ -48,6 +49,13 @@ export class AppComponent implements OnDestroy, OnInit {
 
   // Counter state
   detectionCount = signal(0);
+  
+  // Collapsible state for settings
+  displaySettingsExpanded = signal(true);
+  
+  toggleDisplaySettings(): void {
+    this.displaySettingsExpanded.update(v => !v);
+  }
 
   private firebaseService = inject(FirebaseService);
   private rtc = inject(RtcService);
@@ -209,6 +217,10 @@ export class AppComponent implements OnDestroy, OnInit {
     const newSessionId = this.generateSessionId();
     this.sessionId.set(newSessionId);
     this.mode.set('single');
+  }
+
+  startSprintTimingSingleMenu() {
+    this.mode.set('sprint-timing-single-menu');
   }
 
   startSprintTimingManual() {

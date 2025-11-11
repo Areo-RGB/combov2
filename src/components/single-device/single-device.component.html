@@ -26,33 +26,47 @@
       </div>
 
        <!-- Display Settings Panel -->
-       <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-        <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Display Settings</h3>
-        <div class="flex flex-col gap-4">
-          <!-- Display Type -->
-          <div>
-            <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
-            <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
-              <button (click)="onDisplayContentChange('color')" [class.bg-yellow-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" [class.text-gray-900]="displayContentType() === 'color'" [class.text-white]="displayContentType() !== 'color'" class="w-full font-semibold py-2 rounded-md transition-colors">Colors</button>
-              <button (click)="onDisplayContentChange('math')" [class.bg-yellow-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" [class.text-gray-900]="displayContentType() === 'math'" [class.text-white]="displayContentType() !== 'math'" class="w-full font-semibold py-2 rounded-md transition-colors">Math Game</button>
-              <button (click)="onDisplayContentChange('wechsel')" [class.bg-yellow-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" [class.text-gray-900]="displayContentType() === 'wechsel'" [class.text-white]="displayContentType() !== 'wechsel'" class="w-full font-semibold py-2 rounded-md transition-colors">Wechsel</button>
-              <button (click)="onDisplayContentChange('counter')" [class.bg-yellow-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" [class.text-gray-900]="displayContentType() === 'counter'" [class.text-white]="displayContentType() !== 'counter'" class="w-full font-semibold py-2 rounded-md transition-colors">Counter</button>
-            </div>
-          </div>
-          <!-- Linger Duration -->
-          <div>
-            <label for="lingerDurationSingle" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-yellow-300">{{ lingerDuration() / 1000 }}s</span></label>
-            <input id="lingerDurationSingle" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500">
-          </div>
-          <!-- Max Operations (for Math Game) -->
-          @if (displayContentType() === 'math') {
+       <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+        <button
+          (click)="toggleDisplaySettings()"
+          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+          <h3 class="text-lg font-semibold text-gray-200">Display Settings</h3>
+          <svg 
+            class="w-5 h-5 text-gray-300 transition-transform duration-200"
+            [class.rotate-180]="displaySettingsExpanded()"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        @if (displaySettingsExpanded()) {
+          <div class="px-4 pb-4 space-y-4">
+            <!-- Display Type -->
             <div>
-              <label for="maxOperationsSingle" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-yellow-300">{{ maxOperations() }}</span></label>
-              <input id="maxOperationsSingle" type="range" min="1" max="20" step="1" [value]="maxOperations()" (input)="onMaxOperationsChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+              <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
+              <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
+                <button (click)="onDisplayContentChange('color')" [class.bg-yellow-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" [class.text-gray-900]="displayContentType() === 'color'" [class.text-white]="displayContentType() !== 'color'" class="w-full font-semibold py-2 rounded-md transition-colors">Colors</button>
+                <button (click)="onDisplayContentChange('math')" [class.bg-yellow-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" [class.text-gray-900]="displayContentType() === 'math'" [class.text-white]="displayContentType() !== 'math'" class="w-full font-semibold py-2 rounded-md transition-colors">Math Game</button>
+                <button (click)="onDisplayContentChange('wechsel')" [class.bg-yellow-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" [class.text-gray-900]="displayContentType() === 'wechsel'" [class.text-white]="displayContentType() !== 'wechsel'" class="w-full font-semibold py-2 rounded-md transition-colors">Wechsel</button>
+                <button (click)="onDisplayContentChange('counter')" [class.bg-yellow-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" [class.text-gray-900]="displayContentType() === 'counter'" [class.text-white]="displayContentType() !== 'counter'" class="w-full font-semibold py-2 rounded-md transition-colors">Counter</button>
+              </div>
             </div>
-          }
-        </div>
-      </div>
+            <!-- Linger Duration -->
+            <div>
+              <label for="lingerDurationSingle" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-yellow-300">{{ lingerDuration() / 1000 }}s</span></label>
+              <input id="lingerDurationSingle" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+            </div>
+            <!-- Max Operations (for Math Game) -->
+            @if (displayContentType() === 'math') {
+              <div>
+                <label for="maxOperationsSingle" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-yellow-300">{{ maxOperations() }}</span></label>
+                <input id="maxOperationsSingle" type="range" min="1" max="20" step="1" [value]="maxOperations()" (input)="onMaxOperationsChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-yellow-500">
+              </div>
+            }
+          </div>
+        }
+       </div>
 
       <!-- Action Button / Status -->
       <div class="w-full flex flex-col items-center">

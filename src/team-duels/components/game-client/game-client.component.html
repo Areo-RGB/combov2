@@ -47,9 +47,22 @@
     
     <!-- Settings Panel -->
     @if (gameState()?.status === 'idle') {
-      <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-        <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Your Settings</h3>
-        <div class="space-y-4">
+      <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+        <button
+          (click)="toggleSettings()"
+          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+          <h3 class="text-lg font-semibold text-gray-200">Your Settings</h3>
+          <svg 
+            class="w-5 h-5 text-gray-300 transition-transform duration-200"
+            [class.rotate-180]="settingsExpanded()"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        @if (settingsExpanded()) {
+          <div class="px-4 pb-4 space-y-4">
             <div>
               <label for="livepool-start" class="block mb-2 text-sm font-medium text-gray-300">Your Initial Live Pool: <span class="font-bold text-green-300">{{ initialLivepool() }}</span></label>
               <input id="livepool-start" type="range" min="10" max="300" step="10" [value]="initialLivepool()" (input)="onInitialLivepoolChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500">
@@ -74,7 +87,8 @@
                   }
               </select>
             </div>
-        </div>
+          </div>
+        }
       </div>
     }
 

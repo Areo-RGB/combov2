@@ -24,6 +24,23 @@ export class SettingsComponent {
   showResetAllModal = signal(false);
   
   isFullScreen = signal(!!this.document.fullscreenElement);
+  
+  // Collapsible state for settings sections
+  displaySettingsExpanded = signal(true);
+  audioSettingsExpanded = signal(true);
+  dataManagementExpanded = signal(true);
+  
+  toggleDisplaySettings(): void {
+    this.displaySettingsExpanded.update(v => !v);
+  }
+  
+  toggleAudioSettings(): void {
+    this.audioSettingsExpanded.update(v => !v);
+  }
+  
+  toggleDataManagement(): void {
+    this.dataManagementExpanded.update(v => !v);
+  }
 
   constructor() {
     this.document.addEventListener('fullscreenchange', () => {

@@ -54,28 +54,44 @@
     </div>
 
     <!-- Settings -->
-    <div>
-      <h3 class="text-lg font-medium text-gray-300 mb-2">Settings</h3>
-      <div class="bg-gray-800 p-3 rounded-md">
-        <label for="min-delay" class="flex justify-between text-sm font-medium text-gray-400">
-          <span>Min. Detection Delay</span>
-          <span class="text-orange-400">{{ minDetectionDelay() }}ms</span>
-        </label>
-        <input
-          id="min-delay"
-          type="range"
-          min="500"
-          max="5000"
-          step="100"
-          [value]="minDetectionDelay()"
-          (input)="onMinDelayChange($event)"
-          [disabled]="!isHost()"
-          class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1 accent-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        />
-        @if (!isHost()) {
-          <p class="text-xs text-gray-500 mt-1">Settings controlled by Host.</p>
-        }
-      </div>
+    <div class="bg-gray-800 rounded-lg border border-gray-600 overflow-hidden">
+      <button
+        (click)="toggleSettings()"
+        class="w-full flex items-center justify-between p-3 text-left hover:bg-gray-700/50 transition-colors">
+        <h3 class="text-lg font-medium text-gray-300">Settings</h3>
+        <svg 
+          class="w-5 h-5 text-gray-300 transition-transform duration-200"
+          [class.rotate-180]="settingsExpanded()"
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      @if (settingsExpanded()) {
+        <div class="px-3 pb-3">
+          <div class="bg-gray-800 p-3 rounded-md">
+            <label for="min-delay" class="flex justify-between text-sm font-medium text-gray-400">
+              <span>Min. Detection Delay</span>
+              <span class="text-orange-400">{{ minDetectionDelay() }}ms</span>
+            </label>
+            <input
+              id="min-delay"
+              type="range"
+              min="500"
+              max="5000"
+              step="100"
+              [value]="minDetectionDelay()"
+              (input)="onMinDelayChange($event)"
+              [disabled]="!isHost()"
+              class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer mt-1 accent-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            @if (!isHost()) {
+              <p class="text-xs text-gray-500 mt-1">Settings controlled by Host.</p>
+            }
+          </div>
+        </div>
+      }
     </div>
 
     <!-- Connected Devices -->

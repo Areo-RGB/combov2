@@ -2,60 +2,106 @@
   <h2 class="text-2xl font-bold text-cyan-400 border-b border-gray-700 pb-3">Settings</h2>
 
   <!-- Display Settings -->
-  <div class="space-y-4">
-    <h3 class="text-lg font-semibold text-gray-300">Display</h3>
-    <div class="bg-gray-700/50 p-4 rounded-md flex items-center justify-between">
-      <label for="fullscreen-toggle" class="font-medium text-white">Fullscreen Mode</label>
-      <button (click)="toggleFullscreen()" class="px-4 py-2 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold">
-        {{ isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen' }}
-      </button>
-    </div>
+  <div class="bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+    <button
+      (click)="toggleDisplaySettings()"
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      <h3 class="text-lg font-semibold text-gray-300">Display</h3>
+      <svg 
+        class="w-5 h-5 text-gray-300 transition-transform duration-200"
+        [class.rotate-180]="displaySettingsExpanded()"
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    @if (displaySettingsExpanded()) {
+      <div class="px-4 pb-4 space-y-4">
+        <div class="bg-gray-800/50 p-4 rounded-md flex items-center justify-between">
+          <label for="fullscreen-toggle" class="font-medium text-white">Fullscreen Mode</label>
+          <button (click)="toggleFullscreen()" class="px-4 py-2 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold">
+            {{ isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen' }}
+          </button>
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Audio Settings -->
-  <div class="space-y-4">
-    <h3 class="text-lg font-semibold text-gray-300">Audio</h3>
-     <div class="bg-gray-700/50 p-4 rounded-md flex items-center justify-between">
-      <label for="audio-toggle" class="font-medium text-white">Enable Race Start Audio</label>
-      <label class="relative inline-flex items-center cursor-pointer">
-        <input type="checkbox" id="audio-toggle" class="sr-only peer" 
-               [checked]="audioService.isAudioEnabled()"
-               (change)="onAudioToggle($event)">
-        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
-      </label>
-    </div>
+  <div class="bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+    <button
+      (click)="toggleAudioSettings()"
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      <h3 class="text-lg font-semibold text-gray-300">Audio</h3>
+      <svg 
+        class="w-5 h-5 text-gray-300 transition-transform duration-200"
+        [class.rotate-180]="audioSettingsExpanded()"
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    @if (audioSettingsExpanded()) {
+      <div class="px-4 pb-4 space-y-4">
+        <div class="bg-gray-800/50 p-4 rounded-md flex items-center justify-between">
+          <label for="audio-toggle" class="font-medium text-white">Enable Race Start Audio</label>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="audio-toggle" class="sr-only peer" 
+                   [checked]="audioService.isAudioEnabled()"
+                   (change)="onAudioToggle($event)">
+            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+          </label>
+        </div>
+      </div>
+    }
   </div>
 
   <!-- Data Management -->
-  <div class="space-y-4">
-    <h3 class="text-lg font-semibold text-red-400">Data Management</h3>
-    
-    <!-- Reset Individual Player -->
-    <div class="bg-gray-700/50 p-4 rounded-md">
-      <h4 class="font-medium text-white mb-3">Reset Individual Player</h4>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-        @for (player of playerService.players(); track player.id) {
-            <button (click)="resetPlayer(player.id)"
-                    class="bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
-              Reset {{ player.name }}
-            </button>
-        }
+  <div class="bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+    <button
+      (click)="toggleDataManagement()"
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      <h3 class="text-lg font-semibold text-red-400">Data Management</h3>
+      <svg 
+        class="w-5 h-5 text-gray-300 transition-transform duration-200"
+        [class.rotate-180]="dataManagementExpanded()"
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </button>
+    @if (dataManagementExpanded()) {
+      <div class="px-4 pb-4 space-y-4">
+        <!-- Reset Individual Player -->
+        <div class="bg-gray-800/50 p-4 rounded-md">
+          <h4 class="font-medium text-white mb-3">Reset Individual Player</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            @for (player of playerService.players(); track player.id) {
+                <button (click)="resetPlayer(player.id)"
+                        class="bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
+                  Reset {{ player.name }}
+                </button>
+            }
+          </div>
+        </div>
+        
+        <!-- Reset All Data -->
+        <div class="bg-red-900/30 border border-red-700 p-4 rounded-md flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-red-300">Reset All Application Data</h4>
+            <p class="text-sm text-red-400">This will permanently delete all players, stats, and match history.</p>
+          </div>
+          <button (click)="showResetAllModal.set(true)"
+                  class="px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 text-white font-bold whitespace-nowrap">
+            Reset All Data
+          </button>
+        </div>
       </div>
-    </div>
-    
-    <!-- Reset All Data -->
-    <div class="bg-red-900/30 border border-red-700 p-4 rounded-md flex items-center justify-between">
-      <div>
-        <h4 class="font-bold text-red-300">Reset All Application Data</h4>
-        <p class="text-sm text-red-400">This will permanently delete all players, stats, and match history.</p>
-      </div>
-      <button (click)="showResetAllModal.set(true)"
-              class="px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 text-white font-bold whitespace-nowrap">
-        Reset All Data
-      </button>
-    </div>
+    }
   </div>
-</div>
 
 <app-confirmation-modal 
   [isOpen]="showResetAllModal()"

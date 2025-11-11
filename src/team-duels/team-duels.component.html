@@ -1,34 +1,54 @@
-<div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-7xl mx-auto border border-white border-opacity-20">
+<div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col animate-fade-in w-full max-w-7xl mx-auto border border-white border-opacity-20">
   @switch (mode()) {
     @case ('selection') {
       <!-- Header -->
-      <div class="w-full flex justify-between items-center mb-6">
-        <button (click)="onGoBackToMenu()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h2 class="text-3xl font-bold text-white">Team Duels</h2>
-        <div class="w-20"></div> <!-- Spacer for centering -->
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-8 w-full max-w-4xl">
-        <!-- Single Device Card -->
-        <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
-          <h2 class="text-2xl font-semibold mb-4 text-green-400">Single Device</h2>
-          <p class="text-gray-300 text-center mb-6">Play offline on one device using the camera for start/stop signals.</p>
-          <button (click)="startSingleDeviceMode()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300">
-            Start Offline Game
-          </button>
+      <app-header 
+        [title]="'Team Duels'"
+        (goBack)="onGoBackToMenu()">
+      </app-header>
+      
+      <!-- Content -->
+      <div class="w-full flex flex-col items-center">
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Create a Session Card -->
+          <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-green-400">Create a Session</h2>
+            <p class="text-gray-300 text-center mb-6">Play offline on one device using the camera for start/stop signals.</p>
+            <button (click)="startDetector()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300">
+              Join as Display
+            </button>
+          </div>
+    
+          <!-- Join a Session Card -->
+          <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Join a Session</h2>
+            <p class="text-gray-300 text-center mb-6">Join as display</p>
+            <div class="w-full flex flex-col items-center">
+              <input 
+                type="text" 
+                [value]="inputSessionId()"
+                (input)="handleSessionIdInput($event)"
+                placeholder="Enter 6-digit Session ID"
+                maxlength="6"
+                class="w-full text-center bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 mb-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 uppercase tracking-widest"
+              >
+              @if (errorMessage()) {
+                <p class="text-red-400 text-sm mb-4">{{ errorMessage() }}</p>
+              }
+              <button (click)="joinDisplay()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
+                Start Detecting
+              </button>
+            </div>
+          </div>
         </div>
-
-        <!-- Multi Device Card -->
-        <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
-          <h2 class="text-2xl font-semibold mb-4 text-cyan-400">Multi Device</h2>
-          <p class="text-gray-300 text-center mb-6">Connect multiple devices to compete online.</p>
-          <button (click)="startMultiDeviceMode()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
-            Start Online Game
-          </button>
+        
+        <!-- Single Device Mode Card -->
+        <div class="mt-8 pt-8 border-t border-gray-700 flex flex-col items-center justify-center p-6 rounded-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Single Device Mode</h2>
+            <p class="text-gray-300 text-center mb-6">Play offline on one device using the camera for start/stop signals.</p>
+            <button (click)="startSingleDeviceMode()" class="w-full max-w-md bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-300">
+              Start Single Device Mode
+            </button>
         </div>
       </div>
     }
@@ -118,32 +138,48 @@
           </div>
           
           <!-- Settings Panel -->
-           <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-            <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Game Settings</h3>
-             <div>
-                <label for="livepool-start" class="block mb-2 text-sm font-medium text-gray-300">Initial Live Pool: <span class="font-bold text-green-300">{{ initialLivepool() }}</span></label>
-                <input id="livepool-start" type="range" min="10" max="300" step="10" [value]="initialLivepool()" (input)="onInitialLivepoolChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500">
+           <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+            <button
+              (click)="toggleGameSettings()"
+              class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+              <h3 class="text-lg font-semibold text-gray-200">Game Settings</h3>
+              <svg 
+                class="w-5 h-5 text-gray-300 transition-transform duration-200"
+                [class.rotate-180]="gameSettingsExpanded()"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            @if (gameSettingsExpanded()) {
+              <div class="px-4 pb-4 space-y-4">
+                <div>
+                  <label for="livepool-start" class="block mb-2 text-sm font-medium text-gray-300">Initial Live Pool: <span class="font-bold text-green-300">{{ initialLivepool() }}</span></label>
+                  <input id="livepool-start" type="range" min="10" max="300" step="10" [value]="initialLivepool()" (input)="onInitialLivepoolChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500">
+                </div>
+                <div class="mt-4">
+                  <label for="voice-select" class="block mb-2 text-sm font-medium text-gray-300">Announcement Voice</label>
+                  <select id="voice-select" 
+                          class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5"
+                          [value]="selectedVoiceURI()"
+                          (change)="onVoiceChange($event)">
+                      <optgroup label="Custom Audio">
+                          @for (voice of preRecordedVoiceOptions; track voice.key) {
+                              <option [value]="voice.key">{{ voice.name }}</option>
+                          }
+                      </optgroup>
+                      @if (availableVoices().length > 0) {
+                          <optgroup label="Browser Voices (German)">
+                              @for (voice of availableVoices(); track voice.voiceURI) {
+                                  <option [value]="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
+                              }
+                          </optgroup>
+                      }
+                  </select>
+                </div>
               </div>
-              <div class="mt-4">
-                <label for="voice-select" class="block mb-2 text-sm font-medium text-gray-300">Announcement Voice</label>
-                <select id="voice-select" 
-                        class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5"
-                        [value]="selectedVoiceURI()"
-                        (change)="onVoiceChange($event)">
-                    <optgroup label="Custom Audio">
-                        @for (voice of preRecordedVoiceOptions; track voice.key) {
-                            <option [value]="voice.key">{{ voice.name }}</option>
-                        }
-                    </optgroup>
-                    @if (availableVoices().length > 0) {
-                        <optgroup label="Browser Voices (German)">
-                            @for (voice of availableVoices(); track voice.voiceURI) {
-                                <option [value]="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
-                            }
-                        </optgroup>
-                    }
-                </select>
-              </div>
+            }
           </div>
 
           <!-- Action Buttons / Status -->

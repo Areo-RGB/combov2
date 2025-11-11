@@ -34,6 +34,13 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
 
   readonly DeviceRole = DeviceRole;
   readonly deviceRoles = [DeviceRole.Start, DeviceRole.Split, DeviceRole.Finish];
+  
+  // Collapsible state for settings
+  settingsExpanded = signal(true);
+  
+  toggleSettings(): void {
+    this.settingsExpanded.update(v => !v);
+  }
 
   ngOnInit(): void {
     const initialId = this.initialSessionId();

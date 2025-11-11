@@ -1,7 +1,7 @@
-// FIX: Import `NgZone` to resolve 'Cannot find name' error.
 import { ChangeDetectionStrategy, Component, output, signal, viewChild, OnDestroy, inject, OnInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DetectorComponent } from '../components/detector/detector.component';
+import { HeaderComponent } from '../components/header/header.component';
 import { TeamDuelsLobbyComponent } from './components/lobby/lobby.component';
 import { GameClientComponent } from './components/game-client/game-client.component';
 import { DisplayHostComponent } from './components/display-host/display-host.component';
@@ -15,6 +15,7 @@ import { WebRTCService } from './services/webrtc.service';
   imports: [
     CommonModule, 
     DetectorComponent,
+    HeaderComponent,
     TeamDuelsLobbyComponent,
     GameClientComponent,
     DisplayHostComponent
@@ -30,6 +31,8 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   sessionId = signal<string | null>(null);
   deviceId = signal<string>('');
   role = signal<'game' | 'display' | null>(null);
+  inputSessionId = signal<string>('');
+  errorMessage = signal<string>('');
 
   // --- SINGLE DEVICE STATE (Kept for single device mode) ---
   livepool = signal(60);
@@ -48,6 +51,13 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   private announcedThresholds = signal<Set<number>>(new Set());
   availableVoices = signal<SpeechSynthesisVoice[]>([]);
   selectedVoiceURI = signal<string>('default');
+  
+  // Collapsible state for settings
+  gameSettingsExpanded = signal(true);
+  
+  toggleGameSettings(): void {
+    this.gameSettingsExpanded.update(v => !v);
+  }
 
   private readonly PRE_RECORDED_VOICES: { [key: string]: { name: string; files: { [key: string]: string } } } = {
     'default': {
@@ -116,6 +126,40 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
     this.mode.set('single-device');
   }
 
+  startDetector(): void {
+    // Create a new session and go to display-host mode
+    const newSessionId = this.generateSessionId();
+    this.sessionId.set(newSessionId);
+    this.role.set('display');
+    this.firebaseService.connect();
+    this.mode.set('display-host');
+  }
+
+  joinDisplay(): void {
+    if (this.inputSessionId().trim().length < 6) {
+      this.errorMessage.set('Please enter a valid 6-character session ID.');
+      return;
+    }
+    this.errorMessage.set('');
+    const sessionId = this.inputSessionId().trim().toUpperCase();
+    this.sessionId.set(sessionId);
+    this.role.set('game');
+    this.firebaseService.connect();
+    this.mode.set('game-client');
+  }
+
+  handleSessionIdInput(event: Event): void {
+    const inputElement = event.target as HTMLInputElement;
+    this.inputSessionId.set(inputElement.value);
+    if (this.errorMessage()) {
+      this.errorMessage.set('');
+    }
+  }
+
+  private generateSessionId(): string {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+  }
+
   startMultiDeviceMode(): void {
     this.firebaseService.connect(); // Ensure we are connected for the lobby
     this.mode.set('lobby');
@@ -133,6 +177,8 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
     // Clear multi-device state and disconnect
     this.sessionId.set(null);
     this.role.set(null);
+    this.inputSessionId.set('');
+    this.errorMessage.set('');
     this.firebaseService.disconnect();
   }
 

@@ -35,6 +35,13 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
   
   // Counter state
   detectionCount = signal(0);
+  
+  // Collapsible state for settings
+  displaySettingsExpanded = signal(true);
+  
+  toggleDisplaySettings(): void {
+    this.displaySettingsExpanded.update(v => !v);
+  }
 
   detectorComponent = viewChild.required(DetectorComponent);
   private displayContainer = viewChild.required<ElementRef>('displayContainer');

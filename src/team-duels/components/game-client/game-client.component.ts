@@ -27,6 +27,13 @@ export class GameClientComponent implements OnInit, OnDestroy {
   initialLivepool = signal(60);
   selectedVoiceURI = signal<string>('default');
   availableVoices = signal<SpeechSynthesisVoice[]>([]);
+  
+  // Collapsible state for settings
+  settingsExpanded = signal(true);
+  
+  toggleSettings(): void {
+    this.settingsExpanded.update(v => !v);
+  }
 
   private readonly PRE_RECORDED_VOICES: { [key: string]: { name: string; files: { [key: string]: string } } } = {
     'default': {

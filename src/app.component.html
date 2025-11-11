@@ -5,16 +5,6 @@
   <main class="w-full max-w-4xl mx-auto">
     @switch (mode()) {
       @case ('selection') {
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
-          <div class="flex flex-col items-center justify-center p-6">
-            <h2 class="text-2xl font-semibold mb-4 text-purple-400">Games</h2>
-            <p class="text-gray-300 text-center mb-6">Use camera motion to interact with various display modes.</p>
-            <button (click)="mode.set('motion-games')" class="w-full max-w-md bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300">
-              Launch Games
-            </button>
-          </div>
-        </div>
-
         <!-- Sprint Duels Card -->
         <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
           <div class="flex flex-col items-center justify-center p-6">
@@ -22,6 +12,17 @@
             <p class="text-gray-300 text-center mb-6">Manage, track, and rank players in head-to-head sprint competitions.</p>
             <button (click)="mode.set('sprint-duels')" class="w-full max-w-md bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
               Launch Sprint Duels
+            </button>
+          </div>
+        </div>
+
+        <!-- Games Card -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
+          <div class="flex flex-col items-center justify-center p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-purple-400">Games</h2>
+            <p class="text-gray-300 text-center mb-6">Use camera motion to interact with various display modes.</p>
+            <button (click)="mode.set('motion-games')" class="w-full max-w-md bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300">
+              Launch Games
             </button>
           </div>
         </div>
@@ -49,20 +50,15 @@
         </div>
       }
       @case ('motion-games') {
-        <div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-4xl mx-auto">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col animate-fade-in w-full max-w-4xl mx-auto border border-white border-opacity-20">
           <!-- Header -->
-          <div class="w-full flex justify-between items-center mb-6">
-            <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 class="text-2xl font-semibold text-white"></h2>
-            <div class="w-20"></div> <!-- Spacer for centering -->
-          </div>
+          <app-header 
+            [title]="'Games'"
+            (goBack)="goBackToSelection()">
+          </app-header>
           
           <!-- Content from old collapsible -->
-          <div class="w-full">
+          <div class="w-full flex flex-col items-center">
             <div class="grid md:grid-cols-2 gap-8">
               <!-- Detector Card -->
               <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
@@ -111,7 +107,7 @@
         <app-detector [sessionId]="sessionId()" (goBack)="goBackToSelection()" (motionDetected)="handleMotion($event)"></app-detector>
       }
       @case ('display') {
-        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 flex flex-col items-center animate-fade-in w-full max-w-3xl mx-auto">
+        <div class="bg-gray-800 rounded-lg shadow-2xl p-8 flex flex-col items-center animate-fade-in w-full max-w-3xl mx-auto border border-white border-opacity-20">
           <div class="w-full flex justify-between items-center mb-6">
             <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -138,32 +134,46 @@
           </div>
 
           <!-- Display Settings Panel -->
-          <div class="w-full bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-            <h3 class="text-lg font-semibold mb-4 text-gray-200 border-b border-gray-600 pb-2">Display Settings</h3>
-            <div class="flex flex-col gap-4">
-              <!-- Display Type -->
-              <div>
-                <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
-                <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
-                  <button (click)="onDisplayContentChange('color')" [class.bg-purple-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" [class.text-white]="displayContentType() === 'color'" class="w-full font-semibold py-2 rounded-md transition-colors">Colors</button>
-                  <button (click)="onDisplayContentChange('math')" [class.bg-purple-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" [class.text-white]="displayContentType() === 'math'" class="w-full font-semibold py-2 rounded-md transition-colors">Math Game</button>
-                  <button (click)="onDisplayContentChange('wechsel')" [class.bg-purple-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" [class.text-white]="displayContentType() === 'wechsel'" class="w-full font-semibold py-2 rounded-md transition-colors">Wechsel</button>
-                  <button (click)="onDisplayContentChange('counter')" [class.bg-purple-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" [class.text-white]="displayContentType() === 'counter'" class="w-full font-semibold py-2 rounded-md transition-colors">Counter</button>
-                </div>
-              </div>
-              <!-- Linger Duration -->
-              <div>
-                <label for="lingerDuration" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-purple-300">{{ lingerDuration() / 1000 }}s</span></label>
-                <input id="lingerDuration" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
-              </div>
-              <!-- Max Operations (for Math Game) -->
-              @if (displayContentType() === 'math') {
+          <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
+            <button
+              (click)="toggleDisplaySettings()"
+              class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+              <h3 class="text-lg font-semibold text-gray-200">Display Settings</h3>
+              <svg 
+                class="w-5 h-5 text-gray-300 transition-transform duration-200"
+                [class.rotate-180]="displaySettingsExpanded()"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            @if (displaySettingsExpanded()) {
+              <div class="px-4 pb-4 space-y-4">
+                <!-- Display Type -->
                 <div>
-                  <label for="maxOperations" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-purple-300">{{ maxOperations() }}</span></label>
-                  <input id="maxOperations" type="range" min="1" max="20" step="1" [value]="maxOperations()" (input)="onMaxOperationsChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                  <label class="block mb-2 text-sm font-medium text-gray-300">Signal Type</label>
+                  <div class="flex rounded-lg bg-gray-800 p-1 gap-1">
+                    <button (click)="onDisplayContentChange('color')" [class.bg-purple-500]="displayContentType() === 'color'" [class.bg-gray-600]="displayContentType() !== 'color'" [class.text-white]="displayContentType() === 'color'" class="w-full font-semibold py-2 rounded-md transition-colors">Colors</button>
+                    <button (click)="onDisplayContentChange('math')" [class.bg-purple-500]="displayContentType() === 'math'" [class.bg-gray-600]="displayContentType() !== 'math'" [class.text-white]="displayContentType() === 'math'" class="w-full font-semibold py-2 rounded-md transition-colors">Math Game</button>
+                    <button (click)="onDisplayContentChange('wechsel')" [class.bg-purple-500]="displayContentType() === 'wechsel'" [class.bg-gray-600]="displayContentType() !== 'wechsel'" [class.text-white]="displayContentType() === 'wechsel'" class="w-full font-semibold py-2 rounded-md transition-colors">Wechsel</button>
+                    <button (click)="onDisplayContentChange('counter')" [class.bg-purple-500]="displayContentType() === 'counter'" [class.bg-gray-600]="displayContentType() !== 'counter'" [class.text-white]="displayContentType() === 'counter'" class="w-full font-semibold py-2 rounded-md transition-colors">Counter</button>
+                  </div>
                 </div>
-              }
-            </div>
+                <!-- Linger Duration -->
+                <div>
+                  <label for="lingerDuration" class="block mb-2 text-sm font-medium text-gray-300">Linger Duration: <span class="font-bold text-purple-300">{{ lingerDuration() / 1000 }}s</span></label>
+                  <input id="lingerDuration" type="range" min="100" max="5000" step="100" [value]="lingerDuration()" (input)="onLingerDurationChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                </div>
+                <!-- Max Operations (for Math Game) -->
+                @if (displayContentType() === 'math') {
+                  <div>
+                    <label for="maxOperations" class="block mb-2 text-sm font-medium text-gray-300">Number of Steps: <span class="font-bold text-purple-300">{{ maxOperations() }}</span></label>
+                    <input id="maxOperations" type="range" min="1" max="20" step="1" [value]="maxOperations()" (input)="onMaxOperationsChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                  </div>
+                }
+              </div>
+            }
           </div>
         </div>
       }
@@ -171,52 +181,62 @@
         <app-single-device [sessionId]="sessionId()" (goBack)="goBackToSelection()"></app-single-device>
       }
       @case ('sprint-timing-menu') {
-        <div class="bg-gray-800 rounded-lg shadow-2xl p-4 sm:p-8 flex flex-col items-center animate-fade-in w-full max-w-4xl mx-auto">
+        <div class="w-full max-w-4xl mx-auto border border-white border-opacity-20 rounded-lg p-4 sm:p-8">
           <!-- Header -->
-          <div class="w-full flex justify-between items-center mb-6">
-            <button (click)="goBackToSelection()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <h2 class="text-2xl font-semibold text-white">Sprint Timing</h2>
-            <div class="w-12 h-12"></div> <!-- Spacer to balance the button -->
+          <app-header 
+            [title]="'Sprint Timing'"
+            (goBack)="goBackToSelection()">
+          </app-header>
+
+          <!-- Single Device Card -->
+          <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-gray-700">
+            <div class="flex flex-col items-center justify-center p-6">
+              <h2 class="text-2xl font-semibold mb-4 text-yellow-400">Single Device</h2>
+              <p class="text-gray-300 text-center mb-6">Use one device for both start and finish.</p>
+              <button (click)="startSprintTimingSingleMenu()" class="w-full max-w-md bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-yellow-300">
+                Select Single Device Mode
+              </button>
+            </div>
           </div>
 
-          <!-- Sprint Timing Modes -->
-          <div class="w-full">
-            <!-- Single Device -->
-            <div class="mb-6">
-              <h3 class="text-lg font-semibold mb-3 text-gray-300">Single Device</h3>
-              <p class="text-gray-400 text-sm mb-4">Use one device for both start and finish</p>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button (click)="startSprintTimingManual()" class="flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
-                  <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span>Manual Start</span>
-                  <span class="text-xs font-normal mt-1">Button to start</span>
-                </button>
-                <button (click)="startSprintTimingFlying()" class="flex flex-col items-center justify-center bg-orange-600 hover:bg-orange-700 text-white font-bold py-4 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
-                  <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                  </svg>
-                  <span>Flying Start</span>
-                  <span class="text-xs font-normal mt-1">Motion auto-starts</span>
-                </button>
-              </div>
+          <!-- Multi-Device Card -->
+          <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in border border-gray-700">
+            <div class="flex flex-col items-center justify-center p-6">
+              <h2 class="text-2xl font-semibold mb-4 text-orange-400">Multi-Device</h2>
+              <p class="text-gray-300 text-center mb-6">Use multiple devices (start, split, finish)</p>
+              <button (click)="startMultiDeviceSetup()" class="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
+                Multi Device
+              </button>
             </div>
+          </div>
+        </div>
+      }
+      @case ('sprint-timing-single-menu') {
+        <div class="w-full max-w-4xl mx-auto border border-white border-opacity-20 rounded-lg p-4 sm:p-8">
+          <!-- Header -->
+          <app-header 
+            [title]="'Single Device'"
+            (goBack)="mode.set('sprint-timing-menu')">
+          </app-header>
 
-            <!-- Multi-Device -->
-            <div>
-              <h3 class="text-lg font-semibold mb-3 text-gray-300">Multi-Device</h3>
-              <p class="text-gray-400 text-sm mb-4">Use multiple devices (start, split, finish)</p>
-              <button (click)="startMultiDeviceSetup()" class="w-full flex items-center justify-center bg-orange-700 hover:bg-orange-800 text-white font-bold py-4 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
-                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                New Multi-Device Session
+          <!-- Single Device - Manual Start Card -->
+          <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-gray-700">
+            <div class="flex flex-col items-center justify-center p-6">
+              <h2 class="text-2xl font-semibold mb-4 text-orange-400">Manual Start</h2>
+              <p class="text-gray-300 text-center mb-6">Use one device for both start and finish. Button to start.</p>
+              <button (click)="startSprintTimingManual()" class="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
+                Launch Manual Start
+              </button>
+            </div>
+          </div>
+
+          <!-- Single Device - Flying Start Card -->
+          <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in border border-gray-700">
+            <div class="flex flex-col items-center justify-center p-6">
+              <h2 class="text-2xl font-semibold mb-4 text-orange-400">Flying Start</h2>
+              <p class="text-gray-300 text-center mb-6">Use one device for both start and finish. Motion auto-starts.</p>
+              <button (click)="startSprintTimingFlying()" class="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
+                Launch Flying Start
               </button>
             </div>
           </div>
