@@ -331,15 +331,15 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
     this.minDetectionDelay.set(Number(value));
   }
 
-  get canStart(): boolean {
+  canStart(): boolean {
     return this.deviceRole() === DeviceRole.Start && !this.isTiming();
   }
 
-  get shouldShowArm(): boolean {
+  shouldShowArm(): boolean {
     return this.startMode() === 'flying' && this.deviceRole() === DeviceRole.Start && !this.isTiming() && this.lapResults().length === 0;
   }
 
-  get shouldShowReset(): boolean {
+  shouldShowReset(): boolean {
     return this.isTiming() || this.lapResults().length > 0;
   }
 }

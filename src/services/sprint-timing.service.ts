@@ -159,14 +159,14 @@ export class SprintTimingService {
     };
 
     onValue(messagesRef, listener);
-    this.messageListeners.set(sessionId, listener);
+    this.messageListeners.set(sessionId, callback);
   }
 
   cleanupSession(sessionId: string): void {
     this.leaveSession(sessionId);
 
     const messagesRef = ref(this.db, `sprint-sessions/${sessionId}/messages`);
-    off(messagesRef, 'value', this.messageListeners.get(sessionId));
+    off(messagesRef, 'value');
     this.messageListeners.delete(sessionId);
 
     const presenceRef = ref(this.db, `sprint-sessions/${sessionId}/presence`);
