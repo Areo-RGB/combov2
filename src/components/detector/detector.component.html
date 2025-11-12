@@ -178,6 +178,24 @@
                 <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300">Sensitivity: <span class="font-bold text-cyan-300">{{ sensitivity() }}</span></label>
                 <input id="sensitivity" type="range" min="1" max="10" [value]="sensitivity()" (input)="onSensitivityChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500">
               </div>
+
+              <!-- Brightness Threshold Slider (only for motion detection) -->
+              @if (detectionMethod() === 'motion') {
+                <div class="flex flex-col justify-center">
+                  <label for="brightnessThreshold" class="block mb-2 text-sm font-medium text-gray-300">
+                    Brightness Change Threshold: <span class="font-bold text-cyan-300">{{ brightnessThreshold() }}</span>
+                  </label>
+                  <input
+                    id="brightnessThreshold"
+                    type="range"
+                    min="0"
+                    max="100"
+                    [value]="brightnessThreshold()"
+                    (input)="onBrightnessThresholdChange($event)"
+                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                  <p class="text-xs text-gray-400 mt-1">Filters sudden brightness changes (e.g., athlete blocking light)</p>
+                </div>
+              }
               <!-- Detection Zone Controls -->
               <div class="flex flex-col justify-center gap-4">
                 <div>

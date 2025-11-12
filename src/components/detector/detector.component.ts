@@ -36,6 +36,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   poseLibrary = signal<'mediapipe' | 'movenet'>('mediapipe'); // Pose detection library
   poseModel = signal<'lite' | 'full' | 'heavy'>('lite'); // MediaPipe model selector
   moveNetModel = signal<'lightning' | 'thunder' | 'multipose'>('lightning'); // MoveNet model selector
+  brightnessThreshold = signal<number>(30); // Threshold for sudden brightness changes (0-100)
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
@@ -43,6 +44,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private stream: MediaStream | null = null;
   private animationFrameId: number | null = null;
   private lastImageData: ImageData | null = null;
+  private lastBrightness: number | null = null;
   private lastMotionTime = 0;
   private detectionCounter = 0;
   readonly CANVAS_WIDTH = 160;
@@ -182,6 +184,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         
         // Reset last image data when zone changes to prevent comparing differently sized areas
         this.lastImageData = null;
+        this.lastBrightness = null;
         this.drawPersistentZone();
       });
 
@@ -338,6 +341,21 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const current = ctx.getImageData(x, y, width, height);
 
+    // Calculate current brightness
+    const currentBrightness = this.calculateAverageBrightness(current.data, 2);
+
+    // Check for sudden brightness changes (e.g., athlete running in front of camera)
+    if (this.lastBrightness !== null) {
+      const brightnessDiff = Math.abs(currentBrightness - this.lastBrightness);
+
+      // If brightness change exceeds threshold, skip motion detection (likely false positive)
+      if (brightnessDiff > this.brightnessThreshold()) {
+        this.lastImageData = current;
+        this.lastBrightness = currentBrightness;
+        return;
+      }
+    }
+
     if (this.lastImageData && (current.width === this.lastImageData.width && current.height === this.lastImageData.height)) {
       const motionThreshold = 11 - this.sensitivity();
       const changedPct = this.calculateDifferenceFast(current.data, this.lastImageData.data, 30, motionThreshold, 2);
@@ -352,6 +370,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.lastImageData = current;
+    this.lastBrightness = currentBrightness;
   }
 
   private async processPoseDetection(): Promise<void> {
@@ -568,6 +587,28 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     return (changed / sampledPixels) * 100;
   }
 
+  /**
+   * Calculate average brightness from image data
+   * Returns a value between 0-100
+   */
+  private calculateAverageBrightness(data: Uint8ClampedArray, pixelStride = 2): number {
+    let totalBrightness = 0;
+    let samples = 0;
+
+    for (let i = 0; i < data.length; i += 4 * pixelStride) {
+      // Calculate perceived brightness using luminance formula
+      // Human eye is more sensitive to green, less to blue
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+      totalBrightness += brightness;
+      samples++;
+    }
+
+    return samples > 0 ? (totalBrightness / samples / 255) * 100 : 0;
+  }
+
   private handleMotionDetected(intensity: number): void {
     this.detectionCounter++;
     
@@ -650,6 +691,14 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sensitivity.set(Number(value));
   }
 
+  onBrightnessThresholdChange(event: Event) {
+    const value = (event.target as HTMLInputElement).value;
+    const numValue = Number(value);
+    if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+      this.brightnessThreshold.set(numValue);
+    }
+  }
+
   onCooldownChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     const numValue = Number(value);
@@ -696,6 +745,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.detectionMethod.set(method);
     // Reset detection state when switching methods
     this.lastImageData = null;
+    this.lastBrightness = null;
     this.previousPersonDetected = false;
     this.lastMotionTime = 0;
     this.lastPoseDetectionTime = 0;
