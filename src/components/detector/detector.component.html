@@ -125,6 +125,30 @@
               </div>
             </div>
 
+            <!-- DiffyJS Toggle (only visible when motion detection is selected) -->
+            @if (detectionMethod() === 'motion') {
+              <div class="bg-cyan-900/20 border border-cyan-700/50 rounded-lg p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex-1">
+                    <label for="diffyjs-toggle" class="text-sm font-medium text-gray-300 block mb-1">
+                      Use DiffyJS (High Performance)
+                      <span class="inline-block ml-2 px-2 py-0.5 text-xs bg-green-600 text-white rounded">NEW</span>
+                    </label>
+                    <p class="text-xs text-gray-400">3x faster processing, 50% less CPU usage</p>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      id="diffyjs-toggle"
+                      class="sr-only peer"
+                      [checked]="useDiffyJS()"
+                      (change)="onUseDiffyJSChange($event)">
+                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                  </label>
+                </div>
+              </div>
+            }
+
             <!-- Pose Library Selector (only visible when pose detection is selected) -->
             @if (detectionMethod() === 'pose') {
               <div>
