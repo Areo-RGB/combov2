@@ -6,6 +6,7 @@ import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import { DiffyDetectionService } from '../../services/diffy-detection.service';
 import { SpeedyDetectionService } from '../../services/speedy-detection.service';
+import { DetectionSettingsService } from '../../services/detection-settings.service';
 
 @Component({
   selector: 'app-detector',
@@ -27,22 +28,27 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   status = signal<'idle' | 'initializing' | 'ready' | 'detecting' | 'error' | 'no_camera'>('idle');
   lastMotionSignal = signal<string | null>(null);
   settingsExpanded = signal<boolean>(true); // Settings expanded by default
-  sensitivity = signal<number>(5);
-  motionCooldown = signal<number>(500); // Minimum delay between detections in ms
-  signalCadence = signal<number>(1); // Signal on every Nth detection
-  zoneWidthPercent = signal<number>(5); // 0 = off, 100 = full width
-  zonePositionPercent = signal<number>(50); // Horizontal position, 50% is center
-  useFullScreenDetection = signal<boolean>(false);
   detectionZone = signal<{ x: number; y: number; width: number; height: number } | null>(null);
-  detectionMethod = signal<'motion' | 'pose'>('motion'); // Detection method selector
-  poseLibrary = signal<'mediapipe' | 'movenet'>('mediapipe'); // Pose detection library
-  poseModel = signal<'lite' | 'full' | 'heavy'>('lite'); // MediaPipe model selector
-  moveNetModel = signal<'lightning' | 'thunder' | 'multipose'>('lightning'); // MoveNet model selector
-  useDiffyJS = signal<boolean>(false); // Feature flag: use diffyjs for motion detection
-  useSpeedyVision = signal<boolean>(false); // Feature flag: use speedy-vision for GPU-accelerated detection
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
-  selectedCameraId = signal<string>('');
+
+  // Inject the centralized detection settings service
+  private detectionSettings = inject(DetectionSettingsService);
+
+  // Expose settings from the centralized service for template binding
+  get sensitivity() { return this.detectionSettings.sensitivity; }
+  get motionCooldown() { return this.detectionSettings.motionCooldown; }
+  get signalCadence() { return this.detectionSettings.signalCadence; }
+  get zoneWidthPercent() { return this.detectionSettings.zoneWidthPercent; }
+  get zonePositionPercent() { return this.detectionSettings.zonePositionPercent; }
+  get useFullScreenDetection() { return this.detectionSettings.useFullScreenDetection; }
+  get detectionMethod() { return this.detectionSettings.detectionMethod; }
+  get poseLibrary() { return this.detectionSettings.poseLibrary; }
+  get poseModel() { return this.detectionSettings.poseModel; }
+  get moveNetModel() { return this.detectionSettings.moveNetModel; }
+  get useDiffyJS() { return this.detectionSettings.useDiffyJS; }
+  get useSpeedyVision() { return this.detectionSettings.useSpeedyVision; }
+  get selectedCameraId() { return this.detectionSettings.selectedCameraId; }
 
   private stream: MediaStream | null = null;
   private animationFrameId: number | null = null;
@@ -337,6 +343,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.speedyService.isSupported()) {
       console.warn('Speedy-vision requires WebGL2, falling back to canvas detection');
       this.useSpeedyVision.set(false);
+      this.detectionSettings.saveSettings();
       this.zone.runOutsideAngular(() => {
         this.queueNextFrame();
       });
@@ -374,6 +381,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error) {
       console.error('Failed to initialize speedy-vision:', error);
       this.useSpeedyVision.set(false);
+      this.detectionSettings.saveSettings();
       // Fallback to canvas detection
       this.zone.runOutsideAngular(() => {
         this.queueNextFrame();
@@ -775,6 +783,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   onSensitivityChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.sensitivity.set(Number(value));
+    this.detectionSettings.saveSettings();
   }
 
   onCooldownChange(event: Event) {
@@ -782,6 +791,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     const numValue = Number(value);
     if (!isNaN(numValue) && numValue >= 0) {
         this.motionCooldown.set(numValue);
+        this.detectionSettings.saveSettings();
     }
   }
 
@@ -791,27 +801,32 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!isNaN(numValue) && numValue >= 1) {
         this.signalCadence.set(numValue);
         this.detectionCounter = 0; // Reset on change
+        this.detectionSettings.saveSettings();
     }
   }
 
   onZoneWidthChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.zoneWidthPercent.set(Number(value));
+    this.detectionSettings.saveSettings();
   }
 
   onZonePositionChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.zonePositionPercent.set(Number(value));
+    this.detectionSettings.saveSettings();
   }
-  
+
   onFullScreenToggleChange(event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     this.useFullScreenDetection.set(checked);
+    this.detectionSettings.saveSettings();
   }
 
   onCameraChange(event: Event) {
     const selectedId = (event.target as HTMLSelectElement).value;
     this.selectedCameraId.set(selectedId);
+    this.detectionSettings.saveSettings();
     this.startCamera();
   }
 
@@ -821,6 +836,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onDetectionMethodChange(method: 'motion' | 'pose'): void {
     this.detectionMethod.set(method);
+    this.detectionSettings.saveSettings();
     // Reset detection state when switching methods
     this.lastImageData = null;
     this.previousPersonDetected = false;
@@ -849,6 +865,8 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.useSpeedyVision.set(false);
     }
 
+    this.detectionSettings.saveSettings();
+
     // If switching while detecting, restart detection with new method
     if (this.status() === 'detecting' && this.detectionMethod() === 'motion') {
       this.stopDetection();
@@ -866,6 +884,8 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.useDiffyJS.set(false);
     }
 
+    this.detectionSettings.saveSettings();
+
     // If switching while detecting, restart detection with new method
     if (this.status() === 'detecting' && this.detectionMethod() === 'motion') {
       this.stopDetection();
@@ -877,6 +897,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   async onPoseLibraryChange(event: Event): Promise<void> {
     const library = (event.target as HTMLSelectElement).value as 'mediapipe' | 'movenet';
     this.poseLibrary.set(library);
+    this.detectionSettings.saveSettings();
 
     // Clean up existing detectors
     if (this.poseLandmarker) {
@@ -899,6 +920,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   async onPoseModelChange(event: Event): Promise<void> {
     const model = (event.target as HTMLSelectElement).value as 'lite' | 'full' | 'heavy';
     this.poseModel.set(model);
+    this.detectionSettings.saveSettings();
 
     // Reinitialize MediaPipe with the new model
     if (this.poseLandmarker) {
@@ -916,6 +938,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   async onMoveNetModelChange(event: Event): Promise<void> {
     const model = (event.target as HTMLSelectElement).value as 'lightning' | 'thunder' | 'multipose';
     this.moveNetModel.set(model);
+    this.detectionSettings.saveSettings();
 
     // Reinitialize MoveNet with the new model
     if (this.moveNetDetector) {
