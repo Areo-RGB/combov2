@@ -10,6 +10,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
+import { BodyposeComponent } from './components/bodypose/bodypose.component';
 import { RtcService } from './services/rtc.service';
 import { SignalingService } from './services/signaling.service';
 import { CameraService } from './services/camera.service';
@@ -27,10 +28,10 @@ type DisplaySignal =
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent, HeaderComponent],
+  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent, BodyposeComponent, HeaderComponent],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-menu' | 'sprint-timing-single-menu' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels'>('selection');
+  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-menu' | 'sprint-timing-single-menu' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels' | 'bodypose'>('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');

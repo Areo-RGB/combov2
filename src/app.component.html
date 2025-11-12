@@ -39,12 +39,23 @@
         </div>
 
         <!-- Sprint Timing Card -->
-        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in border border-white border-opacity-20">
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in mb-8 border border-white border-opacity-20">
           <div class="flex flex-col items-center justify-center p-6">
             <h2 class="text-2xl font-semibold mb-4 text-orange-400">Sprint Timing</h2>
             <p class="text-gray-300 text-center mb-6">Time sprints with single or multiple devices using motion detection.</p>
             <button (click)="mode.set('sprint-timing-menu')" class="w-full max-w-md bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-orange-300">
               Launch Sprint Timing
+            </button>
+          </div>
+        </div>
+
+        <!-- Bodypose Motion Analyzer Card -->
+        <div class="bg-gray-800 rounded-lg shadow-2xl animate-fade-in border border-white border-opacity-20">
+          <div class="flex flex-col items-center justify-center p-6">
+            <h2 class="text-2xl font-semibold mb-4 text-pink-400">Bodypose Motion Analyzer</h2>
+            <p class="text-gray-300 text-center mb-6">Real-time body pose tracking and motion analysis with AI-powered joint detection.</p>
+            <button (click)="mode.set('bodypose')" class="w-full max-w-md bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-pink-300">
+              Launch Bodypose Analyzer
             </button>
           </div>
         </div>
@@ -273,6 +284,9 @@
       }
       @case ('team-duels') {
         <app-team-duels (goBack)="goBackToSelection()"></app-team-duels>
+      }
+      @case ('bodypose') {
+        <app-bodypose (goBack)="goBackToSelection()"></app-bodypose>
       }
     }
   </main>
