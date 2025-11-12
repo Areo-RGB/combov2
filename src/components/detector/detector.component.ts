@@ -4,6 +4,7 @@ import { PoseLandmarker, FilesetResolver, PoseLandmarkerResult } from '@mediapip
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
+import { DiffyDetectionService } from '../../services/diffy-detection.service';
 
 @Component({
   selector: 'app-detector',
@@ -36,6 +37,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   poseLibrary = signal<'mediapipe' | 'movenet'>('mediapipe'); // Pose detection library
   poseModel = signal<'lite' | 'full' | 'heavy'>('lite'); // MediaPipe model selector
   moveNetModel = signal<'lightning' | 'thunder' | 'multipose'>('lightning'); // MoveNet model selector
+  useDiffyJS = signal<boolean>(false); // Feature flag: use diffyjs for motion detection
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
@@ -53,6 +55,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   // Performance and cleanup improvements
   private zone = inject(NgZone);
   private injector = inject(Injector);
+  private diffyService = inject(DiffyDetectionService);
   private zoneEffectCleanup?: () => void;
   private resizeObserver?: ResizeObserver;
   private ctx?: CanvasRenderingContext2D;
@@ -277,10 +280,50 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.status.set('detecting');
     this.lastMotionTime = Date.now();
     this.detectionCounter = 0;
-    this.zone.runOutsideAngular(() => {
-      this.queueNextFrame();
-    });
+
+    // Initialize diffyjs if enabled for motion detection
+    if (this.detectionMethod() === 'motion' && this.useDiffyJS()) {
+      this.initializeDiffyJS();
+    } else {
+      this.zone.runOutsideAngular(() => {
+        this.queueNextFrame();
+      });
+    }
   }
+
+  private initializeDiffyJS(): void {
+    const video = this.videoRef().nativeElement;
+
+    // Configure diffyjs with current settings
+    this.diffyService.initialize(video, {
+      sensitivityLevel: this.sensitivity(),
+      detectionZone: this.detectionZone(),
+      cooldown: this.motionCooldown(),
+      cadence: this.signalCadence(),
+      debug: false // Set to true to see diff visualization
+    });
+
+    // Listen for motion detection events
+    const handleDiffyMotion = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const { intensity } = customEvent.detail;
+
+      this.zone.run(() => {
+        this.handleMotionDetected(intensity);
+      });
+    };
+
+    window.addEventListener('diffyMotionDetected', handleDiffyMotion);
+
+    // Store cleanup function
+    if (!this.diffyCleanupFn) {
+      this.diffyCleanupFn = () => {
+        window.removeEventListener('diffyMotionDetected', handleDiffyMotion);
+      };
+    }
+  }
+
+  private diffyCleanupFn?: () => void;
 
   private queueNextFrame() {
     if (this.status() !== 'detecting') return;
@@ -322,6 +365,11 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private processMotionDetection(): void {
+    // Skip canvas processing if using diffyjs
+    if (this.useDiffyJS() && this.diffyService.isActive()) {
+      return;
+    }
+
     const ctx = this.ctx!;
     const video = this.videoRef().nativeElement;
     if (!ctx) return;
@@ -596,6 +644,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined; // Explicitly clear reference
 
+    // Clean up diffyjs resources
+    this.diffyService.cleanup();
+    this.diffyCleanupFn?.();
+
     // Clean up MediaPipe resources
     if (this.poseLandmarker) {
       this.poseLandmarker.close();
@@ -627,6 +679,11 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.vfcHandle && video?.cancelVideoFrameCallback) {
       video.cancelVideoFrameCallback(this.vfcHandle);
       this.vfcHandle = null;
+    }
+
+    // Stop diffyjs if active
+    if (this.diffyService.isActive()) {
+      this.diffyService.cleanup();
     }
 
     if (this.stream) {
@@ -700,8 +757,24 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lastMotionTime = 0;
     this.lastPoseDetectionTime = 0;
     this.detectionCounter = 0;
+    // Stop diffyjs if switching away from motion
+    if (method !== 'motion' && this.diffyService.isActive()) {
+      this.diffyService.cleanup();
+    }
     // Clear and redraw overlay
     this.drawPersistentZone();
+  }
+
+  onUseDiffyJSChange(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.useDiffyJS.set(checked);
+
+    // If switching while detecting, restart detection with new method
+    if (this.status() === 'detecting' && this.detectionMethod() === 'motion') {
+      this.stopDetection();
+      this.status.set('ready');
+      // User can manually restart detection to apply the change
+    }
   }
 
   async onPoseLibraryChange(event: Event): Promise<void> {
