@@ -53,6 +53,9 @@ importers:
       '@tensorflow/tfjs-core':
         specifier: ^4.22.0
         version: 4.22.0(encoding@0.1.13)
+      diffyjs:
+        specifier: ^2.0.0
+        version: 2.0.0
       firebase:
         specifier: ^12.5.0
         version: 12.5.0
@@ -2025,6 +2028,9 @@ packages:
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
+
+  diffyjs@2.0.0:
+    resolution: {integrity: sha512-USc0bLLTWYaYcz/cVuolwutpC8jVCztKY8lTixbJu/ypv4APXzeGYxjFEjUkXDqSUDY2MTy3lgKlVH/Cc+O/xg==}
 
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
@@ -5287,6 +5293,8 @@ snapshots:
 
   detect-libc@2.1.2:
     optional: true
+
+  diffyjs@2.0.0: {}
 
   dom-serializer@2.0.0:
     dependencies:
