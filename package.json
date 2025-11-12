@@ -38,6 +38,7 @@
     "diffyjs": "^2.0.0",
     "firebase": "^12.5.0",
     "rxjs": "^7.8.2",
+    "speedy-vision": "^0.9.0-wip",
     "tailwindcss": "latest"
   },
   "devDependencies": {
