@@ -11,7 +11,13 @@
     "cap:add:android": "npx cap add android",
     "cap:sync": "npx cap sync android",
     "open:android": "npx cap open android",
-    "build:android": "ng build && npx cap sync android"
+    "build:android": "ng build && npx cap sync android",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:race": "vitest --run --testNamePattern='race condition'",
+    "test:perf": "vitest --run --testNamePattern='performance'",
+    "test:ci": "vitest --run --coverage"
   },
   "dependencies": {
     "@angular/build": "^20.3.9",
@@ -34,10 +40,17 @@
     "tailwindcss": "latest"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^20.3.9",
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
+    "@testing-library/angular": "^18.1.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.19.0",
+    "@vitest/ui": "^4.0.8",
+    "happy-dom": "^20.0.10",
+    "jsdom": "^27.1.0",
     "typescript": "~5.8.3",
-    "vite": "^6.4.1"
+    "vite": "^6.4.1",
+    "vitest": "^4.0.8"
   }
 }
