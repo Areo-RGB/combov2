@@ -5,6 +5,7 @@ import * as poseDetection from '@tensorflow-models/pose-detection';
 import '@tensorflow/tfjs-core';
 import '@tensorflow/tfjs-backend-webgl';
 import { DiffyDetectionService } from '../../services/diffy-detection.service';
+import { SpeedyDetectionService } from '../../services/speedy-detection.service';
 
 @Component({
   selector: 'app-detector',
@@ -38,6 +39,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   poseModel = signal<'lite' | 'full' | 'heavy'>('lite'); // MediaPipe model selector
   moveNetModel = signal<'lightning' | 'thunder' | 'multipose'>('lightning'); // MoveNet model selector
   useDiffyJS = signal<boolean>(false); // Feature flag: use diffyjs for motion detection
+  useSpeedyVision = signal<boolean>(false); // Feature flag: use speedy-vision for GPU-accelerated detection
 
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
@@ -56,6 +58,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private zone = inject(NgZone);
   private injector = inject(Injector);
   private diffyService = inject(DiffyDetectionService);
+  private speedyService = inject(SpeedyDetectionService);
   private zoneEffectCleanup?: () => void;
   private resizeObserver?: ResizeObserver;
   private ctx?: CanvasRenderingContext2D;
@@ -281,8 +284,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lastMotionTime = Date.now();
     this.detectionCounter = 0;
 
-    // Initialize diffyjs if enabled for motion detection
-    if (this.detectionMethod() === 'motion' && this.useDiffyJS()) {
+    // Priority: Speedy-vision > DiffyJS > Canvas
+    if (this.detectionMethod() === 'motion' && this.useSpeedyVision()) {
+      this.initializeSpeedyVision();
+    } else if (this.detectionMethod() === 'motion' && this.useDiffyJS()) {
       this.initializeDiffyJS();
     } else {
       this.zone.runOutsideAngular(() => {
@@ -325,6 +330,59 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private diffyCleanupFn?: () => void;
 
+  private async initializeSpeedyVision(): Promise<void> {
+    const video = this.videoRef().nativeElement;
+
+    // Check WebGL2 support
+    if (!this.speedyService.isSupported()) {
+      console.warn('Speedy-vision requires WebGL2, falling back to canvas detection');
+      this.useSpeedyVision.set(false);
+      this.zone.runOutsideAngular(() => {
+        this.queueNextFrame();
+      });
+      return;
+    }
+
+    try {
+      // Configure speedy-vision with current settings
+      await this.speedyService.initialize(video, {
+        sensitivityLevel: this.sensitivity(),
+        detectionZone: this.detectionZone(),
+        cooldown: this.motionCooldown(),
+        cadence: this.signalCadence(),
+        debug: false
+      });
+
+      // Listen for motion detection events
+      const handleSpeedyMotion = (event: Event) => {
+        const customEvent = event as CustomEvent;
+        const { intensity } = customEvent.detail;
+
+        this.zone.run(() => {
+          this.handleMotionDetected(intensity);
+        });
+      };
+
+      window.addEventListener('speedyMotionDetected', handleSpeedyMotion);
+
+      // Store cleanup function
+      if (!this.speedyCleanupFn) {
+        this.speedyCleanupFn = () => {
+          window.removeEventListener('speedyMotionDetected', handleSpeedyMotion);
+        };
+      }
+    } catch (error) {
+      console.error('Failed to initialize speedy-vision:', error);
+      this.useSpeedyVision.set(false);
+      // Fallback to canvas detection
+      this.zone.runOutsideAngular(() => {
+        this.queueNextFrame();
+      });
+    }
+  }
+
+  private speedyCleanupFn?: () => void;
+
   private queueNextFrame() {
     if (this.status() !== 'detecting') return;
     const video = this.videoRef().nativeElement as HTMLVideoElement & {
@@ -365,7 +423,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private processMotionDetection(): void {
-    // Skip canvas processing if using diffyjs
+    // Skip canvas processing if using GPU-accelerated libraries
+    if (this.useSpeedyVision() && this.speedyService.isActive()) {
+      return;
+    }
     if (this.useDiffyJS() && this.diffyService.isActive()) {
       return;
     }
@@ -644,6 +705,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined; // Explicitly clear reference
 
+    // Clean up speedy-vision resources
+    this.speedyService.cleanup();
+    this.speedyCleanupFn?.();
+
     // Clean up diffyjs resources
     this.diffyService.cleanup();
     this.diffyCleanupFn?.();
@@ -679,6 +744,11 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.vfcHandle && video?.cancelVideoFrameCallback) {
       video.cancelVideoFrameCallback(this.vfcHandle);
       this.vfcHandle = null;
+    }
+
+    // Stop speedy-vision if active
+    if (this.speedyService.isActive()) {
+      this.speedyService.cleanup();
     }
 
     // Stop diffyjs if active
@@ -757,9 +827,14 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lastMotionTime = 0;
     this.lastPoseDetectionTime = 0;
     this.detectionCounter = 0;
-    // Stop diffyjs if switching away from motion
-    if (method !== 'motion' && this.diffyService.isActive()) {
-      this.diffyService.cleanup();
+    // Stop GPU-accelerated libraries if switching away from motion
+    if (method !== 'motion') {
+      if (this.speedyService.isActive()) {
+        this.speedyService.cleanup();
+      }
+      if (this.diffyService.isActive()) {
+        this.diffyService.cleanup();
+      }
     }
     // Clear and redraw overlay
     this.drawPersistentZone();
@@ -768,6 +843,28 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   onUseDiffyJSChange(event: Event): void {
     const checked = (event.target as HTMLInputElement).checked;
     this.useDiffyJS.set(checked);
+
+    // Disable speedy-vision if enabling diffyjs
+    if (checked) {
+      this.useSpeedyVision.set(false);
+    }
+
+    // If switching while detecting, restart detection with new method
+    if (this.status() === 'detecting' && this.detectionMethod() === 'motion') {
+      this.stopDetection();
+      this.status.set('ready');
+      // User can manually restart detection to apply the change
+    }
+  }
+
+  onUseSpeedyVisionChange(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.useSpeedyVision.set(checked);
+
+    // Disable diffyjs if enabling speedy-vision
+    if (checked) {
+      this.useDiffyJS.set(false);
+    }
 
     // If switching while detecting, restart detection with new method
     if (this.status() === 'detecting' && this.detectionMethod() === 'motion') {
