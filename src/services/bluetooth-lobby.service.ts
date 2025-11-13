@@ -53,17 +53,17 @@ export class BluetoothLobbyService {
 
   // ---- Public API ----
 
-  async startHostLobby(lobbyId: string, hostName: string): Promise<void> {
+  async startHostLobby(hostName: string): Promise<void> {
     this.role = 'host';
-    this.lobbyId = lobbyId;
-    await this.initializePeripheral(lobbyId);
+    this.lobbyId = 'default';
+    await this.initializePeripheral();
   }
 
-  async joinLobby(lobbyId: string, clientName: string): Promise<void> {
+  async joinLobby(clientName: string): Promise<void> {
     this.role = 'client';
-    this.lobbyId = lobbyId;
+    this.lobbyId = 'default';
     await this.initializeCentral();
-    await this.scanAndConnect(lobbyId, clientName);
+    await this.scanAndConnect(clientName);
   }
 
   async broadcastOffer(deviceId: string, sdp: string): Promise<void> {
@@ -151,7 +151,7 @@ export class BluetoothLobbyService {
 
   // ---- Peripheral (Host) Mode ----
 
-  private async initializePeripheral(lobbyId: string): Promise<void> {
+  private async initializePeripheral(): Promise<void> {
     // Listen for client connections
     BleSignaling.addListener('rxWritten', async (event: any) => {
       const decoded = this.parseEnvelope(event?.value);
@@ -178,8 +178,8 @@ export class BluetoothLobbyService {
     });
 
     await BleSignaling.startAdvertising({
-      sessionId: lobbyId,
-      name: `${this.NAME_PREFIX}${lobbyId}`,
+      sessionId: 'default',
+      name: 'Lobby',
       serviceId: this.SERVICE_ID,
       rxId: this.RX_ID,
       txId: this.TX_ID,
@@ -203,17 +203,13 @@ export class BluetoothLobbyService {
     await BleClient.initialize({ androidNeverForLocation: true });
   }
 
-  private async scanAndConnect(lobbyId: string, clientName: string): Promise<void> {
+  private async scanAndConnect(clientName: string): Promise<void> {
     let resolved = false;
 
     await BleClient.requestLEScan({ services: [this.SERVICE_ID] }, async (result) => {
-      const name = (result.localName || (result as any).name || (result as any).device?.name) as
-        | string
-        | undefined;
       const deviceId = (result.device?.deviceId || (result as any).deviceId) as string | undefined;
 
-      if (!name || !deviceId) return;
-      if (!name.startsWith(`${this.NAME_PREFIX}${lobbyId}`)) return;
+      if (!deviceId) return;
       if (resolved) return;
 
       resolved = true;

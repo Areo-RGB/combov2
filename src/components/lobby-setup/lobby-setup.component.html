@@ -76,21 +76,15 @@
                 </div>
                 <h2 class="text-2xl font-bold text-gray-50">Join Lobby</h2>
               </div>
-              <p class="text-neutral-300 mb-4 leading-relaxed">
-                Enter the lobby ID to discover and connect to the host device.
+              <p class="text-neutral-300 mb-6 leading-relaxed">
+                Scan for and automatically connect to any available lobby via Bluetooth.
               </p>
-              <input
-                type="text"
-                [(ngModel)]="lobbyIdInput"
-                placeholder="Lobby ID"
-                class="w-full bg-gray-900 text-neutral-100 rounded-lg px-4 py-3 mb-4 border border-neutral-600 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-              />
               <button
                 (click)="joinClientLobby()"
-                [disabled]="isConnecting() || !deviceName() || !lobbyIdInput()"
+                [disabled]="isConnecting() || !deviceName()"
                 class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg"
               >
-                {{ isConnecting() ? 'Connecting...' : 'Join Lobby' }}
+                {{ isConnecting() ? 'Scanning...' : 'Scan & Join' }}
               </button>
             </div>
           </div>
@@ -112,7 +106,7 @@
           >
             Lobby Host
           </h1>
-          <p class="text-neutral-400 text-lg">Lobby ID: <span class="text-cyan-400 font-mono">{{ lobbyId() }}</span></p>
+          <p class="text-neutral-400 text-lg">Broadcasting lobby via Bluetooth</p>
         </div>
 
         <div class="space-y-6">
@@ -141,7 +135,7 @@
                   </svg>
                 </div>
                 <p class="text-neutral-400">Waiting for devices to connect...</p>
-                <p class="text-neutral-500 text-sm mt-2">Share the Lobby ID with other devices</p>
+                <p class="text-neutral-500 text-sm mt-2">Other devices can scan and join via Bluetooth</p>
               </div>
             } @else {
               <div class="space-y-3">
@@ -218,7 +212,7 @@
           >
             Lobby Client
           </h1>
-          <p class="text-neutral-400 text-lg">Connected to: <span class="text-purple-400 font-mono">{{ lobbyId() }}</span></p>
+          <p class="text-neutral-400 text-lg">Connected to host</p>
         </div>
 
         <div class="space-y-6">

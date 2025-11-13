@@ -54,17 +54,14 @@ export class LocalLobbyService {
 
   // ---- Host Methods ----
 
-  async createLobby(hostName: string): Promise<string> {
-    const lobbyId = this.generateLobbyId();
-    this.lobbyId.set(lobbyId);
+  async createLobby(hostName: string): Promise<void> {
+    this.lobbyId.set('default');
     this.role.set('host');
     this.hostName.set(hostName);
     this.devices.set([]);
     this.isSetupComplete.set(false);
 
-    await this.bluetooth.startHostLobby(lobbyId, hostName);
-
-    return lobbyId;
+    await this.bluetooth.startHostLobby(hostName);
   }
 
   async completeSetup(): Promise<void> {
@@ -88,15 +85,15 @@ export class LocalLobbyService {
 
   // ---- Client Methods ----
 
-  async joinLobby(lobbyId: string, clientName: string): Promise<void> {
+  async joinLobby(clientName: string): Promise<void> {
     const clientId = this.generateClientId();
     this.clientId.set(clientId);
-    this.lobbyId.set(lobbyId);
+    this.lobbyId.set('default');
     this.role.set('client');
     this.devices.set([]);
     this.isSetupComplete.set(false);
 
-    await this.bluetooth.joinLobby(lobbyId, clientName);
+    await this.bluetooth.joinLobby(clientName);
   }
 
   // ---- WebRTC Connection Management ----
@@ -313,10 +310,6 @@ export class LocalLobbyService {
   }
 
   // ---- Utility ----
-
-  private generateLobbyId(): string {
-    return Math.floor(Math.random() * 10).toString();
-  }
 
   private generateClientId(): string {
     return `client-${Math.random().toString(36).substring(2, 11)}`;

@@ -16,7 +16,6 @@ export class LobbySetupComponent {
   // View state
   viewState = signal<'selection' | 'host' | 'client'>('selection');
   deviceName = signal<string>('');
-  lobbyIdInput = signal<string>('');
   error = signal<string | null>(null);
   isConnecting = signal<boolean>(false);
 
@@ -54,7 +53,7 @@ export class LobbySetupComponent {
     this.error.set(null);
 
     try {
-      const lobbyId = await this.lobbyService.createLobby(this.deviceName());
+      await this.lobbyService.createLobby(this.deviceName());
       this.viewState.set('host');
     } catch (err) {
       console.error('Failed to create lobby:', err);
@@ -85,8 +84,8 @@ export class LobbySetupComponent {
   // ---- Client Actions ----
 
   async joinClientLobby(): Promise<void> {
-    if (!this.deviceName() || !this.lobbyIdInput()) {
-      this.error.set('Please enter both device name and lobby ID');
+    if (!this.deviceName()) {
+      this.error.set('Please enter a device name');
       return;
     }
 
@@ -94,11 +93,11 @@ export class LobbySetupComponent {
     this.error.set(null);
 
     try {
-      await this.lobbyService.joinLobby(this.lobbyIdInput(), this.deviceName());
+      await this.lobbyService.joinLobby(this.deviceName());
       this.viewState.set('client');
     } catch (err) {
       console.error('Failed to join lobby:', err);
-      this.error.set('Failed to join lobby. Please check the lobby ID and try again.');
+      this.error.set('Failed to join lobby. Please try again.');
     } finally {
       this.isConnecting.set(false);
     }
