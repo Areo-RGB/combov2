@@ -79,6 +79,20 @@ D/BleSignalingPlugin:    TX Power: 3
 ✅ BLE Advertising started successfully!
 ```
 
+**Note about packet sizes (updated in latest version):**
+- The plugin now shows packet size calculations in logs
+- BLE advertising has a 31-byte limit per packet
+- We use **2 packets** to avoid "Data too large" errors:
+  - **Advertising packet**: Service UUID only (~19 bytes)
+  - **Scan response**: Device name (~14 bytes)
+- This keeps both under the 31-byte limit
+- Clients still see both the UUID and name when scanning
+- Look for these lines in logs:
+  ```
+  D/BleSignalingPlugin:    Advertising packet size: Service UUID (16 bytes) + overhead (~3 bytes) = ~19 bytes
+  D/BleSignalingPlugin:    Scan response size: Device name (X bytes) + overhead (~2 bytes)
+  ```
+
 ---
 
 ## ❌ What to Look For - Failure Cases
@@ -125,11 +139,16 @@ E/BleSignalingPlugin: ❌ BLE Advertising failed: [reason] (code: X)
 ```
 
 **Possible reasons:**
-- `Data too large` (code 1) - Advertising data exceeds limit
+- `Data too large` (code 1) - **FIXED** in latest version (now uses scan response)
 - `Too many advertisers` (code 2) - Another app is advertising
 - `Already started` (code 3) - Plugin already advertising
 - `Internal error` (code 4) - System Bluetooth error
 - `Feature unsupported` (code 5) - BLE advertising not supported
+
+**Fix for "Data too large" (if you see this on old version):**
+- This should NOT occur in the latest version (commit 94a2ba4+)
+- The plugin now splits data between advertising packet and scan response
+- If you still see this, rebuild the APK with the latest code
 
 **Fix for "Too many advertisers":**
 ```bash
