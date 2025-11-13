@@ -297,11 +297,19 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     if (detector) {
       if (newValue) {
         detector.onDetectionMethodChange('pose');
-        // Enable landmark position tracking mode
+        // Enable landmark position tracking mode (but don't trigger timer yet)
         detector.enableLandmarkTracking();
+        // Start detection immediately to show landmarks
+        if (detector.status() === 'ready') {
+          detector.startDetection();
+        }
       } else {
         detector.onDetectionMethodChange('motion');
         detector.disableLandmarkTracking();
+        // Stop detection when bodypose is disabled
+        if (detector.status() === 'detecting') {
+          detector.stopDetection();
+        }
       }
     }
   }
@@ -309,11 +317,8 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
   handleReady() {
     if (this.useBodypose()) {
       this.isReady.set(true);
-      const detector = this.detectorComponent();
-      if (detector && detector.status() === 'ready') {
-        // Start detection with landmark position tracking
-        detector.startDetection();
-      }
+      // Detection is already running (started when bodypose was toggled)
+      // This just enables timer triggering on large movements
     }
   }
 }
