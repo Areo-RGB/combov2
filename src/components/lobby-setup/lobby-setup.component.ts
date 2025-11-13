@@ -55,9 +55,10 @@ export class LobbySetupComponent {
     try {
       await this.lobbyService.createLobby(this.deviceName());
       this.viewState.set('host');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create lobby:', err);
-      this.error.set('Failed to create lobby. Please try again.');
+      const errorMsg = err?.message || err?.toString() || 'Unknown error';
+      this.error.set(`Failed to create lobby: ${errorMsg}`);
     } finally {
       this.isConnecting.set(false);
     }
@@ -95,9 +96,10 @@ export class LobbySetupComponent {
     try {
       await this.lobbyService.joinLobby(this.deviceName());
       this.viewState.set('client');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to join lobby:', err);
-      this.error.set('Failed to join lobby. Please try again.');
+      const errorMsg = err?.message || err?.toString() || 'Unknown error';
+      this.error.set(`Failed to join lobby: ${errorMsg}`);
     } finally {
       this.isConnecting.set(false);
     }
