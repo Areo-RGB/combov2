@@ -315,7 +315,7 @@ export class LocalLobbyService {
   // ---- Utility ----
 
   private generateLobbyId(): string {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+    return Math.floor(Math.random() * 10).toString();
   }
 
   private generateClientId(): string {
