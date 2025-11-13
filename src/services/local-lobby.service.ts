@@ -1,13 +1,13 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { BluetoothLobbyService, LobbyMessage, LobbyRole } from './bluetooth-lobby.service';
+import { RtcConnection } from './rtc-connection';
 
 export interface ConnectedDevice {
   id: string;
   name: string;
   connected: boolean;
   rtcReady: boolean;
-  peerConnection: RTCPeerConnection | null;
-  dataChannel: RTCDataChannel | null;
+  rtcConnection: RtcConnection | null;
 }
 
 export interface LobbyState {
@@ -33,7 +33,7 @@ export class LocalLobbyService {
   isSetupComplete = signal<boolean>(false);
   selectedMode = signal<string | null>(null);
   clientId = signal<string | null>(null);
-  clientPeerConnection = signal<RTCPeerConnection | null>(null);
+  clientRtcConnection: RtcConnection | null = null;
 
   // Computed signals
   allDevicesReady = computed(() => {
@@ -112,23 +112,29 @@ export class LocalLobbyService {
 
   private async createWebRTCConnection(device: ConnectedDevice): Promise<void> {
     try {
-      // Create peer connection (no ICE servers for local network)
-      const pc = new RTCPeerConnection({ iceServers: [] });
-      device.peerConnection = pc;
+      // Create RTC connection
+      const rtc = new RtcConnection();
+      device.rtcConnection = rtc;
 
-      // Create data channel
-      const dc = pc.createDataChannel('lobby', { ordered: true });
-      device.dataChannel = dc;
+      // Set up callbacks
+      rtc.onOpen(() => {
+        console.log(`RTC connection ready for device: ${device.id}`);
+        this.updateDeviceRtcStatus(device.id, true);
+      });
 
-      this.attachDataChannelHandlers(device, dc);
+      rtc.onClose(() => {
+        console.log(`RTC connection closed for device: ${device.id}`);
+        this.updateDeviceRtcStatus(device.id, false);
+      });
+
+      rtc.onMessage((msg) => {
+        this.messageCallbacks.forEach((cb) => cb(msg));
+      });
 
       // Create offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      await this.waitForIceGatheringComplete(pc);
+      const sdp = await rtc.createOfferWithDataChannel('lobby');
 
       // Send offer to client via Bluetooth
-      const sdp = pc.localDescription?.sdp ?? '';
       await this.bluetooth.broadcastOffer(device.id, sdp);
 
       console.log('Offer sent for device:', device.id);
@@ -141,31 +147,35 @@ export class LocalLobbyService {
     const devices = this.devices();
     const device = devices.find((d) => d.id === deviceId);
 
-    if (!device || !device.peerConnection) return;
+    if (!device || !device.rtcConnection) return;
 
-    await device.peerConnection.setRemoteDescription({ type: 'answer', sdp: answerSdp });
-    this.updateDeviceRtcStatus(deviceId, true);
+    await device.rtcConnection.setRemoteAnswer(answerSdp);
+    console.log('Answer processed for device:', deviceId);
   }
 
   private async handleOffer(offerSdp: string): Promise<void> {
     // Client receives offer from host
-    const pc = new RTCPeerConnection({ iceServers: [] });
-    this.clientPeerConnection.set(pc);
+    const rtc = new RtcConnection();
+    this.clientRtcConnection = rtc;
 
-    pc.ondatachannel = (e) => {
-      const dc = e.channel;
-      this.attachDataChannelHandlers({ id: 'host', name: 'Host' } as ConnectedDevice, dc);
-    };
+    // Set up callbacks
+    rtc.onOpen(() => {
+      console.log('Client RTC connection ready');
+    });
 
-    await pc.setRemoteDescription({ type: 'offer', sdp: offerSdp });
+    rtc.onClose(() => {
+      console.log('Client RTC connection closed');
+    });
 
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    await this.waitForIceGatheringComplete(pc);
+    rtc.onMessage((msg) => {
+      this.messageCallbacks.forEach((cb) => cb(msg));
+    });
+
+    // Accept offer and create answer
+    const sdp = await rtc.acceptOfferAndCreateAnswer(offerSdp);
 
     // Send answer back to host
     const clientId = this.clientId() || 'unknown';
-    const sdp = pc.localDescription?.sdp ?? '';
     await this.bluetooth.sendAnswer(clientId, sdp);
 
     console.log('Answer sent to host');
@@ -182,8 +192,7 @@ export class LocalLobbyService {
             name: msg.deviceName || 'Unknown',
             connected: true,
             rtcReady: false,
-            peerConnection: null,
-            dataChannel: null,
+            rtcConnection: null,
           });
         }
         break;
@@ -230,43 +239,6 @@ export class LocalLobbyService {
     this.devices.set(updated);
   }
 
-  // ---- Data Channel Helpers ----
-
-  private attachDataChannelHandlers(device: ConnectedDevice, dc: RTCDataChannel): void {
-    dc.onopen = () => {
-      console.log(`Data channel opened for device: ${device.id}`);
-    };
-
-    dc.onmessage = (ev) => {
-      try {
-        const parsed = JSON.parse(ev.data);
-        this.messageCallbacks.forEach((cb) => cb(parsed));
-      } catch {
-        // Ignore malformed data
-      }
-    };
-
-    dc.onerror = (err) => {
-      console.error(`Data channel error for device ${device.id}:`, err);
-    };
-  }
-
-  private waitForIceGatheringComplete(pc: RTCPeerConnection): Promise<void> {
-    if (pc.iceGatheringState === 'complete') {
-      return Promise.resolve();
-    }
-
-    return new Promise<void>((resolve) => {
-      const listener = () => {
-        if (pc.iceGatheringState === 'complete') {
-          pc.removeEventListener('icegatheringstatechange', listener);
-          resolve();
-        }
-      };
-      pc.addEventListener('icegatheringstatechange', listener);
-    });
-  }
-
   // ---- Messaging ----
 
   onMessage(callback: (msg: any) => void): void {
@@ -275,11 +247,10 @@ export class LocalLobbyService {
 
   sendToAll(message: any): void {
     const devices = this.devices();
-    const jsonMsg = JSON.stringify(message);
 
     devices.forEach((device) => {
-      if (device.dataChannel && device.dataChannel.readyState === 'open') {
-        device.dataChannel.send(jsonMsg);
+      if (device.rtcConnection && device.rtcConnection.isReady()) {
+        device.rtcConnection.send(message);
       }
     });
   }
@@ -289,14 +260,18 @@ export class LocalLobbyService {
   async cleanup(): Promise<void> {
     const devices = this.devices();
 
+    // Close all device connections
     devices.forEach((device) => {
-      if (device.dataChannel) {
-        device.dataChannel.close();
-      }
-      if (device.peerConnection) {
-        device.peerConnection.close();
+      if (device.rtcConnection) {
+        device.rtcConnection.close();
       }
     });
+
+    // Close client connection
+    if (this.clientRtcConnection) {
+      this.clientRtcConnection.close();
+      this.clientRtcConnection = null;
+    }
 
     await this.bluetooth.cleanup();
 
