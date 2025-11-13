@@ -7,5 +7,16 @@
     ],
     "deny": [],
     "ask": []
+  },
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--extension"],
+      "env": {
+        "PLAYWRIGHT_MCP_EXTENSION_TOKEN":
+          "7h-QTOrW7nDypPd7AV0WT3e2MXHAVZuDnYCTaXm6cg4"
+      }
+    }
   }
 }
+
