@@ -46,6 +46,31 @@ else
 fi
 echo ""
 
+# Check 2b: MainActivity.java registers plugin correctly
+echo "📱 Checking MainActivity.java plugin registration..."
+if [ -f "android/app/src/main/java/com/motionsignal/app/MainActivity.java" ]; then
+    if grep -q "registerPlugin(BleSignalingPlugin.class)" android/app/src/main/java/com/motionsignal/app/MainActivity.java; then
+        echo "✅ BleSignalingPlugin is registered in MainActivity"
+
+        # Verify it's before super.onCreate()
+        if grep -B 1 "super.onCreate" android/app/src/main/java/com/motionsignal/app/MainActivity.java | grep -q "registerPlugin"; then
+            echo "✅ Plugin registered BEFORE super.onCreate() (correct timing)"
+        else
+            echo "❌ Plugin registered AFTER super.onCreate() - this will cause errors!"
+            echo "   Plugin must be registered BEFORE calling super.onCreate()"
+            ERRORS=$((ERRORS + 1))
+        fi
+    else
+        echo "❌ BleSignalingPlugin NOT registered in MainActivity"
+        echo "   Add: registerPlugin(BleSignalingPlugin.class); in onCreate()"
+        ERRORS=$((ERRORS + 1))
+    fi
+else
+    echo "⚠️  MainActivity.java not found"
+    WARNINGS=$((WARNINGS + 1))
+fi
+echo ""
+
 # Check 3: AndroidManifest.xml has BLE permissions
 echo "📜 Checking AndroidManifest.xml permissions..."
 if [ -f "android/app/src/main/AndroidManifest.xml" ]; then

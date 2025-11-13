@@ -39,11 +39,19 @@ Located in `android/app/src/main/java/com/motionsignal/app/`:
      - GATT server with custom service UUID
      - RX characteristic for receiving data
      - TX characteristic for sending notifications
-     - Auto-registered via `@CapacitorPlugin` annotation
+     - Annotated with `@CapacitorPlugin`
 
 2. **`MainActivity.java`** - App entry point
-   - Standard Capacitor bridge activity
-   - Plugins auto-discovered via annotations
+   - **CRITICAL**: Plugin is registered **BEFORE** `super.onCreate()`
+   - This ensures the plugin is available when the bridge initializes
+   - Code:
+     ```java
+     @Override
+     public void onCreate(Bundle savedInstanceState) {
+         registerPlugin(BleSignalingPlugin.class);  // MUST be first!
+         super.onCreate(savedInstanceState);
+     }
+     ```
 
 3. **`AndroidManifest.xml`** - Permissions and configuration
    - All required Bluetooth permissions:

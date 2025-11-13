@@ -39,11 +39,33 @@ else
     echo "⚠️  Warning: BleSignalingPlugin.java not found in ./app/"
 fi
 
-# Copy MainActivity.java (if custom)
-if [ -f "./app/src/main/java/com/motionsignal/app/MainActivity.java" ]; then
-    cp ./app/src/main/java/com/motionsignal/app/MainActivity.java \
-       android/app/src/main/java/com/motionsignal/app/
-    echo "✅ MainActivity.java copied"
+# Ensure MainActivity.java registers the plugin
+MAINACTIVITY="android/app/src/main/java/com/motionsignal/app/MainActivity.java"
+if [ -f "$MAINACTIVITY" ]; then
+    if ! grep -q "registerPlugin(BleSignalingPlugin.class)" "$MAINACTIVITY"; then
+        echo "⚠️  MainActivity.java missing plugin registration, fixing..."
+
+        # Create corrected MainActivity.java
+        cat > "$MAINACTIVITY" << 'EOF'
+package com.motionsignal.app;
+
+import android.os.Bundle;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(BleSignalingPlugin.class);
+        super.onCreate(savedInstanceState);
+    }
+}
+EOF
+        echo "✅ MainActivity.java updated with plugin registration"
+    else
+        echo "✅ MainActivity.java already has plugin registration"
+    fi
+else
+    echo "⚠️  Warning: MainActivity.java not found"
 fi
 
 # Copy AndroidManifest.xml with BLE permissions
