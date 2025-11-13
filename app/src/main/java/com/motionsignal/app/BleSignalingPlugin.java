@@ -254,10 +254,17 @@ public class BleSignalingPlugin extends Plugin {
                 .setTimeout(0) // Advertise indefinitely
                 .build();
 
+        // Don't include device name in advertising packet to avoid "Data too large" error
+        // Device name is still set on adapter and available during connection
         AdvertiseData data = new AdvertiseData.Builder()
-                .setIncludeDeviceName(true)
+                .setIncludeDeviceName(false)  // Changed from true - saves 12+ bytes
                 .addServiceUuid(new ParcelUuid(serviceUuid))
                 .setIncludeTxPowerLevel(false)
+                .build();
+
+        // Optionally add scan response with device name (31 more bytes available)
+        AdvertiseData scanResponse = new AdvertiseData.Builder()
+                .setIncludeDeviceName(true)  // Device name goes in scan response
                 .build();
 
         // Create callback with proper error handling
@@ -311,8 +318,11 @@ public class BleSignalingPlugin extends Plugin {
         };
 
         Log.d(TAG, "Starting BLE advertising...");
+        Log.d(TAG, "   Advertising packet size: Service UUID (16 bytes) + overhead (~3 bytes) = ~19 bytes");
+        Log.d(TAG, "   Scan response size: Device name (" + deviceName.length() + " bytes) + overhead (~2 bytes)");
         try {
-            advertiser.startAdvertising(settings, data, advertiseCallback);
+            // Include scan response with device name to avoid "Data too large" error
+            advertiser.startAdvertising(settings, data, scanResponse, advertiseCallback);
         } catch (SecurityException e) {
             Log.e(TAG, "SecurityException starting advertising: " + e.getMessage());
             call.reject("Permission denied: " + e.getMessage());
