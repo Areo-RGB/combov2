@@ -93,7 +93,7 @@ export class LocalLobbyService {
     this.devices.set([]);
     this.isSetupComplete.set(false);
 
-    await this.bluetooth.joinLobby(clientName);
+    await this.bluetooth.joinLobby(clientName, clientId);
   }
 
   // ---- WebRTC Connection Management ----

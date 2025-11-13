@@ -59,11 +59,11 @@ export class BluetoothLobbyService {
     await this.initializePeripheral();
   }
 
-  async joinLobby(clientName: string): Promise<void> {
+  async joinLobby(clientName: string, clientId: string): Promise<void> {
     this.role = 'client';
     this.lobbyId = 'default';
     await this.initializeCentral();
-    await this.scanAndConnect(clientName);
+    await this.scanAndConnect(clientName, clientId);
   }
 
   async broadcastOffer(deviceId: string, sdp: string): Promise<void> {
@@ -203,7 +203,7 @@ export class BluetoothLobbyService {
     await BleClient.initialize({ androidNeverForLocation: true });
   }
 
-  private async scanAndConnect(clientName: string): Promise<void> {
+  private async scanAndConnect(clientName: string, clientId: string): Promise<void> {
     let resolved = false;
 
     await BleClient.requestLEScan({ services: [this.SERVICE_ID] }, async (result) => {
@@ -233,8 +233,7 @@ export class BluetoothLobbyService {
         });
       });
 
-      // Send device info to host
-      const clientId = this.generateDeviceId();
+      // Send device info to host (use provided clientId)
       const msg: LobbyMessage = {
         type: 'device-info',
         deviceId: clientId,
