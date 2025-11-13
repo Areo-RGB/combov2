@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, output, signal, viewChild, OnDestroy, inject, OnInit, NgZone } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  output,
+  signal,
+  viewChild,
+  OnDestroy,
+  inject,
+  OnInit,
+  NgZone,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DetectorComponent } from '../components/detector/detector.component';
 import { HeaderComponent } from '../components/header/header.component';
@@ -13,19 +23,21 @@ import { WebRTCService } from './services/webrtc.service';
   templateUrl: './team-duels.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, 
+    CommonModule,
     DetectorComponent,
     HeaderComponent,
     TeamDuelsLobbyComponent,
     GameClientComponent,
-    DisplayHostComponent
+    DisplayHostComponent,
   ],
-  providers: [TeamDuelsFirebaseService, WebRTCService] // Scope services to this feature
+  providers: [TeamDuelsFirebaseService, WebRTCService], // Scope services to this feature
 })
 export class TeamDuelsComponent implements OnDestroy, OnInit {
   goBack = output<void>();
 
-  mode = signal<'selection' | 'single-device' | 'lobby' | 'game-client' | 'display-host'>('selection');
+  mode = signal<'selection' | 'single-device' | 'lobby' | 'game-client' | 'display-host'>(
+    'selection'
+  );
 
   // Multi-device state
   sessionId = signal<string | null>(null);
@@ -42,7 +54,7 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   lastReactionTime = signal<number | null>(null);
   gameState = signal<'idle' | 'running' | 'paused'>('idle');
   private animationFrameId: number | null = null;
-  
+
   // Audio state for single-device mode
   private startSoundAudio = new Audio();
   private announcementAudio = new Audio();
@@ -51,43 +63,50 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   private announcedThresholds = signal<Set<number>>(new Set());
   availableVoices = signal<SpeechSynthesisVoice[]>([]);
   selectedVoiceURI = signal<string>('default');
-  
+
   // Collapsible state for settings
   gameSettingsExpanded = signal(true);
-  
+
   toggleGameSettings(): void {
-    this.gameSettingsExpanded.update(v => !v);
+    this.gameSettingsExpanded.update((v) => !v);
   }
 
-  private readonly PRE_RECORDED_VOICES: { [key: string]: { name: string; files: { [key: string]: string } } } = {
-    'default': {
+  private readonly PRE_RECORDED_VOICES: {
+    [key: string]: { name: string; files: { [key: string]: string } };
+  } = {
+    default: {
       name: 'Pre-recorded (Default)',
       files: {
-        'fünfzig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785980/f%C3%BCnfzig',
-        'vierzig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785981/vierzig',
-        'dreißig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785982/drei%C3%9Fig',
-        'zwanzig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785984/zwanzig',
-        'zehn': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785985/zehn',
-        'fünf': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785985/f%C3%BCnf',
-        'drei': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785986/drei'
-      }
+        fünfzig: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785980/f%C3%BCnfzig',
+        vierzig: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785981/vierzig',
+        dreißig: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785982/drei%C3%9Fig',
+        zwanzig: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785984/zwanzig',
+        zehn: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785985/zehn',
+        fünf: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785985/f%C3%BCnf',
+        drei: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762785986/drei',
+      },
     },
-    'crusader': {
+    crusader: {
       name: 'Crusader',
       files: {
-        'fünfzig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786496/f%C3%BCnfzig_crusader',
-        'vierzig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786497/vierzig_crusader',
-        'dreißig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786498/drei%C3%9Fig_crusader',
-        'zwanzig': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786499/zwanzig_crusader',
-        'zehn': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786499/zehn_crusader',
-        'fünf': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786500/f%C3%BCnf_crusader',
-        'drei': 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786501/drei_crusader'
-      }
-    }
+        fünfzig:
+          'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786496/f%C3%BCnfzig_crusader',
+        vierzig: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786497/vierzig_crusader',
+        dreißig:
+          'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786498/drei%C3%9Fig_crusader',
+        zwanzig: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786499/zwanzig_crusader',
+        zehn: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786499/zehn_crusader',
+        fünf: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786500/f%C3%BCnf_crusader',
+        drei: 'https://res.cloudinary.com/dg8zbx8ja/raw/upload/v1762786501/drei_crusader',
+      },
+    },
   };
 
-  preRecordedVoiceOptions = Object.entries(this.PRE_RECORDED_VOICES).map(([key, value]) => ({ key, name: value.name }));
-  
+  preRecordedVoiceOptions = Object.entries(this.PRE_RECORDED_VOICES).map(([key, value]) => ({
+    key,
+    name: value.name,
+  }));
+
   detector = viewChild(DetectorComponent);
   private zone = inject(NgZone);
   private firebaseService = inject(TeamDuelsFirebaseService);
@@ -165,7 +184,7 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
     this.mode.set('lobby');
   }
 
-  onSessionStarted(event: { sessionId: string, role: 'game' | 'display' }): void {
+  onSessionStarted(event: { sessionId: string; role: 'game' | 'display' }): void {
     this.sessionId.set(event.sessionId);
     this.role.set(event.role);
     this.mode.set(event.role === 'game' ? 'game-client' : 'display-host');
@@ -190,7 +209,7 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   private loadVoices(): void {
     if ('speechSynthesis' in window) {
       const setVoices = () => {
-        const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('de'));
+        const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.startsWith('de'));
         this.availableVoices.set(voices);
       };
       window.speechSynthesis.onvoiceschanged = setVoices;
@@ -199,14 +218,18 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
   }
 
   private playStartSound(): void {
-    this.startSoundAudio.src = 'https://video-idea.fra1.cdn.digitaloceanspaces.com/beeps/start-sound-beep-102201.mp3';
-    this.startSoundAudio.play().catch(err => console.error("Audio playback failed:", err));
+    this.startSoundAudio.src =
+      'https://video-idea.fra1.cdn.digitaloceanspaces.com/beeps/start-sound-beep-102201.mp3';
+    this.startSoundAudio.play().catch((err) => console.error('Audio playback failed:', err));
   }
 
   private playWarningSound(): void {
-    this.warningSoundAudio.src = 'https://video-idea.fra1.cdn.digitaloceanspaces.com/warning-alarm-loop-1-279206.mp3';
+    this.warningSoundAudio.src =
+      'https://video-idea.fra1.cdn.digitaloceanspaces.com/warning-alarm-loop-1-279206.mp3';
     this.warningSoundAudio.loop = true;
-    this.warningSoundAudio.play().catch(err => console.error("Warning audio playback failed:", err));
+    this.warningSoundAudio
+      .play()
+      .catch((err) => console.error('Warning audio playback failed:', err));
   }
 
   private stopWarningSound(): void {
@@ -224,13 +247,15 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
       const url = preRecordedVoicePack.files[text];
       if (url) {
         this.announcementAudio.src = url;
-        this.announcementAudio.play().catch(err => console.error("Audio playback failed:", err));
+        this.announcementAudio.play().catch((err) => console.error('Audio playback failed:', err));
       }
     } else {
       if (!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const selectedVoice = this.availableVoices().find(v => v.voiceURI === this.selectedVoiceURI());
+      const selectedVoice = this.availableVoices().find(
+        (v) => v.voiceURI === this.selectedVoiceURI()
+      );
       if (selectedVoice) utterance.voice = selectedVoice;
       utterance.lang = 'de-DE';
       utterance.pitch = 1.0;
@@ -241,17 +266,24 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
 
   private checkAndAnnounceThresholds(oldValue: number, newValue: number): void {
     const thresholds: { value: number; text: string }[] = [
-        { value: 50, text: 'fünfzig' }, { value: 40, text: 'vierzig' },
-        { value: 30, text: 'dreißig' }, { value: 20, text: 'zwanzig' },
-        { value: 10, text: 'zehn' }, { value: 5, text: 'fünf' },
-        { value: 3, text: 'drei' },
+      { value: 50, text: 'fünfzig' },
+      { value: 40, text: 'vierzig' },
+      { value: 30, text: 'dreißig' },
+      { value: 20, text: 'zwanzig' },
+      { value: 10, text: 'zehn' },
+      { value: 5, text: 'fünf' },
+      { value: 3, text: 'drei' },
     ];
     const announced = this.announcedThresholds();
     for (const threshold of thresholds) {
-        if (oldValue > threshold.value && newValue <= threshold.value && !announced.has(threshold.value)) {
-            this.speak(threshold.text);
-            this.announcedThresholds.update(s => s.add(threshold.value));
-        }
+      if (
+        oldValue > threshold.value &&
+        newValue <= threshold.value &&
+        !announced.has(threshold.value)
+      ) {
+        this.speak(threshold.text);
+        this.announcedThresholds.update((s) => s.add(threshold.value));
+      }
     }
   }
 
@@ -319,7 +351,7 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
       this.timerStartTime.set(null);
     }
   }
-  
+
   runTimer(): void {
     const update = () => {
       if (this.timerStartTime() !== null) {
@@ -329,7 +361,7 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
       }
     };
     this.zone.runOutsideAngular(() => {
-        this.animationFrameId = requestAnimationFrame(update);
+      this.animationFrameId = requestAnimationFrame(update);
     });
   }
 
@@ -347,13 +379,13 @@ export class TeamDuelsComponent implements OnDestroy, OnInit {
     this.stopWarningSound();
     this.warningSoundPlayed.set(false);
   }
-  
+
   onInitialLivepoolChange(event: Event) {
-      const value = Number((event.target as HTMLInputElement).value);
-      if (!isNaN(value) && value > 0) {
-          this.initialLivepool.set(value);
-          this.resetGame();
-      }
+    const value = Number((event.target as HTMLInputElement).value);
+    if (!isNaN(value) && value > 0) {
+      this.initialLivepool.set(value);
+      this.resetGame();
+    }
   }
 
   onVoiceChange(event: Event) {

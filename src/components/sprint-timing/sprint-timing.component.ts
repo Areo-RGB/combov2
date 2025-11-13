@@ -1,4 +1,16 @@
-import { ChangeDetectionStrategy, Component, input, output, signal, viewChild, ElementRef, inject, Renderer2, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+  signal,
+  viewChild,
+  ElementRef,
+  inject,
+  Renderer2,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
 import { HeaderComponent } from '../header/header.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
@@ -73,7 +85,7 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     if (this.detectionStartTimeout) {
       clearTimeout(this.detectionStartTimeout);
     }
-    
+
     const detector = this.detectorComponent();
     if (detector && detector.status() === 'ready') {
       this.detectionStartTimeout = setTimeout(() => {
@@ -93,12 +105,12 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
 
   handleArm() {
     this.isArmed.set(true);
-    
+
     // Start detection after 1 second delay for flying start mode
     if (this.detectionStartTimeout) {
       clearTimeout(this.detectionStartTimeout);
     }
-    
+
     const detector = this.detectorComponent();
     if (detector && detector.status() === 'ready') {
       this.detectionStartTimeout = setTimeout(() => {
@@ -149,10 +161,10 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     const newLap: LapResult = {
       id: Date.now(),
       time: lapTime,
-      formatted
+      formatted,
     };
 
-    this.lapResults.update(laps => [...laps, newLap].sort((a, b) => a.time - b.time));
+    this.lapResults.update((laps) => [...laps, newLap].sort((a, b) => a.time - b.time));
     this.stopTimer();
   }
 
@@ -170,13 +182,13 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     this.elapsedTime.set(0);
     this.isArmed.set(this.startMode() === 'flying');
     this.lastDetectionTime = 0;
-    
+
     // Stop detection if it was started
     const detector = this.detectorComponent();
     if (detector && detector.status() === 'detecting') {
       detector.stopDetection();
     }
-    
+
     // Clear any pending detection start timeout
     if (this.detectionStartTimeout) {
       clearTimeout(this.detectionStartTimeout);
@@ -189,7 +201,7 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
   }
 
   deleteLap(id: number) {
-    this.lapResults.update(laps => laps.filter(lap => lap.id !== id));
+    this.lapResults.update((laps) => laps.filter((lap) => lap.id !== id));
   }
 
   private formatTime(time: number): string {

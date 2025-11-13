@@ -37,7 +37,7 @@ export const DEVICE_PROFILES: Record<string, MobileDeviceProfile> = {
     memoryLimit: 2048,
     frameTime: 50, // 20fps
   },
-  'throttled': {
+  throttled: {
     name: 'Throttled Device (Background)',
     cpuSlowdown: 6,
     memoryLimit: 1024,
@@ -86,7 +86,7 @@ export async function simulateCPUSlowdown(
   // Add artificial delay to simulate slower CPU
   const slowdownDelay = actualTime * (profile.cpuSlowdown - 1);
   if (slowdownDelay > 0) {
-    await new Promise(resolve => setTimeout(resolve, slowdownDelay));
+    await new Promise((resolve) => setTimeout(resolve, slowdownDelay));
   }
 }
 
@@ -131,7 +131,7 @@ export async function simulateFrameLoop(
 
     // Wait for next frame
     const remainingTime = Math.max(0, profile.frameTime - frameTime);
-    await new Promise(resolve => setTimeout(resolve, remainingTime));
+    await new Promise((resolve) => setTimeout(resolve, remainingTime));
   }
 
   const avgFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
@@ -154,12 +154,12 @@ export async function testRaceCondition<T>(
   const allResults: T[][] = [];
 
   for (let i = 0; i < iterations; i++) {
-    const results = await Promise.all(operations.map(op => op()));
+    const results = await Promise.all(operations.map((op) => op()));
     allResults.push(results);
 
     // Check if results are inconsistent (simple equality check)
     const firstResult = JSON.stringify(results[0]);
-    if (results.some(r => JSON.stringify(r) !== firstResult)) {
+    if (results.some((r) => JSON.stringify(r) !== firstResult)) {
       races++;
     }
   }
@@ -181,7 +181,7 @@ export async function simulateConcurrentUpdates<T>(
   await Promise.all(
     updates.map(async (update, index) => {
       const randomDelay = delay * Math.random();
-      await new Promise(resolve => setTimeout(resolve, randomDelay));
+      await new Promise((resolve) => setTimeout(resolve, randomDelay));
       states[index + 1] = update(states[states.length - 1]);
     })
   );
@@ -286,7 +286,7 @@ export function assertPerformance(
   if (metrics.executionTime > maxTime) {
     throw new Error(
       message ||
-      `Performance threshold exceeded: ${metrics.executionTime.toFixed(2)}ms > ${maxTime}ms`
+        `Performance threshold exceeded: ${metrics.executionTime.toFixed(2)}ms > ${maxTime}ms`
     );
   }
 }

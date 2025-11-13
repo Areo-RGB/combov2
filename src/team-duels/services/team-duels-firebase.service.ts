@@ -1,6 +1,17 @@
 import { Injectable } from '@angular/core';
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
-import { getDatabase, ref, set, onValue, off, Database, goOffline, goOnline, remove, onChildAdded } from 'firebase/database';
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  off,
+  Database,
+  goOffline,
+  goOnline,
+  remove,
+  onChildAdded,
+} from 'firebase/database';
 import { firebaseConfig } from '../../firebase.config';
 
 export interface GameClientState {
@@ -20,7 +31,6 @@ export interface Signal {
   type: 'offer' | 'answer' | 'ice-candidate';
   data: any;
 }
-
 
 @Injectable()
 export class TeamDuelsFirebaseService {
@@ -55,11 +65,18 @@ export class TeamDuelsFirebaseService {
   // --- Signaling Methods ---
 
   async sendSignal(sessionId: string, to: string, signal: Signal): Promise<void> {
-    const signalRef = ref(this.db, `${this.basePath}/${sessionId}/signals/${to}/${self.crypto.randomUUID()}`);
+    const signalRef = ref(
+      this.db,
+      `${this.basePath}/${sessionId}/signals/${to}/${self.crypto.randomUUID()}`
+    );
     await set(signalRef, signal);
   }
 
-  listenForSignals(sessionId: string, myId: string, callback: (signal: Signal) => void): () => void {
+  listenForSignals(
+    sessionId: string,
+    myId: string,
+    callback: (signal: Signal) => void
+  ): () => void {
     const signalsRef = ref(this.db, `${this.basePath}/${sessionId}/signals/${myId}`);
     // Use onChildAdded to process signals as they arrive and avoid race conditions.
     const unsubscribe = onChildAdded(signalsRef, (snapshot) => {
@@ -80,13 +97,13 @@ export class TeamDuelsFirebaseService {
     const stateRef = ref(this.db, `${this.basePath}/${sessionId}/gameState`);
     await set(stateRef, state);
   }
-  
+
   // --- Connection Management ---
-  
+
   disconnect() {
     goOffline(this.db);
   }
-  
+
   connect() {
     goOnline(this.db);
   }

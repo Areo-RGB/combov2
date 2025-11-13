@@ -60,7 +60,7 @@ export interface SpeedyDetectionConfig {
  * Uses optical flow and feature tracking for advanced motion analysis
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SpeedyDetectionService {
   private media: any = null;
@@ -167,17 +167,13 @@ export class SpeedyDetectionService {
       lk.output().connectTo(sink.input());
 
       // Initialize pipeline
-      this.pipeline.init(
-        source, greyscale, blur, nightvision,
-        harris, lk, sink
-      );
+      this.pipeline.init(source, greyscale, blur, nightvision, harris, lk, sink);
 
       // Start processing loop
       this.isRunning = true;
       this.zone.runOutsideAngular(() => {
         this.processLoop();
       });
-
     } catch (error) {
       console.error('Failed to initialize speedy-vision:', error);
       throw error;
@@ -211,7 +207,7 @@ export class SpeedyDetectionService {
       x: Math.floor(zone.x * scaleX),
       y: Math.floor(zone.y * scaleY),
       width: Math.floor(zone.width * scaleX),
-      height: Math.floor(zone.height * scaleY)
+      height: Math.floor(zone.height * scaleY),
     };
   }
 
@@ -242,7 +238,6 @@ export class SpeedyDetectionService {
             this.handleMotionDetected(motionData);
           }
         }
-
       } catch (error) {
         console.error('Speedy pipeline error:', error);
       }
@@ -265,12 +260,12 @@ export class SpeedyDetectionService {
         velocity: 0,
         direction: { x: 0, y: 0 },
         confidence: 0,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
     }
 
     // Filter keypoints with valid flow data
-    const movingKeypoints = keypoints.filter(kp => {
+    const movingKeypoints = keypoints.filter((kp) => {
       // Check if keypoint has flow data (tracked)
       return kp.flow && (Math.abs(kp.flow.x) > 0.1 || Math.abs(kp.flow.y) > 0.1);
     });
@@ -282,7 +277,7 @@ export class SpeedyDetectionService {
         velocity: 0,
         direction: { x: 0, y: 0 },
         confidence: 0,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
     }
 
@@ -323,7 +318,7 @@ export class SpeedyDetectionService {
       velocity: avgVelocity,
       direction: { x: avgFlowX, y: avgFlowY },
       confidence,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
   }
 
@@ -360,8 +355,8 @@ export class SpeedyDetectionService {
             velocity: motionData.velocity,
             direction: motionData.direction,
             confidence: motionData.confidence,
-            timestamp: now
-          }
+            timestamp: now,
+          },
         });
         window.dispatchEvent(event);
 
@@ -413,7 +408,7 @@ export class SpeedyDetectionService {
 
     return {
       current: this.detectionCounter(),
-      total: this.config.cadence
+      total: this.config.cadence,
     };
   }
 

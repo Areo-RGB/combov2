@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal, ElementRef, viewChild, effect } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+  ElementRef,
+  viewChild,
+  effect,
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { PlayerService } from '../../services/player.service';
 import { MatchService } from '../../services/match.service';
@@ -32,21 +40,21 @@ export class SettingsComponent {
   audioSettingsExpanded = signal(true);
   detectionSettingsExpanded = signal(true);
   dataManagementExpanded = signal(true);
-  
+
   toggleDisplaySettings(): void {
-    this.displaySettingsExpanded.update(v => !v);
+    this.displaySettingsExpanded.update((v) => !v);
   }
 
   toggleAudioSettings(): void {
-    this.audioSettingsExpanded.update(v => !v);
+    this.audioSettingsExpanded.update((v) => !v);
   }
 
   toggleDetectionSettings(): void {
-    this.detectionSettingsExpanded.update(v => !v);
+    this.detectionSettingsExpanded.update((v) => !v);
   }
 
   toggleDataManagement(): void {
-    this.dataManagementExpanded.update(v => !v);
+    this.dataManagementExpanded.update((v) => !v);
   }
 
   constructor() {
@@ -67,12 +75,12 @@ export class SettingsComponent {
     const enabled = (event.target as HTMLInputElement).checked;
     this.audioService.toggleAudio(enabled);
   }
-  
+
   resetPlayer(playerId: string): void {
-      const player = this.playerService.resetPlayer(playerId);
-      if (player) {
-          this.toastService.show(`${player.name} has been reset.`, 'success');
-      }
+    const player = this.playerService.resetPlayer(playerId);
+    if (player) {
+      this.toastService.show(`${player.name} has been reset.`, 'success');
+    }
   }
 
   confirmResetAllData(): void {
@@ -163,4 +171,3 @@ export class SettingsComponent {
     this.toastService.show('Detection settings have been reset to defaults.', 'success');
   }
 }
-

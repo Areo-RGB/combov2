@@ -11,7 +11,7 @@ export class ConfirmationModalComponent {
   message = input<string>('Are you sure you want to proceed?');
   confirmText = input<string>('Confirm');
   cancelText = input<string>('Cancel');
-  
+
   confirm = output<void>();
   cancel = output<void>();
 }

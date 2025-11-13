@@ -35,7 +35,7 @@ describe('RtcService', () => {
 
       // All should succeed but only last one is active
       expect(offers).toHaveLength(3);
-      offers.forEach(offer => {
+      offers.forEach((offer) => {
         expect(typeof offer).toBe('string');
         expect(offer.length).toBeGreaterThan(0);
       });
@@ -68,7 +68,9 @@ describe('RtcService', () => {
       expect(answer).toBeTruthy();
       expect(offer).toBeTruthy();
 
-      console.warn('⚠️ Race condition: Simultaneous offer/answer creation causes connection confusion');
+      console.warn(
+        '⚠️ Race condition: Simultaneous offer/answer creation causes connection confusion'
+      );
     });
 
     it('should wait for ICE gathering to complete', async () => {
@@ -99,7 +101,9 @@ describe('RtcService', () => {
       const result = await Promise.race([offerPromise, timeoutPromise]);
 
       if (result === 'timeout') {
-        console.warn('⚠️ ICE gathering timeout not handled - connection setup can hang indefinitely');
+        console.warn(
+          '⚠️ ICE gathering timeout not handled - connection setup can hang indefinitely'
+        );
       }
     });
   });
@@ -332,14 +336,10 @@ describe('RtcService', () => {
       expect(connections.length).toBe(10);
 
       // Check if old connections are closed
-      const unclosedConnections = connections.filter(
-        pc => pc.connectionState !== 'closed'
-      );
+      const unclosedConnections = connections.filter((pc) => pc.connectionState !== 'closed');
 
       if (unclosedConnections.length > 1) {
-        console.warn(
-          `⚠️ Memory leak: ${unclosedConnections.length} unclosed peer connections`
-        );
+        console.warn(`⚠️ Memory leak: ${unclosedConnections.length} unclosed peer connections`);
       }
 
       // Only the last connection should be open
@@ -388,7 +388,7 @@ describe('RtcService', () => {
       // Make ICE gathering complete immediately
       Object.defineProperty(mockPC, 'iceGatheringState', {
         get: () => 'complete',
-        configurable: true
+        configurable: true,
       });
 
       (globalThis as any).RTCPeerConnection = vi.fn(() => mockPC);

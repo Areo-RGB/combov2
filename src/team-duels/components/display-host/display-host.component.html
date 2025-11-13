@@ -11,7 +11,10 @@
         <div class="flex items-center justify-center gap-2 mt-1.5" [class]="status.color">
           <span class="relative flex h-2.5 w-2.5">
             @if (status.isPinging) {
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" [class]="status.bgColor"></span>
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                [class]="status.bgColor"
+              ></span>
             }
             <span class="relative inline-flex rounded-full h-2.5 w-2.5" [class]="status.bgColor"></span>
           </span>
@@ -24,27 +27,47 @@
   <!-- Client Displays -->
   <div class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6 min-h-[200px]">
     @for (client of clients(); track client.deviceId) {
-      <div class="bg-gray-900 p-4 rounded-lg text-center border-2 flex flex-col justify-between shadow-lg transition-colors" [class]="getClientBorderColor(client.connectionState)">
+      <div
+        class="bg-gray-900 p-4 rounded-lg text-center border-2 flex flex-col justify-between shadow-lg transition-colors"
+        [class]="getClientBorderColor(client.connectionState)"
+      >
         <div>
-            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider truncate">Player {{ client.deviceId.substring(0, 4).toUpperCase() }}</h3>
-            <div class="my-2 text-6xl font-black" [class.text-green-400]="client.livepool >= 0" [class.text-red-500]="client.livepool < 0">
-              {{ client.livepool.toFixed(2) }}
-            </div>
-             <p class="text-xs text-gray-500 h-4">
-                Initial: <span class="font-mono text-gray-400">{{ client.initialLivepool ?? gameState().initialLivepool }}</span>
-            </p>
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider truncate">
+            Player {{ client.deviceId.substring(0, 4).toUpperCase() }}
+          </h3>
+          <div
+            class="my-2 text-6xl font-black"
+            [class.text-green-400]="client.livepool >= 0"
+            [class.text-red-500]="client.livepool < 0"
+          >
+            {{ client.livepool.toFixed(2) }}
+          </div>
+          <p class="text-xs text-gray-500 h-4">
+            Initial:
+            <span class="font-mono text-gray-400">{{ client.initialLivepool ?? gameState().initialLivepool }}</span>
+          </p>
         </div>
         <div>
-            <div class="w-full bg-gray-700 rounded-full h-3.5 border border-gray-600 mb-2 mt-2">
-                <div class="bg-gradient-to-r from-green-500 to-teal-400 h-full rounded-full transition-all duration-500" [style.width.%]="getLivepoolPercentage(client)"></div>
-            </div>
-            <p class="text-xs text-gray-500">Last Time: <span class="font-mono text-yellow-400">{{ client.lastReactionTime.toFixed(2) }}s</span></p>
+          <div class="w-full bg-gray-700 rounded-full h-3.5 border border-gray-600 mb-2 mt-2">
+            <div
+              class="bg-gradient-to-r from-green-500 to-teal-400 h-full rounded-full transition-all duration-500"
+              [style.width.%]="getLivepoolPercentage(client)"
+            ></div>
+          </div>
+          <p class="text-xs text-gray-500">
+            Last Time: <span class="font-mono text-yellow-400">{{ client.lastReactionTime.toFixed(2) }}s</span>
+          </p>
         </div>
       </div>
     } @empty {
-      <div class="md:col-span-2 lg:col-span-3 xl:col-span-4 text-center py-12 bg-gray-900/50 rounded-lg flex flex-col justify-center items-center">
+      <div
+        class="md:col-span-2 lg:col-span-3 xl:col-span-4 text-center py-12 bg-gray-900/50 rounded-lg flex flex-col justify-center items-center"
+      >
         <p class="text-gray-500 text-lg">Waiting for players to join...</p>
-        <p class="text-gray-400 mt-2">Share the Session ID: <span class="font-mono text-xl text-purple-300 p-2 bg-gray-700 rounded-md">{{ sessionId() }}</span></p>
+        <p class="text-gray-400 mt-2">
+          Share the Session ID:
+          <span class="font-mono text-xl text-purple-300 p-2 bg-gray-700 rounded-md">{{ sessionId() }}</span>
+        </p>
       </div>
     }
   </div>
@@ -52,30 +75,67 @@
   <!-- Settings & Controls Panel -->
   <div class="w-full max-w-3xl bg-gray-900/50 p-6 rounded-lg border border-gray-700 relative">
     <h3 class="text-xl font-semibold mb-6 text-gray-200 border-b border-gray-600 pb-3">Game Controls</h3>
-    
+
     <!-- Action Buttons -->
     <div class="flex justify-center items-center gap-4">
       @switch (gameState().status) {
-        @case('running') {
-          <button (click)="pauseGame()" class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Pause Game</button>
+        @case ('running') {
+          <button
+            (click)="pauseGame()"
+            class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105"
+          >
+            Pause Game
+          </button>
         }
-        @case('paused') {
-          <button (click)="resumeGame()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Resume Game</button>
+        @case ('paused') {
+          <button
+            (click)="resumeGame()"
+            class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105"
+          >
+            Resume Game
+          </button>
         }
-        @case('idle') {
-          <button (click)="startGame()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105" [disabled]="clients().length === 0">Start Game</button>
+        @case ('idle') {
+          <button
+            (click)="startGame()"
+            class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105"
+            [disabled]="clients().length === 0"
+          >
+            Start Game
+          </button>
         }
       }
-      <button (click)="resetGame()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105">Reset Game</button>
+      <button
+        (click)="resetGame()"
+        class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform transform hover:scale-105"
+      >
+        Reset Game
+      </button>
     </div>
 
-    <button (click)="toggleFullscreen()" 
-            [title]="isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen'"
-            class="absolute bottom-4 right-4 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <button
+      (click)="toggleFullscreen()"
+      [title]="isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen'"
+      class="absolute bottom-4 right-4 bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-full transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
       @if (!isFullScreen()) {
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 2H4a2 2 0 0 0-2 2v4m20 0V4a2 2 0 0 0-2-2h-4m0 20h4a2 2 0 0 0 2-2v-4M8 22H4a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M8 2H4a2 2 0 0 0-2 2v4m20 0V4a2 2 0 0 0-2-2h-4m0 20h4a2 2 0 0 0 2-2v-4M8 22H4a2 2 0 0 1-2-2v-4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
       } @else {
-        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 22h-4a2 2 0 0 1-2-2v-4M2 8V4a2 2 0 0 1 2-2h4m12 0h4a2 2 0 0 1 2 2v4M2 16v4a2 2 0 0 0 2 2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M16 22h-4a2 2 0 0 1-2-2v-4M2 8V4a2 2 0 0 1 2-2h4m12 0h4a2 2 0 0 1 2 2v4M2 16v4a2 2 0 0 0 2 2h4"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
       }
     </button>
   </div>

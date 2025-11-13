@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, output, signal, viewChild, computed } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  output,
+  signal,
+  viewChild,
+  computed,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RankingListComponent } from './components/ranking-list/ranking-list.component';
 import { MatchMakerComponent } from './components/match-maker/match-maker.component';
@@ -20,7 +27,7 @@ type ActiveTab = 'rankings' | 'match-maker' | 'history' | 'settings';
     HistoryComponent,
     SettingsComponent,
     ToastComponent,
-    HeaderComponent
+    HeaderComponent,
   ],
 })
 export class SprintDuelsComponent {

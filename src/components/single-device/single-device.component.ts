@@ -1,15 +1,27 @@
-import { ChangeDetectionStrategy, Component, input, output, signal, viewChild, ElementRef, inject, Renderer2, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+  signal,
+  viewChild,
+  ElementRef,
+  inject,
+  Renderer2,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
 import { DisplayComponent } from '../display/display.component';
 import { HeaderComponent } from '../header/header.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
 
-type DisplaySignal = 
-  | { type: 'color', value: string, timestamp: number, intensity?: number } 
-  | { type: 'math_op', op: string, sum: number, timestamp: number, intensity?: number }
-  | { type: 'math_result', sum: number, timestamp: number, intensity?: number }
-  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number, intensity?: number }
-  | { type: 'counter', count: number, timestamp: number, intensity?: number }
+type DisplaySignal =
+  | { type: 'color'; value: string; timestamp: number; intensity?: number }
+  | { type: 'math_op'; op: string; sum: number; timestamp: number; intensity?: number }
+  | { type: 'math_result'; sum: number; timestamp: number; intensity?: number }
+  | { type: 'wechsel_text'; value: 'Rechts' | 'Links'; timestamp: number; intensity?: number }
+  | { type: 'counter'; count: number; timestamp: number; intensity?: number }
   | null;
 
 @Component({
@@ -25,22 +37,30 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
   motionSignal = signal<DisplaySignal>(null);
   lingerDuration = signal(1000);
   displayContentType = signal<'color' | 'math' | 'wechsel' | 'counter'>('color');
-  private readonly colors = ['#ef4444', '#22c55e', '#3b82f6', '#f1f5f9', '#facc15', '#a855f7', '#22d3ee'];
+  private readonly colors = [
+    '#ef4444',
+    '#22c55e',
+    '#3b82f6',
+    '#f1f5f9',
+    '#facc15',
+    '#a855f7',
+    '#22d3ee',
+  ];
 
   // Math game state
   maxOperations = signal(5);
   mathGameStatus = signal<'idle' | 'running' | 'finished'>('idle');
   currentSum = signal(0);
   operationsDone = signal(0);
-  
+
   // Counter state
   detectionCount = signal(0);
-  
+
   // Collapsible state for settings
   displaySettingsExpanded = signal(true);
-  
+
   toggleDisplaySettings(): void {
-    this.displaySettingsExpanded.update(v => !v);
+    this.displaySettingsExpanded.update((v) => !v);
   }
 
   detectorComponent = viewChild.required(DetectorComponent);
@@ -74,15 +94,31 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
   handleMotion(intensity: number) {
     if (this.displayContentType() === 'color') {
       const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
-      this.motionSignal.set({ type: 'color', value: randomColor, timestamp: Date.now(), intensity });
+      this.motionSignal.set({
+        type: 'color',
+        value: randomColor,
+        timestamp: Date.now(),
+        intensity,
+      });
     } else if (this.displayContentType() === 'math') {
       this.runMathGameStep(intensity);
     } else if (this.displayContentType() === 'counter') {
-      this.detectionCount.update(c => c + 1);
-      this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp: Date.now(), intensity });
-    } else { // 'wechsel'
+      this.detectionCount.update((c) => c + 1);
+      this.motionSignal.set({
+        type: 'counter',
+        count: this.detectionCount(),
+        timestamp: Date.now(),
+        intensity,
+      });
+    } else {
+      // 'wechsel'
       const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
-      this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp: Date.now(), intensity });
+      this.motionSignal.set({
+        type: 'wechsel_text',
+        value: text,
+        timestamp: Date.now(),
+        intensity,
+      });
     }
   }
 
@@ -104,13 +140,14 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
     }
 
     done++;
-    const operator = (sum === 0) ? '+' : (Math.random() < 0.5 ? '+' : '-');
+    const operator = sum === 0 ? '+' : Math.random() < 0.5 ? '+' : '-';
     let value;
 
     if (operator === '+') {
       value = Math.floor(Math.random() * 9) + 1;
       sum += value;
-    } else { // operator is '-'
+    } else {
+      // operator is '-'
       value = Math.floor(Math.random() * Math.min(sum, 9)) + 1;
       sum -= value;
     }
@@ -124,7 +161,7 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
       op: `${operator} ${value}`,
       sum: sum,
       timestamp: Date.now(),
-      intensity
+      intensity,
     });
 
     if (done >= max) {
@@ -137,25 +174,25 @@ export class SingleDeviceComponent implements OnInit, OnDestroy {
             type: 'math_result',
             sum: this.currentSum(),
             timestamp: Date.now(),
-            intensity
+            intensity,
           });
         }
         this.resultTimeoutId = null;
       }, this.lingerDuration() + 500); // A bit longer than the operation display time
     }
   }
-  
+
   onLingerDurationChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.lingerDuration.set(Number(value));
   }
-  
+
   onMaxOperationsChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.maxOperations.set(Number(value));
     this.resetDisplayState();
   }
-  
+
   onDisplayContentChange(type: 'color' | 'math' | 'wechsel' | 'counter') {
     this.displayContentType.set(type);
     this.resetDisplayState();

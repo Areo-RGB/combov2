@@ -7,31 +7,37 @@
   <!-- Game State Display -->
   <div class="flex flex-col gap-6">
     <div class="bg-gray-900/50 p-6 rounded-lg text-center border border-gray-700">
-        <h3 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Session Status</h3>
-        @if (gameState(); as state) {
-            <p class="text-3xl font-bold mt-2"
-               [class.text-green-400]="state.status === 'running'"
-               [class.text-yellow-400]="state.status === 'paused'"
-               [class.text-gray-500]="state.status === 'idle'">
-               {{ state.status.charAt(0).toUpperCase() + state.status.slice(1) }}
-            </p>
-            @if (state.status === 'idle') {
-                <p class="text-gray-400 mt-2">Waiting for Display to start the game.</p>
-            } @else if (state.status === 'paused') {
-                <p class="text-gray-400 mt-2">Game paused by Display.</p>
-            }
-        } @else {
-            <p class="text-gray-500 text-lg">Connecting to session...</p>
+      <h3 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Session Status</h3>
+      @if (gameState(); as state) {
+        <p
+          class="text-3xl font-bold mt-2"
+          [class.text-green-400]="state.status === 'running'"
+          [class.text-yellow-400]="state.status === 'paused'"
+          [class.text-gray-500]="state.status === 'idle'"
+        >
+          {{ state.status.charAt(0).toUpperCase() + state.status.slice(1) }}
+        </p>
+        @if (state.status === 'idle') {
+          <p class="text-gray-400 mt-2">Waiting for Display to start the game.</p>
+        } @else if (state.status === 'paused') {
+          <p class="text-gray-400 mt-2">Game paused by Display.</p>
         }
+      } @else {
+        <p class="text-gray-500 text-lg">Connecting to session...</p>
+      }
     </div>
 
     <div class="bg-gray-900/50 p-6 rounded-lg text-center border border-gray-700">
       <h3 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">Your Live Pool</h3>
-      <div class="my-4 text-7xl font-black" [class.text-green-400]="livepool() >= 0" [class.text-red-500]="livepool() < 0">
+      <div
+        class="my-4 text-7xl font-black"
+        [class.text-green-400]="livepool() >= 0"
+        [class.text-red-500]="livepool() < 0"
+      >
         {{ livepool().toFixed(2) }}
       </div>
     </div>
-    
+
     <div class="bg-gray-900/50 p-6 rounded-lg text-center border border-gray-700">
       <h3 class="text-lg font-semibold text-gray-400 uppercase tracking-wider">
         @if (timerStartTime() === null) {
@@ -40,51 +46,72 @@
           Current Time
         }
       </h3>
-      <div class="my-4 text-7xl font-black" [class.text-yellow-400]="timerStartTime() !== null" [class.text-white]="timerStartTime() === null">
+      <div
+        class="my-4 text-7xl font-black"
+        [class.text-yellow-400]="timerStartTime() !== null"
+        [class.text-white]="timerStartTime() === null"
+      >
         {{ elapsedTime() }}
       </div>
     </div>
-    
+
     <!-- Settings Panel -->
     @if (gameState()?.status === 'idle') {
       <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
         <button
           (click)="toggleSettings()"
-          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
+        >
           <h3 class="text-lg font-semibold text-gray-200">Your Settings</h3>
-          <svg 
+          <svg
             class="w-5 h-5 text-gray-300 transition-transform duration-200"
             [class.rotate-180]="settingsExpanded()"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
         @if (settingsExpanded()) {
           <div class="px-4 pb-4 space-y-4">
             <div>
-              <label for="livepool-start" class="block mb-2 text-sm font-medium text-gray-300">Your Initial Live Pool: <span class="font-bold text-green-300">{{ initialLivepool() }}</span></label>
-              <input id="livepool-start" type="range" min="10" max="300" step="10" [value]="initialLivepool()" (input)="onInitialLivepoolChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500">
+              <label for="livepool-start" class="block mb-2 text-sm font-medium text-gray-300"
+                >Your Initial Live Pool: <span class="font-bold text-green-300">{{ initialLivepool() }}</span></label
+              >
+              <input
+                id="livepool-start"
+                type="range"
+                min="10"
+                max="300"
+                step="10"
+                [value]="initialLivepool()"
+                (input)="onInitialLivepoolChange($event)"
+                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-green-500"
+              />
             </div>
             <div>
-              <label for="voice-select" class="block mb-2 text-sm font-medium text-gray-300">Your Announcement Voice</label>
-              <select id="voice-select" 
-                      class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5"
-                      [value]="selectedVoiceURI()"
-                      (change)="onVoiceChange($event)">
-                  <optgroup label="Custom Audio">
-                      @for (voice of preRecordedVoiceOptions; track voice.key) {
-                          <option [value]="voice.key">{{ voice.name }}</option>
-                      }
-                  </optgroup>
-                  @if (availableVoices().length > 0) {
-                      <optgroup label="Browser Voices (German)">
-                          @for (voice of availableVoices(); track voice.voiceURI) {
-                              <option [value]="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
-                          }
-                      </optgroup>
+              <label for="voice-select" class="block mb-2 text-sm font-medium text-gray-300"
+                >Your Announcement Voice</label
+              >
+              <select
+                id="voice-select"
+                class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5"
+                [value]="selectedVoiceURI()"
+                (change)="onVoiceChange($event)"
+              >
+                <optgroup label="Custom Audio">
+                  @for (voice of preRecordedVoiceOptions; track voice.key) {
+                    <option [value]="voice.key">{{ voice.name }}</option>
                   }
+                </optgroup>
+                @if (availableVoices().length > 0) {
+                  <optgroup label="Browser Voices (German)">
+                    @for (voice of availableVoices(); track voice.voiceURI) {
+                      <option [value]="voice.voiceURI">{{ voice.name }} ({{ voice.lang }})</option>
+                    }
+                  </optgroup>
+                }
               </select>
             </div>
           </div>
@@ -94,21 +121,24 @@
 
     <!-- Action Button / Status -->
     <div class="w-full flex flex-col items-center">
-        @if (detector()?.status() !== 'detecting' && gameState()?.status === 'running') {
-            <button (click)="detector()?.startDetection()" class="w-full max-w-xs bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg">
-                Start Detection
-            </button>
-        } @else if (detector()?.status() === 'detecting') {
-            <div class="text-center h-16">
-                <p class="text-lg text-green-400 flex items-center justify-center">
-                    <span class="relative flex h-3 w-3 mr-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                    </span>
-                    Actively detecting motion...
-                </p>
-            </div>
-        }
+      @if (detector()?.status() !== 'detecting' && gameState()?.status === 'running') {
+        <button
+          (click)="detector()?.startDetection()"
+          class="w-full max-w-xs bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg"
+        >
+          Start Detection
+        </button>
+      } @else if (detector()?.status() === 'detecting') {
+        <div class="text-center h-16">
+          <p class="text-lg text-green-400 flex items-center justify-center">
+            <span class="relative flex h-3 w-3 mr-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            Actively detecting motion...
+          </p>
+        </div>
+      }
     </div>
   </div>
 </div>

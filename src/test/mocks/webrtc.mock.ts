@@ -71,7 +71,7 @@ export class MockRTCPeerConnection {
   }
 
   close(): void {
-    this.dataChannels.forEach(dc => dc.close());
+    this.dataChannels.forEach((dc) => dc.close());
     this.updateConnectionState('closed');
   }
 
@@ -88,11 +88,19 @@ export class MockRTCPeerConnection {
 
   private generateMockIceCandidates(): void {
     const candidates = [
-      { candidate: 'candidate:1 1 UDP 2130706431 192.168.1.1 54321 typ host', sdpMid: '0', sdpMLineIndex: 0 },
-      { candidate: 'candidate:2 1 UDP 1694498815 203.0.113.1 54321 typ srflx', sdpMid: '0', sdpMLineIndex: 0 },
+      {
+        candidate: 'candidate:1 1 UDP 2130706431 192.168.1.1 54321 typ host',
+        sdpMid: '0',
+        sdpMLineIndex: 0,
+      },
+      {
+        candidate: 'candidate:2 1 UDP 1694498815 203.0.113.1 54321 typ srflx',
+        sdpMid: '0',
+        sdpMLineIndex: 0,
+      },
     ];
 
-    candidates.forEach(candidate => {
+    candidates.forEach((candidate) => {
       setTimeout(() => {
         this.emit('icecandidate', { candidate });
       }, Math.random() * 100); // Random timing to simulate race conditions
@@ -108,19 +116,19 @@ export class MockRTCPeerConnection {
     this.connectionState = state;
     if (state === 'connected') {
       this.iceConnectionState = 'connected';
-      this.dataChannels.forEach(dc => dc._simulateOpen());
+      this.dataChannels.forEach((dc) => dc._simulateOpen());
     }
     this.emit('connectionstatechange', {});
     this.emit('iceconnectionstatechange', {});
   }
 
   private emit(event: string, data: any): void {
-    this.eventListeners.get(event)?.forEach(listener => listener(data));
+    this.eventListeners.get(event)?.forEach((listener) => listener(data));
   }
 
   private async simulateDelay(ms: number): Promise<void> {
     if (ms > 0) {
-      await new Promise(resolve => setTimeout(resolve, ms));
+      await new Promise((resolve) => setTimeout(resolve, ms));
     }
   }
 
@@ -176,7 +184,7 @@ export class MockRTCDataChannel {
   }
 
   private emit(event: string, data: any): void {
-    this.eventListeners.get(event)?.forEach(listener => listener(data));
+    this.eventListeners.get(event)?.forEach((listener) => listener(data));
   }
 
   // Helper for testing

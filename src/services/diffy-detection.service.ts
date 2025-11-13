@@ -58,7 +58,7 @@ export interface DiffyDetectionConfig {
  * Integrates with existing detector.component.ts architecture
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DiffyDetectionService {
   private diffyInstance: DiffyInstance | null = null;
@@ -71,7 +71,7 @@ export class DiffyDetectionService {
 
   // Matrix resolution for motion detection
   // Higher resolution = more granular detection, slower processing
-  private readonly MATRIX_WIDTH = 40;  // 40x30 provides good balance
+  private readonly MATRIX_WIDTH = 40; // 40x30 provides good balance
   private readonly MATRIX_HEIGHT = 30;
 
   constructor(private zone: NgZone) {}
@@ -91,12 +91,12 @@ export class DiffyDetectionService {
     const options: DiffyOptions = {
       resolution: {
         x: this.MATRIX_WIDTH,
-        y: this.MATRIX_HEIGHT
+        y: this.MATRIX_HEIGHT,
       },
       sensitivity,
       threshold,
       debug: config.debug || false,
-      onFrame: (matrix) => this.processFrame(matrix)
+      onFrame: (matrix) => this.processFrame(matrix),
     };
 
     // Create diffyjs instance outside Angular zone for performance
@@ -121,7 +121,7 @@ export class DiffyDetectionService {
     // threshold: 10-50 (lower = more sensitive)
 
     const sensitivity = 0.1 + ((clampedLevel - 1) / 9) * 0.4; // 0.1 to 0.5
-    const threshold = 10 + ((clampedLevel - 1) / 9) * 40;     // 10 to 50
+    const threshold = 10 + ((clampedLevel - 1) / 9) * 40; // 10 to 50
 
     return { sensitivity, threshold };
   }
@@ -243,7 +243,7 @@ export class DiffyDetectionService {
 
         // Trigger custom event for component to listen
         const event = new CustomEvent('diffyMotionDetected', {
-          detail: { intensity, timestamp: now }
+          detail: { intensity, timestamp: now },
         });
         window.dispatchEvent(event);
 
@@ -279,7 +279,7 @@ export class DiffyDetectionService {
 
     return {
       current: this.detectionCounter(),
-      total: this.config.cadence
+      total: this.config.cadence,
     };
   }
 

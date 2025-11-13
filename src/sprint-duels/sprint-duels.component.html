@@ -5,7 +5,8 @@
       [title]="'Sprint Duels'"
       [subtitle]="'Player Ranking & Matchmaking System'"
       [showBackButton]="!isArenaViewActive()"
-      (goBack)="goBack.emit()">
+      (goBack)="goBack.emit()"
+    >
     </app-header>
   </div>
 
@@ -14,35 +15,76 @@
     <div class="bg-gray-800 rounded-xl shadow-lg p-2 border border-neutral-700">
       <div class="overflow-x-auto scrollbar-hide">
         <div class="flex items-center gap-2 min-w-max">
-          <button (click)="setActiveTab('rankings')" [class]="getTabClass('rankings')" class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105">
+          <button
+            (click)="setActiveTab('rankings')"
+            [class]="getTabClass('rankings')"
+            class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105"
+          >
             <span class="flex items-center justify-center gap-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                />
               </svg>
               Rankings
             </span>
           </button>
-          <button (click)="setActiveTab('match-maker')" [class]="getTabClass('match-maker')" class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105">
+          <button
+            (click)="setActiveTab('match-maker')"
+            [class]="getTabClass('match-maker')"
+            class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105"
+          >
             <span class="flex items-center justify-center gap-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
               </svg>
               Match Maker
             </span>
           </button>
-          <button (click)="setActiveTab('history')" [class]="getTabClass('history')" class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105">
+          <button
+            (click)="setActiveTab('history')"
+            [class]="getTabClass('history')"
+            class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105"
+          >
             <span class="flex items-center justify-center gap-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               History
             </span>
           </button>
-          <button (click)="setActiveTab('settings')" [class]="getTabClass('settings')" class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105">
+          <button
+            (click)="setActiveTab('settings')"
+            [class]="getTabClass('settings')"
+            class="flex-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 whitespace-nowrap hover:scale-105"
+          >
             <span class="flex items-center justify-center gap-2">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               Settings
             </span>
@@ -76,10 +118,10 @@
 
 <style>
   .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
   .scrollbar-hide::-webkit-scrollbar {
-    display: none;  /* Chrome, Safari and Opera */
+    display: none; /* Chrome, Safari and Opera */
   }
 </style>

@@ -99,8 +99,12 @@ describe('SignalingService', () => {
 
       // Process both message sets concurrently (using same key - simulates race)
       await Promise.all([
-        Promise.all(chunks1.map(c => (service as any).handleIncomingChunk('same-key', c, onComplete))),
-        Promise.all(chunks2.map(c => (service as any).handleIncomingChunk('same-key', c, onComplete))),
+        Promise.all(
+          chunks1.map((c) => (service as any).handleIncomingChunk('same-key', c, onComplete))
+        ),
+        Promise.all(
+          chunks2.map((c) => (service as any).handleIncomingChunk('same-key', c, onComplete))
+        ),
       ]);
 
       // Only one should complete (last one wins - potential data loss!)
@@ -208,9 +212,7 @@ describe('SignalingService', () => {
       });
 
       // Should throw or handle gracefully
-      await expect(
-        (service as any).writeChunks(deviceId, largePayload)
-      ).rejects.toThrow();
+      await expect((service as any).writeChunks(deviceId, largePayload)).rejects.toThrow();
     });
   });
 
@@ -227,9 +229,7 @@ describe('SignalingService', () => {
       const payload = { t: 'offer' as const, sdp: message };
 
       // Should complete without errors
-      await expect(
-        (service as any).writeChunks(deviceId, payload)
-      ).resolves.not.toThrow();
+      await expect((service as any).writeChunks(deviceId, payload)).resolves.not.toThrow();
     });
 
     it('performance: chunk encoding/decoding should be fast on mobile', async () => {
@@ -297,7 +297,7 @@ describe('SignalingService', () => {
         t: 'offer' as const,
         idx: 0,
         total: 100000, // Unreasonably large
-        data: 'test'
+        data: 'test',
       };
 
       let completed = false;
@@ -325,9 +325,7 @@ describe('SignalingService', () => {
       (service as any).startScanAndConnect = vi.fn().mockResolvedValue(undefined);
 
       // Start multiple handshakes concurrently
-      await Promise.all(
-        sessions.map(sessionId => service.startDetectorHandshake(sessionId))
-      );
+      await Promise.all(sessions.map((sessionId) => service.startDetectorHandshake(sessionId)));
 
       // Should call initialization for each unique session
       expect((service as any).initializeCentral).toHaveBeenCalled();

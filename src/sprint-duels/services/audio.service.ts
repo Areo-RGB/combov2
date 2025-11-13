@@ -4,7 +4,7 @@ import { StorageService } from './storage.service';
 import { BEEP_SOUND_URL, NUMBER_SOUNDS } from '../sprint-duels-audio';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AudioService {
   isAudioEnabled = signal<boolean>(true);
@@ -46,7 +46,7 @@ export class AudioService {
       };
 
       // The play() method returns a promise which can be rejected if playback fails.
-      audio.play().catch(error => {
+      audio.play().catch((error) => {
         console.error(`The play() request was interrupted for ${url}`, error);
         reject(error);
       });
@@ -58,7 +58,7 @@ export class AudioService {
     try {
       await this.playAudio(BEEP_SOUND_URL);
     } catch (error) {
-      console.error("Failed to play beep sound.", error);
+      console.error('Failed to play beep sound.', error);
     }
   }
 
@@ -66,7 +66,7 @@ export class AudioService {
     if (!this.isAudioEnabled() || this.isPlaying()) return;
 
     this.isPlaying.set(true);
-    
+
     const p1Sound = NUMBER_SOUNDS[p1.jerseyNumber];
     const p2Sound = NUMBER_SOUNDS[p2.jerseyNumber];
 
@@ -78,20 +78,20 @@ export class AudioService {
 
     try {
       // Small delay before starting
-      await new Promise(resolve => setTimeout(resolve, 150));
-      
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
       // Play player numbers
       await this.playAudio(p1Sound);
-      await new Promise(resolve => setTimeout(resolve, 150)); // Pause between numbers
+      await new Promise((resolve) => setTimeout(resolve, 150)); // Pause between numbers
       await this.playAudio(p2Sound);
 
       // Add a longer, more deliberate delay before the start beep
-      await new Promise(resolve => setTimeout(resolve, 750));
+      await new Promise((resolve) => setTimeout(resolve, 750));
       await this.playAudio(BEEP_SOUND_URL);
     } catch (error) {
-      console.error("Audio sequence failed.", error);
+      console.error('Audio sequence failed.', error);
     } finally {
-        this.isPlaying.set(false);
+      this.isPlaying.set(false);
     }
   }
 }

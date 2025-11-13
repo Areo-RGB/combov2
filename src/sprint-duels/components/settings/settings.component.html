@@ -1,26 +1,33 @@
-<div class="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 text-gray-200 animate-fade-in space-y-8 border border-white border-opacity-20">
+<div
+  class="bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 text-gray-200 animate-fade-in space-y-8 border border-white border-opacity-20"
+>
   <h2 class="text-2xl font-bold text-cyan-400 border-b border-gray-700 pb-3">Settings</h2>
 
   <!-- Display Settings -->
   <div class="bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
     <button
       (click)="toggleDisplaySettings()"
-      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
+    >
       <h3 class="text-lg font-semibold text-gray-300">Display</h3>
-      <svg 
+      <svg
         class="w-5 h-5 text-gray-300 transition-transform duration-200"
         [class.rotate-180]="displaySettingsExpanded()"
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
       </svg>
     </button>
     @if (displaySettingsExpanded()) {
       <div class="px-4 pb-4 space-y-4">
         <div class="bg-gray-800/50 p-4 rounded-md flex items-center justify-between">
           <label for="fullscreen-toggle" class="font-medium text-white">Fullscreen Mode</label>
-          <button (click)="toggleFullscreen()" class="px-4 py-2 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold">
+          <button
+            (click)="toggleFullscreen()"
+            class="px-4 py-2 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-semibold"
+          >
             {{ isFullScreen() ? 'Exit Fullscreen' : 'Enter Fullscreen' }}
           </button>
         </div>
@@ -32,15 +39,17 @@
   <div class="bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
     <button
       (click)="toggleAudioSettings()"
-      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
+    >
       <h3 class="text-lg font-semibold text-gray-300">Audio</h3>
       <svg
         class="w-5 h-5 text-gray-300 transition-transform duration-200"
         [class.rotate-180]="audioSettingsExpanded()"
         fill="none"
         stroke="currentColor"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
       </svg>
     </button>
     @if (audioSettingsExpanded()) {
@@ -48,10 +57,16 @@
         <div class="bg-gray-800/50 p-4 rounded-md flex items-center justify-between">
           <label for="audio-toggle" class="font-medium text-white">Enable Race Start Audio</label>
           <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="audio-toggle" class="sr-only peer"
-                   [checked]="audioService.isAudioEnabled()"
-                   (change)="onAudioToggle($event)">
-            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+            <input
+              type="checkbox"
+              id="audio-toggle"
+              class="sr-only peer"
+              [checked]="audioService.isAudioEnabled()"
+              (change)="onAudioToggle($event)"
+            />
+            <div
+              class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"
+            ></div>
           </label>
         </div>
       </div>
@@ -62,15 +77,17 @@
   <div class="bg-gray-700/50 rounded-lg border border-blue-600 overflow-hidden">
     <button
       (click)="toggleDetectionSettings()"
-      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
+    >
       <h3 class="text-lg font-semibold text-blue-300">Detection Settings</h3>
       <svg
         class="w-5 h-5 text-gray-300 transition-transform duration-200"
         [class.rotate-180]="detectionSettingsExpanded()"
         fill="none"
         stroke="currentColor"
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
       </svg>
     </button>
     @if (detectionSettingsExpanded()) {
@@ -83,14 +100,16 @@
               (click)="onDetectionMethodChange('motion')"
               [class.bg-blue-500]="detectionSettings.detectionMethod() === 'motion'"
               [class.bg-gray-600]="detectionSettings.detectionMethod() !== 'motion'"
-              class="flex-1 font-semibold py-2 rounded-md transition-colors text-white">
+              class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
+            >
               Motion
             </button>
             <button
               (click)="onDetectionMethodChange('pose')"
               [class.bg-blue-500]="detectionSettings.detectionMethod() === 'pose'"
               [class.bg-gray-600]="detectionSettings.detectionMethod() !== 'pose'"
-              class="flex-1 font-semibold py-2 rounded-md transition-colors text-white">
+              class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
+            >
               Pose
             </button>
           </div>
@@ -107,10 +126,15 @@
               <p class="text-sm text-green-400">Recommended for best performance</p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer"
-                     [checked]="detectionSettings.useSpeedyVision()"
-                     (change)="onSpeedyVisionToggle($event)">
-              <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <input
+                type="checkbox"
+                class="sr-only peer"
+                [checked]="detectionSettings.useSpeedyVision()"
+                (change)="onSpeedyVisionToggle($event)"
+              />
+              <div
+                class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+              ></div>
             </label>
           </div>
 
@@ -121,10 +145,15 @@
               <p class="text-sm text-gray-400">Alternative GPU acceleration</p>
             </div>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer"
-                     [checked]="detectionSettings.useDiffyJS()"
-                     (change)="onDiffyJSToggle($event)">
-              <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <input
+                type="checkbox"
+                class="sr-only peer"
+                [checked]="detectionSettings.useDiffyJS()"
+                (change)="onDiffyJSToggle($event)"
+              />
+              <div
+                class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+              ></div>
             </label>
           </div>
         </div>
@@ -138,14 +167,16 @@
                 (click)="onPoseLibraryChange('mediapipe')"
                 [class.bg-blue-500]="detectionSettings.poseLibrary() === 'mediapipe'"
                 [class.bg-gray-600]="detectionSettings.poseLibrary() !== 'mediapipe'"
-                class="flex-1 font-semibold py-2 rounded-md transition-colors text-white">
+                class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
+              >
                 MediaPipe
               </button>
               <button
                 (click)="onPoseLibraryChange('movenet')"
                 [class.bg-blue-500]="detectionSettings.poseLibrary() === 'movenet'"
                 [class.bg-gray-600]="detectionSettings.poseLibrary() !== 'movenet'"
-                class="flex-1 font-semibold py-2 rounded-md transition-colors text-white">
+                class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
+              >
                 MoveNet
               </button>
             </div>
@@ -159,21 +190,24 @@
                     (click)="onPoseModelChange('lite')"
                     [class.bg-blue-500]="detectionSettings.poseModel() === 'lite'"
                     [class.bg-gray-600]="detectionSettings.poseModel() !== 'lite'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white">
+                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
+                  >
                     Lite
                   </button>
                   <button
                     (click)="onPoseModelChange('full')"
                     [class.bg-blue-500]="detectionSettings.poseModel() === 'full'"
                     [class.bg-gray-600]="detectionSettings.poseModel() !== 'full'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white">
+                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
+                  >
                     Full
                   </button>
                   <button
                     (click)="onPoseModelChange('heavy')"
                     [class.bg-blue-500]="detectionSettings.poseModel() === 'heavy'"
                     [class.bg-gray-600]="detectionSettings.poseModel() !== 'heavy'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white">
+                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
+                  >
                     Heavy
                   </button>
                 </div>
@@ -189,21 +223,24 @@
                     (click)="onMoveNetModelChange('lightning')"
                     [class.bg-blue-500]="detectionSettings.moveNetModel() === 'lightning'"
                     [class.bg-gray-600]="detectionSettings.moveNetModel() !== 'lightning'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white">
+                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
+                  >
                     Lightning
                   </button>
                   <button
                     (click)="onMoveNetModelChange('thunder')"
                     [class.bg-blue-500]="detectionSettings.moveNetModel() === 'thunder'"
                     [class.bg-gray-600]="detectionSettings.moveNetModel() !== 'thunder'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white">
+                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
+                  >
                     Thunder
                   </button>
                   <button
                     (click)="onMoveNetModelChange('multipose')"
                     [class.bg-blue-500]="detectionSettings.moveNetModel() === 'multipose'"
                     [class.bg-gray-600]="detectionSettings.moveNetModel() !== 'multipose'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white">
+                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
+                  >
                     Multipose
                   </button>
                 </div>
@@ -224,7 +261,8 @@
             step="1"
             [value]="detectionSettings.sensitivity()"
             (input)="onSensitivityChange($event)"
-            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
           <div class="flex justify-between text-xs text-gray-400">
             <span>Less Sensitive</span>
             <span>More Sensitive</span>
@@ -243,7 +281,8 @@
             step="100"
             [value]="detectionSettings.motionCooldown()"
             (input)="onMotionCooldownChange($event)"
-            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
           <p class="text-xs text-gray-400">Minimum delay between detections</p>
         </div>
 
@@ -259,7 +298,8 @@
             step="1"
             [value]="detectionSettings.signalCadence()"
             (input)="onSignalCadenceChange($event)"
-            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
           <p class="text-xs text-gray-400">Signal on every Nth detection</p>
         </div>
 
@@ -271,10 +311,15 @@
           <div class="flex items-center justify-between">
             <span class="font-medium text-white">Use Full Screen Detection</span>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" class="sr-only peer"
-                     [checked]="detectionSettings.useFullScreenDetection()"
-                     (change)="onFullScreenDetectionToggle($event)">
-              <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <input
+                type="checkbox"
+                class="sr-only peer"
+                [checked]="detectionSettings.useFullScreenDetection()"
+                (change)="onFullScreenDetectionToggle($event)"
+              />
+              <div
+                class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
+              ></div>
             </label>
           </div>
 
@@ -291,7 +336,8 @@
                 step="1"
                 [value]="detectionSettings.zoneWidthPercent()"
                 (input)="onZoneWidthChange($event)"
-                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
             </div>
 
             <!-- Zone Position -->
@@ -306,7 +352,8 @@
                 step="1"
                 [value]="detectionSettings.zonePositionPercent()"
                 (input)="onZonePositionChange($event)"
-                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              />
             </div>
           }
         </div>
@@ -319,7 +366,8 @@
           </div>
           <button
             (click)="resetDetectionSettings()"
-            class="px-4 py-2 rounded-md bg-orange-600 hover:bg-orange-500 text-white font-semibold whitespace-nowrap">
+            class="px-4 py-2 rounded-md bg-orange-600 hover:bg-orange-500 text-white font-semibold whitespace-nowrap"
+          >
             Reset
           </button>
         </div>
@@ -331,15 +379,17 @@
   <div class="bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
     <button
       (click)="toggleDataManagement()"
-      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+      class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
+    >
       <h3 class="text-lg font-semibold text-red-400">Data Management</h3>
-      <svg 
+      <svg
         class="w-5 h-5 text-gray-300 transition-transform duration-200"
         [class.rotate-180]="dataManagementExpanded()"
-        fill="none" 
-        stroke="currentColor" 
-        viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
       </svg>
     </button>
     @if (dataManagementExpanded()) {
@@ -349,22 +399,26 @@
           <h4 class="font-medium text-white mb-3">Reset Individual Player</h4>
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             @for (player of playerService.players(); track player.id) {
-                <button (click)="resetPlayer(player.id)"
-                        class="bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors">
-                  Reset {{ player.name }}
-                </button>
+              <button
+                (click)="resetPlayer(player.id)"
+                class="bg-orange-700 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-3 rounded-md transition-colors"
+              >
+                Reset {{ player.name }}
+              </button>
             }
           </div>
         </div>
-        
+
         <!-- Reset All Data -->
         <div class="bg-red-900/30 border border-red-700 p-4 rounded-md flex items-center justify-between">
           <div>
             <h4 class="font-bold text-red-300">Reset All Application Data</h4>
             <p class="text-sm text-red-400">This will permanently delete all players, stats, and match history.</p>
           </div>
-          <button (click)="showResetAllModal.set(true)"
-                  class="px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 text-white font-bold whitespace-nowrap">
+          <button
+            (click)="showResetAllModal.set(true)"
+            class="px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 text-white font-bold whitespace-nowrap"
+          >
             Reset All Data
           </button>
         </div>
@@ -372,11 +426,13 @@
     }
   </div>
 
-<app-confirmation-modal 
-  [isOpen]="showResetAllModal()"
-  title="Confirm Full Data Reset"
-  message="Are you absolutely sure? This action cannot be undone. All player data, Elo ratings, and match history will be permanently deleted."
-  confirmText="Yes, Delete Everything"
-  (confirm)="confirmResetAllData()"
-  (cancel)="showResetAllModal.set(false)">
-</app-confirmation-modal>
+  <app-confirmation-modal
+    [isOpen]="showResetAllModal()"
+    title="Confirm Full Data Reset"
+    message="Are you absolutely sure? This action cannot be undone. All player data, Elo ratings, and match history will be permanently deleted."
+    confirmText="Yes, Delete Everything"
+    (confirm)="confirmResetAllData()"
+    (cancel)="showResetAllModal.set(false)"
+  >
+  </app-confirmation-modal>
+</div>

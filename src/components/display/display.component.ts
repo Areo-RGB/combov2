@@ -1,11 +1,18 @@
-import { ChangeDetectionStrategy, Component, effect, input, OnDestroy, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  input,
+  OnDestroy,
+  signal,
+} from '@angular/core';
 
-type DisplaySignal = 
-  | { type: 'color', value: string, timestamp: number, intensity?: number } 
-  | { type: 'math_op', op: string, sum: number, timestamp: number, intensity?: number }
-  | { type: 'math_result', sum: number, timestamp: number, intensity?: number }
-  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number, intensity?: number }
-  | { type: 'counter', count: number, timestamp: number, intensity?: number }
+type DisplaySignal =
+  | { type: 'color'; value: string; timestamp: number; intensity?: number }
+  | { type: 'math_op'; op: string; sum: number; timestamp: number; intensity?: number }
+  | { type: 'math_result'; sum: number; timestamp: number; intensity?: number }
+  | { type: 'wechsel_text'; value: 'Rechts' | 'Links'; timestamp: number; intensity?: number }
+  | { type: 'counter'; count: number; timestamp: number; intensity?: number }
   | null;
 
 @Component({
@@ -45,18 +52,18 @@ export class DisplayComponent implements OnDestroy {
 
             const baseColor = currentSignal.value; // e.g., '#ef4444'
             // Intensity is expected to be a percentage-like value. The default in app.component is 20.
-            const intensityValue = (currentSignal.intensity ?? 20); 
+            const intensityValue = currentSignal.intensity ?? 20;
             // Map intensity (e.g., 0-100) to opacity (e.g., 0.3-1.0)
-            const opacity = Math.min(1.0, 0.3 + (intensityValue / 100) * 0.7); 
-            
+            const opacity = Math.min(1.0, 0.3 + (intensityValue / 100) * 0.7);
+
             this.displayColor.set(this.hexToRgba(baseColor, opacity));
-            
+
             this.activeTimeoutId = setTimeout(() => {
               this.displayColor.set('black');
               this.activeTimeoutId = null;
             }, this.lingerDuration());
             break;
-            
+
           case 'math_op':
             this.displayColor.set('black');
             this.isFinalResult.set(false);
@@ -99,7 +106,6 @@ export class DisplayComponent implements OnDestroy {
             // No timeout for counter, it persists.
             break;
         }
-
       } else {
         this.resetAll();
       }
@@ -107,17 +113,19 @@ export class DisplayComponent implements OnDestroy {
   }
 
   private hexToRgba(hex: string, alpha: number): string {
-    let r = 0, g = 0, b = 0;
+    let r = 0,
+      g = 0,
+      b = 0;
     if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
-        if (hex.length === 4) {
-            r = parseInt(hex[1] + hex[1], 16);
-            g = parseInt(hex[2] + hex[2], 16);
-            b = parseInt(hex[3] + hex[3], 16);
-        } else if (hex.length === 7) {
-            r = parseInt(hex.substring(1, 3), 16);
-            g = parseInt(hex.substring(3, 5), 16);
-            b = parseInt(hex.substring(5, 7), 16);
-        }
+      if (hex.length === 4) {
+        r = parseInt(hex[1] + hex[1], 16);
+        g = parseInt(hex[2] + hex[2], 16);
+        b = parseInt(hex[3] + hex[3], 16);
+      } else if (hex.length === 7) {
+        r = parseInt(hex.substring(1, 3), 16);
+        g = parseInt(hex.substring(3, 5), 16);
+        b = parseInt(hex.substring(5, 7), 16);
+      }
     }
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }

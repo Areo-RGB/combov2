@@ -54,12 +54,14 @@ export class RankingListComponent {
       if (opponentId) {
         const opponent = this.playerService.getPlayerById(opponentId);
         if (!opponent) continue;
-        
+
         if (!statsMap.has(opponentId)) {
           statsMap.set(opponentId, {
             opponentName: opponent.name,
             opponentJersey: opponent.jerseyNumber,
-            wins: 0, losses: 0, draws: 0
+            wins: 0,
+            losses: 0,
+            draws: 0,
           });
         }
 
@@ -69,11 +71,13 @@ export class RankingListComponent {
         else currentStats.draws++;
       }
     }
-    return Array.from(statsMap.values()).sort((a,b) => a.opponentName.localeCompare(b.opponentName));
+    return Array.from(statsMap.values()).sort((a, b) =>
+      a.opponentName.localeCompare(b.opponentName)
+    );
   });
 
   toggleExpand(playerId: string): void {
-    this.expandedPlayerId.update(current => current === playerId ? null : playerId);
+    this.expandedPlayerId.update((current) => (current === playerId ? null : playerId));
   }
 
   getWinPercentage(stats: HeadToHeadStats): number {

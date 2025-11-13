@@ -2,20 +2,14 @@
   <!-- Camera View (top 60%) -->
   <div class="relative h-3/5 overflow-hidden">
     <div #displayContainer class="w-full h-full" (dblclick)="toggleFullscreen()">
-      <app-detector
-        [sessionId]="sessionId()"
-        [showBackButton]="false"
-        (motionDetected)="handleMotion($event)">
+      <app-detector [sessionId]="sessionId()" [showBackButton]="false" (motionDetected)="handleMotion($event)">
       </app-detector>
     </div>
 
     <!-- Overlay Controls -->
     <div class="absolute inset-0 bg-black bg-opacity-30 flex flex-col justify-between p-4 pointer-events-none">
       <!-- Top Bar -->
-      <app-header 
-        [overlayMode]="true"
-        [layout]="'space-between'"
-        (goBack)="onGoBack()">
+      <app-header [overlayMode]="true" [layout]="'space-between'" (goBack)="onGoBack()">
         <div class="flex items-start gap-2 pointer-events-auto">
           <div class="bg-black bg-opacity-70 p-2 rounded-lg text-center">
             <div class="text-sm text-gray-300">
@@ -26,10 +20,21 @@
 
           <button
             (click)="showSettings.set(!showSettings())"
-            class="p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition">
+            class="p-2 rounded-full bg-black bg-opacity-50 hover:bg-opacity-75 transition"
+          >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </button>
         </div>
@@ -37,7 +42,9 @@
 
       <!-- Settings Overlay -->
       @if (showSettings()) {
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 max-w-sm bg-gray-800 bg-opacity-95 rounded-lg p-4 shadow-lg space-y-4 z-10 pointer-events-auto">
+        <div
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 max-w-sm bg-gray-800 bg-opacity-95 rounded-lg p-4 shadow-lg space-y-4 z-10 pointer-events-auto"
+        >
           <h4 class="text-center font-bold text-lg">Sprint Timing Settings</h4>
 
           <div>
@@ -59,7 +66,8 @@
 
           <button
             (click)="showSettings.set(false)"
-            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition">
+            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition"
+          >
             Close
           </button>
         </div>
@@ -82,19 +90,22 @@
         @if (detectorComponent().status() === 'ready') {
           <button
             (click)="detectorComponent().startDetection()"
-            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105">
+            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+          >
             Start Detection
           </button>
         } @else if (detectorComponent().status() === 'detecting') {
           <button
             (click)="detectorComponent().stopDetection()"
-            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105">
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+          >
             Stop Detection
           </button>
         } @else {
           <button
             disabled
-            class="w-full bg-gray-600 text-gray-400 font-bold py-3 px-4 rounded-lg text-base cursor-not-allowed">
+            class="w-full bg-gray-600 text-gray-400 font-bold py-3 px-4 rounded-lg text-base cursor-not-allowed"
+          >
             Start Detection
           </button>
         }
@@ -103,20 +114,23 @@
         @if (isTiming()) {
           <button
             (click)="handleReset()"
-            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105">
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+          >
             RESET
           </button>
         } @else if (lapResults().length > 0) {
           <button
             (click)="handleReset()"
-            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105">
+            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+          >
             RESET
           </button>
         } @else {
           @if (startMode() === 'manual') {
             <button
               (click)="handleManualStart()"
-              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105">
+              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+            >
               START
             </button>
           } @else {
@@ -124,11 +138,14 @@
               <button
                 (click)="handleArm()"
                 [disabled]="detectorComponent().status() !== 'ready' && detectorComponent().status() !== 'detecting'"
-                class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105 disabled:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105 disabled:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 ARM
               </button>
             } @else {
-              <div class="w-full bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg text-base text-center flex flex-col items-center justify-center">
+              <div
+                class="w-full bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg text-base text-center flex flex-col items-center justify-center"
+              >
                 <span>ARMED</span>
                 <span class="text-xs font-normal">For motion</span>
               </div>
@@ -149,15 +166,17 @@
         <!-- Collapsible Header -->
         <button
           (click)="detectorComponent().toggleSettings()"
-          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors">
+          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
+        >
           <h3 class="text-lg font-semibold text-gray-200">Detection Settings</h3>
-          <svg 
+          <svg
             class="w-5 h-5 text-gray-300 transition-transform duration-200"
             [class.rotate-180]="detectorComponent().settingsExpanded()"
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
@@ -175,7 +194,8 @@
                     value="motion"
                     [checked]="detectorComponent().detectionMethod() === 'motion'"
                     (change)="detectorComponent().onDetectionMethodChange('motion')"
-                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
+                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500"
+                  />
                   <span class="ml-2 text-sm text-gray-300">Motion Detection</span>
                 </label>
                 <label class="flex items-center cursor-pointer">
@@ -185,7 +205,8 @@
                     value="pose"
                     [checked]="detectorComponent().detectionMethod() === 'pose'"
                     (change)="detectorComponent().onDetectionMethodChange('pose')"
-                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500">
+                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500"
+                  />
                   <span class="ml-2 text-sm text-gray-300">Body Pose Detection</span>
                 </label>
               </div>
@@ -194,12 +215,15 @@
             <!-- Pose Library Selector -->
             @if (detectorComponent().detectionMethod() === 'pose') {
               <div>
-                <label for="poseLibrary" class="block mb-2 text-sm font-medium text-gray-300">Pose Detection Library</label>
+                <label for="poseLibrary" class="block mb-2 text-sm font-medium text-gray-300"
+                  >Pose Detection Library</label
+                >
                 <select
                   id="poseLibrary"
                   [value]="detectorComponent().poseLibrary()"
                   (change)="detectorComponent().onPoseLibraryChange($event)"
-                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+                >
                   <option value="mediapipe">MediaPipe</option>
                   <option value="movenet">MoveNet (TensorFlow.js)</option>
                 </select>
@@ -213,7 +237,8 @@
                     id="poseModel"
                     [value]="detectorComponent().poseModel()"
                     (change)="detectorComponent().onPoseModelChange($event)"
-                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+                  >
                     <option value="lite">Lite (Fastest, least accurate)</option>
                     <option value="full">Full (Balanced speed and accuracy)</option>
                     <option value="heavy">Heavy (Slowest, most accurate)</option>
@@ -229,7 +254,8 @@
                     id="moveNetModel"
                     [value]="detectorComponent().moveNetModel()"
                     (change)="detectorComponent().onMoveNetModelChange($event)"
-                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+                  >
                     <option value="lightning">SinglePose Lightning (Fastest)</option>
                     <option value="thunder">SinglePose Thunder (Most accurate)</option>
                     <option value="multipose">MultiPose Lightning (Multiple people)</option>
@@ -241,8 +267,19 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Sensitivity Slider -->
               <div class="flex flex-col justify-center">
-                <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300">Sensitivity: <span class="font-bold text-cyan-300">{{ detectorComponent().sensitivity() }}</span></label>
-                <input id="sensitivity" type="range" min="1" max="10" [value]="detectorComponent().sensitivity()" (input)="detectorComponent().onSensitivityChange($event)" class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300"
+                  >Sensitivity:
+                  <span class="font-bold text-cyan-300">{{ detectorComponent().sensitivity() }}</span></label
+                >
+                <input
+                  id="sensitivity"
+                  type="range"
+                  min="1"
+                  max="10"
+                  [value]="detectorComponent().sensitivity()"
+                  (input)="detectorComponent().onSensitivityChange($event)"
+                  class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                />
               </div>
               <!-- Detection Zone Controls -->
               <div class="flex flex-col justify-center gap-4">
@@ -259,34 +296,44 @@
                       }
                     </span>
                   </label>
-                  <input 
-                    id="zoneWidth" 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    [value]="detectorComponent().zoneWidthPercent()" 
+                  <input
+                    id="zoneWidth"
+                    type="range"
+                    min="0"
+                    max="100"
+                    [value]="detectorComponent().zoneWidthPercent()"
                     (input)="detectorComponent().onZoneWidthChange($event)"
                     [disabled]="detectorComponent().useFullScreenDetection()"
-                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
                 </div>
                 <div>
                   <label for="zonePosition" class="block mb-2 text-sm font-medium text-gray-300">Zone Position</label>
-                  <input 
-                      id="zonePosition" 
-                      type="range" 
-                      min="0" 
-                      max="100" 
-                      step="1"
-                      [value]="detectorComponent().zonePositionPercent()" 
-                      (input)="detectorComponent().onZonePositionChange($event)"
-                      [disabled]="detectorComponent().useFullScreenDetection()"
-                      class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <input
+                    id="zonePosition"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    [value]="detectorComponent().zonePositionPercent()"
+                    (input)="detectorComponent().onZonePositionChange($event)"
+                    [disabled]="detectorComponent().useFullScreenDetection()"
+                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
                 </div>
                 <div class="flex items-center gap-3">
                   <label for="fullscreen-toggle" class="text-sm font-medium text-gray-300">Use Full Screen</label>
                   <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="fullscreen-toggle" class="sr-only peer" [checked]="detectorComponent().useFullScreenDetection()" (change)="detectorComponent().onFullScreenToggleChange($event)">
-                    <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                    <input
+                      type="checkbox"
+                      id="fullscreen-toggle"
+                      class="sr-only peer"
+                      [checked]="detectorComponent().useFullScreenDetection()"
+                      (change)="detectorComponent().onFullScreenToggleChange($event)"
+                    />
+                    <div
+                      class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"
+                    ></div>
                   </label>
                 </div>
               </div>
@@ -295,11 +342,12 @@
               @if (detectorComponent().availableCameras().length > 1) {
                 <div class="flex flex-col justify-center md:col-span-2">
                   <label for="camera" class="block mb-2 text-sm font-medium text-gray-300">Camera</label>
-                  <select 
-                    id="camera" 
-                    [value]="detectorComponent().selectedCameraId()" 
+                  <select
+                    id="camera"
+                    [value]="detectorComponent().selectedCameraId()"
                     (change)="detectorComponent().onCameraChange($event)"
-                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+                  >
                     @for (camera of detectorComponent().availableCameras(); track camera.deviceId) {
                       <option [value]="camera.deviceId">{{ camera.label || 'Camera ' + ($index + 1) }}</option>
                     }
@@ -310,26 +358,30 @@
               <!-- Cooldown Input -->
               <div class="flex flex-col justify-center">
                 <label for="cooldown" class="block mb-2 text-sm font-medium text-gray-300">Minimum Delay (ms)</label>
-                <input 
-                  id="cooldown" 
-                  type="number" 
+                <input
+                  id="cooldown"
+                  type="number"
                   min="0"
                   step="50"
-                  [value]="detectorComponent().motionCooldown()" 
-                  (input)="detectorComponent().onCooldownChange($event)" 
-                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                  [value]="detectorComponent().motionCooldown()"
+                  (input)="detectorComponent().onCooldownChange($event)"
+                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+                />
               </div>
               <!-- Signal Cadence Input -->
               <div class="flex flex-col justify-center">
-                <label for="signalCadence" class="block mb-2 text-sm font-medium text-gray-300">Signal every Nth detection</label>
-                <input 
-                  id="signalCadence" 
-                  type="number" 
+                <label for="signalCadence" class="block mb-2 text-sm font-medium text-gray-300"
+                  >Signal every Nth detection</label
+                >
+                <input
+                  id="signalCadence"
+                  type="number"
                   min="1"
                   step="1"
-                  [value]="detectorComponent().signalCadence()" 
-                  (input)="detectorComponent().onSignalCadenceChange($event)" 
-                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
+                  [value]="detectorComponent().signalCadence()"
+                  (input)="detectorComponent().onSignalCadenceChange($event)"
+                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
+                />
               </div>
             </div>
           </div>
@@ -365,17 +417,29 @@
           <button
             (click)="exportToCSV()"
             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg transition text-sm"
-            title="Export to CSV">
+            title="Export to CSV"
+          >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
             </svg>
           </button>
           <button
             (click)="clearHistory()"
             class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-3 rounded-lg transition text-sm"
-            title="Clear all results">
+            title="Clear all results"
+          >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
             </svg>
           </button>
         }
@@ -395,9 +459,10 @@
                 <button
                   (click)="deleteLap(lap.id)"
                   class="text-red-500 hover:text-red-400 transition"
-                  title="Delete this result">
+                  title="Delete this result"
+                >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>

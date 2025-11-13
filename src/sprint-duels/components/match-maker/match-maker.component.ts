@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, effect } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  effect,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlayerService } from '../../services/player.service';
 import { EloService } from '../../services/elo.service';
@@ -21,15 +28,17 @@ export class MatchMakerComponent {
   audioService = inject(AudioService);
   tournamentService = inject(TournamentService);
   toastService = inject(ToastService);
-  
+
   duels = signal<Duel[]>([]);
   private lastPlayerToRunTwiceId = signal<string | null>(null);
   isArenaViewActive = signal(false);
 
-  participatingPlayers = computed(() => this.playerService.players().filter(p => p.isParticipating));
+  participatingPlayers = computed(() =>
+    this.playerService.players().filter((p) => p.isParticipating)
+  );
 
   isRoundInProgress = computed(() => this.duels().length > 0);
-  
+
   isTournamentActive = this.tournamentService.isTournamentActive;
 
   constructor() {
@@ -42,12 +51,12 @@ export class MatchMakerComponent {
   }
 
   ngOnInit(): void {
-      if (this.isTournamentActive()) {
-          this.duels.set(this.tournamentService.currentRoundDuels());
-          if (this.duels().length > 0) {
-            this.isArenaViewActive.set(true);
-          }
+    if (this.isTournamentActive()) {
+      this.duels.set(this.tournamentService.currentRoundDuels());
+      if (this.duels().length > 0) {
+        this.isArenaViewActive.set(true);
       }
+    }
   }
 
   toggleParticipation(player: Player, event: Event): void {
@@ -77,35 +86,42 @@ export class MatchMakerComponent {
       newDuels.push({ player1: playersToPair.shift()!, player2: playersToPair.shift()! });
     }
 
-    if (playersToPair.length === 1) { // Odd player out
+    if (playersToPair.length === 1) {
+      // Odd player out
       const oddPlayer = playersToPair[0];
-      const potentialOpponents = players.filter(p => p.id !== oddPlayer.id && p.id !== this.lastPlayerToRunTwiceId());
-      
+      const potentialOpponents = players.filter(
+        (p) => p.id !== oddPlayer.id && p.id !== this.lastPlayerToRunTwiceId()
+      );
+
       let opponent: Player;
       if (potentialOpponents.length > 0) {
         opponent = potentialOpponents[Math.floor(Math.random() * potentialOpponents.length)];
       } else {
         // Fallback if everyone has run twice recently
-        opponent = players.filter(p => p.id !== oddPlayer.id)[0];
+        opponent = players.filter((p) => p.id !== oddPlayer.id)[0];
       }
-      
+
       newDuels.push({ player1: oddPlayer, player2: opponent });
       this.lastPlayerToRunTwiceId.set(opponent.id);
     } else {
-        this.lastPlayerToRunTwiceId.set(null);
+      this.lastPlayerToRunTwiceId.set(null);
     }
-    
+
     this.duels.set(newDuels);
     this.isArenaViewActive.set(true);
   }
 
   async declareWinner(duel: Duel, winner: Player): Promise<void> {
     if (this.isTournamentActive()) {
-        this.tournamentService.recordTournamentMatch(duel.player1, duel.player2, winner);
-        this.duels.set(this.tournamentService.currentRoundDuels());
+      this.tournamentService.recordTournamentMatch(duel.player1, duel.player2, winner);
+      this.duels.set(this.tournamentService.currentRoundDuels());
     } else {
-        this.matchService.recordMatch(duel.player1, duel.player2, winner.id === duel.player1.id ? 'p1' : 'p2');
-        this.removeDuel(duel);
+      this.matchService.recordMatch(
+        duel.player1,
+        duel.player2,
+        winner.id === duel.player1.id ? 'p1' : 'p2'
+      );
+      this.removeDuel(duel);
     }
   }
 
@@ -113,23 +129,23 @@ export class MatchMakerComponent {
     this.matchService.recordMatch(duel.player1, duel.player2, 'draw');
     this.removeDuel(duel);
   }
-  
+
   startTournament(): void {
-      this.tournamentService.startTournament(this.participatingPlayers());
-      this.duels.set(this.tournamentService.currentRoundDuels());
-      if (this.duels().length > 0) {
-        this.isArenaViewActive.set(true);
-      }
+    this.tournamentService.startTournament(this.participatingPlayers());
+    this.duels.set(this.tournamentService.currentRoundDuels());
+    if (this.duels().length > 0) {
+      this.isArenaViewActive.set(true);
+    }
   }
-  
+
   cancelTournament(): void {
-      this.tournamentService.cancelTournament();
-      this.duels.set([]);
-      this.isArenaViewActive.set(false);
+    this.tournamentService.cancelTournament();
+    this.duels.set([]);
+    this.isArenaViewActive.set(false);
   }
 
   private removeDuel(duel: Duel): void {
-    this.duels.update(d => d.filter(d => d !== duel));
+    this.duels.update((d) => d.filter((d) => d !== duel));
   }
 
   private shuffle<T>(array: T[]): T[] {
@@ -145,18 +161,18 @@ export class MatchMakerComponent {
       this.toastService.show('Speech synthesis not supported.', 'error');
       return;
     }
-    
+
     // Cancel any previous utterance to avoid overlaps
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(name);
-    
+
     // The list of voices is loaded asynchronously. We can't rely on it being present
     // immediately. Setting the lang is a good hint for the browser to pick a suitable voice.
     utterance.lang = 'de-DE';
     utterance.pitch = 1.1;
     utterance.rate = 0.9;
-    
+
     window.speechSynthesis.speak(utterance);
   }
 }

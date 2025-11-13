@@ -42,7 +42,7 @@ const DEFAULT_SETTINGS: DetectionSettings = {
 };
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DetectionSettingsService {
   private readonly STORAGE_KEY = 'detection_settings';

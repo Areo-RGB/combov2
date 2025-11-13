@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.html'
+  styleUrl: './header.component.html',
 })
 export class HeaderComponent {
   title = input<string>('');
@@ -14,11 +14,10 @@ export class HeaderComponent {
   showBackButton = input<boolean>(true);
   overlayMode = input<boolean>(false);
   layout = input<'centered' | 'left' | 'space-between'>('centered');
-  
+
   goBack = output<void>();
 
   onGoBack(): void {
     this.goBack.emit();
   }
 }
-

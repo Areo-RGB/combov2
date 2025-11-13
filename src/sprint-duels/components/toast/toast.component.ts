@@ -8,12 +8,15 @@ import { ToastService } from '../../services/toast.service';
 })
 export class ToastComponent {
   toastService = inject(ToastService);
-  
+
   getBackgroundColor(type: 'success' | 'error' | 'info'): string {
-    switch(type) {
-      case 'success': return 'bg-green-500';
-      case 'error': return 'bg-red-500';
-      case 'info': return 'bg-cyan-500';
+    switch (type) {
+      case 'success':
+        return 'bg-green-500';
+      case 'error':
+        return 'bg-red-500';
+      case 'info':
+        return 'bg-cyan-500';
     }
   }
 }

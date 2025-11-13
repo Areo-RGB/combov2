@@ -50,17 +50,14 @@ describe('Mobile Performance Benchmarks', () => {
       };
 
       for (const [deviceType, profile] of Object.entries(DEVICE_PROFILES)) {
-        const { metrics } = await measureExecutionTime(
-          async () => detectMotion(),
-          20
-        );
+        const { metrics } = await measureExecutionTime(async () => detectMotion(), 20);
 
         const budget = checkFrameBudget(metrics.executionTime, profile);
 
         console.log(
           `${deviceType.padEnd(12)}: ${metrics.executionTime.toFixed(2)}ms ` +
-          `(${budget.budgetUsed.toFixed(1)}% of ${profile.frameTime}ms budget) ` +
-          `${budget.withinBudget ? '✓' : '✗'}`
+            `(${budget.budgetUsed.toFixed(1)}% of ${profile.frameTime}ms budget) ` +
+            `${budget.withinBudget ? '✓' : '✗'}`
         );
 
         // High-end and mid-range should meet budget
@@ -85,21 +82,18 @@ describe('Mobile Performance Benchmarks', () => {
         canvas.height = size.height;
         const ctx = canvas.getContext('2d')!;
 
-        const { metrics } = await measureExecutionTime(
-          async () => {
-            ctx.fillStyle = '#FF0000';
-            ctx.fillRect(0, 0, size.width, size.height);
-            const imageData = ctx.getImageData(0, 0, size.width, size.height);
-            return imageData.data.length;
-          },
-          50
-        );
+        const { metrics } = await measureExecutionTime(async () => {
+          ctx.fillStyle = '#FF0000';
+          ctx.fillRect(0, 0, size.width, size.height);
+          const imageData = ctx.getImageData(0, 0, size.width, size.height);
+          return imageData.data.length;
+        }, 50);
 
         const pixels = size.width * size.height;
 
         console.log(
           `${size.label.padEnd(20)}: ${metrics.executionTime.toFixed(2)}ms ` +
-          `(${pixels.toLocaleString()} pixels)`
+            `(${pixels.toLocaleString()} pixels)`
         );
       }
     });
@@ -125,9 +119,9 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nJSON Performance:\n` +
-        `Stringify: ${stringifyMetrics.executionTime.toFixed(3)}ms\n` +
-        `Parse:     ${parseMetrics.executionTime.toFixed(3)}ms\n` +
-        `Total:     ${(stringifyMetrics.executionTime + parseMetrics.executionTime).toFixed(3)}ms`
+          `Stringify: ${stringifyMetrics.executionTime.toFixed(3)}ms\n` +
+          `Parse:     ${parseMetrics.executionTime.toFixed(3)}ms\n` +
+          `Total:     ${(stringifyMetrics.executionTime + parseMetrics.executionTime).toFixed(3)}ms`
       );
 
       // Should be very fast (< 1ms on average)
@@ -146,7 +140,7 @@ describe('Mobile Performance Benchmarks', () => {
 
       const simulateTransmission = async () => {
         for (let i = 0; i < totalChunks; i++) {
-          await new Promise(resolve => setTimeout(resolve, bleDelay));
+          await new Promise((resolve) => setTimeout(resolve, bleDelay));
         }
       };
 
@@ -154,10 +148,10 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nBLE Transmission:\n` +
-        `Message size: ${message.length} bytes\n` +
-        `Chunks: ${totalChunks}\n` +
-        `Total time: ${metrics.executionTime.toFixed(0)}ms\n` +
-        `Expected: ${totalChunks * bleDelay}ms`
+          `Message size: ${message.length} bytes\n` +
+          `Chunks: ${totalChunks}\n` +
+          `Total time: ${metrics.executionTime.toFixed(0)}ms\n` +
+          `Expected: ${totalChunks * bleDelay}ms`
       );
 
       expect(metrics.executionTime).toBeGreaterThanOrEqual(totalChunks * bleDelay);
@@ -174,12 +168,9 @@ describe('Mobile Performance Benchmarks', () => {
       console.log('\nFirebase Write Latency:');
 
       for (const network of networkProfiles) {
-        const { metrics } = await measureExecutionTime(
-          async () => {
-            await new Promise(resolve => setTimeout(resolve, network.latency));
-          },
-          10
-        );
+        const { metrics } = await measureExecutionTime(async () => {
+          await new Promise((resolve) => setTimeout(resolve, network.latency));
+        }, 10);
 
         console.log(`${network.name.padEnd(6)}: ${metrics.executionTime.toFixed(0)}ms`);
 
@@ -199,14 +190,13 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log('\nFrame Buffer Memory:');
 
-      sizes.forEach(size => {
+      sizes.forEach((size) => {
         const pixels = size.width * size.height;
         const bytes = pixels * 4; // RGBA
         const mb = bytes / (1024 * 1024);
 
         console.log(
-          `${size.label.padEnd(12)}: ${mb.toFixed(2)} MB ` +
-          `(${pixels.toLocaleString()} pixels)`
+          `${size.label.padEnd(12)}: ${mb.toFixed(2)} MB ` + `(${pixels.toLocaleString()} pixels)`
         );
       });
     });
@@ -235,10 +225,7 @@ describe('Mobile Performance Benchmarks', () => {
 
       const growth = detector.getMemoryGrowth();
 
-      console.log(
-        `\nMemory Growth After ${frames} Frames:\n` +
-        `Growth: ${growth.toFixed(1)}%`
-      );
+      console.log(`\nMemory Growth After ${frames} Frames:\n` + `Growth: ${growth.toFixed(1)}%`);
 
       // Should not grow significantly if properly garbage collected
       // (Note: This may not work reliably in test environment)
@@ -252,10 +239,7 @@ describe('Mobile Performance Benchmarks', () => {
       };
 
       const getStorageSize = () => {
-        return Object.values(mockLocalStorage).reduce(
-          (total, value) => total + value.length,
-          0
-        );
+        return Object.values(mockLocalStorage).reduce((total, value) => total + value.length, 0);
       };
 
       // Simulate saving match history
@@ -281,9 +265,9 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nLocalStorage Growth:\n` +
-        `Matches: ${matchesPerDay * days}\n` +
-        `Size: ${mb.toFixed(2)} MB\n` +
-        `Avg per match: ${(totalSize / (matchesPerDay * days)).toFixed(0)} bytes`
+          `Matches: ${matchesPerDay * days}\n` +
+          `Size: ${mb.toFixed(2)} MB\n` +
+          `Avg per match: ${(totalSize / (matchesPerDay * days)).toFixed(0)} bytes`
       );
 
       // localStorage limit is typically 5-10MB
@@ -314,10 +298,10 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nHigh-end Device (60fps target):\n` +
-        `Frames: ${result.totalFrames}\n` +
-        `Dropped: ${result.droppedFrames}\n` +
-        `Avg time: ${result.avgFrameTime.toFixed(2)}ms\n` +
-        `Achieved: ${achievedFps.toFixed(1)}fps`
+          `Frames: ${result.totalFrames}\n` +
+          `Dropped: ${result.droppedFrames}\n` +
+          `Avg time: ${result.avgFrameTime.toFixed(2)}ms\n` +
+          `Achieved: ${achievedFps.toFixed(1)}fps`
       );
 
       expect(result.droppedFrames).toBe(0);
@@ -329,7 +313,7 @@ describe('Mobile Performance Benchmarks', () => {
 
       // Medium complexity processing
       const processFrame = async () => {
-        await new Promise(resolve => setTimeout(resolve, 5)); // Simulate processing
+        await new Promise((resolve) => setTimeout(resolve, 5)); // Simulate processing
       };
 
       const result = await simulateFrameLoop(processFrame, targetFrames, profile);
@@ -338,10 +322,10 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nMid-range Device (30fps target):\n` +
-        `Frames: ${result.totalFrames}\n` +
-        `Dropped: ${result.droppedFrames}\n` +
-        `Avg time: ${result.avgFrameTime.toFixed(2)}ms\n` +
-        `Achieved: ${achievedFps.toFixed(1)}fps`
+          `Frames: ${result.totalFrames}\n` +
+          `Dropped: ${result.droppedFrames}\n` +
+          `Avg time: ${result.avgFrameTime.toFixed(2)}ms\n` +
+          `Achieved: ${achievedFps.toFixed(1)}fps`
       );
 
       expect(result.droppedFrames).toBeLessThan(5);
@@ -353,16 +337,16 @@ describe('Mobile Performance Benchmarks', () => {
 
       // Heavy processing
       const processFrame = async () => {
-        await new Promise(resolve => setTimeout(resolve, 30)); // Slow processing
+        await new Promise((resolve) => setTimeout(resolve, 30)); // Slow processing
       };
 
       const result = await simulateFrameLoop(processFrame, targetFrames, profile);
 
       console.log(
         `\nLow-end Device (20fps target):\n` +
-        `Frames: ${result.totalFrames}\n` +
-        `Dropped: ${result.droppedFrames}\n` +
-        `Avg time: ${result.avgFrameTime.toFixed(2)}ms`
+          `Frames: ${result.totalFrames}\n` +
+          `Dropped: ${result.droppedFrames}\n` +
+          `Avg time: ${result.avgFrameTime.toFixed(2)}ms`
       );
 
       // May drop frames, but should still function
@@ -375,7 +359,7 @@ describe('Mobile Performance Benchmarks', () => {
       const concurrentWrites = 50;
 
       const writeOperation = async (value: any) => {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
       };
 
       const start = performance.now();
@@ -391,9 +375,9 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nConcurrent Firebase Writes:\n` +
-        `Total: ${concurrentWrites}\n` +
-        `Duration: ${duration.toFixed(0)}ms\n` +
-        `Throughput: ${writesPerSecond.toFixed(0)} writes/sec`
+          `Total: ${concurrentWrites}\n` +
+          `Duration: ${duration.toFixed(0)}ms\n` +
+          `Throughput: ${writesPerSecond.toFixed(0)} writes/sec`
       );
 
       expect(writesPerSecond).toBeGreaterThan(10);
@@ -405,7 +389,7 @@ describe('Mobile Performance Benchmarks', () => {
 
       const sendMessage = async (intensity: number) => {
         const message = JSON.stringify({ t: 'motion', intensity, ts: Date.now() });
-        await new Promise(resolve => setTimeout(resolve, messageDelay));
+        await new Promise((resolve) => setTimeout(resolve, messageDelay));
         return message.length;
       };
 
@@ -420,9 +404,9 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nWebRTC Message Throughput:\n` +
-        `Messages: ${messages}\n` +
-        `Duration: ${duration.toFixed(0)}ms\n` +
-        `Rate: ${messagesPerSecond.toFixed(0)} msg/sec`
+          `Messages: ${messages}\n` +
+          `Duration: ${duration.toFixed(0)}ms\n` +
+          `Rate: ${messagesPerSecond.toFixed(0)} msg/sec`
       );
 
       // Should easily handle 60 messages/sec (one per frame at 60fps)
@@ -445,11 +429,11 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log(
         `\nEstimated Battery Impact:\n` +
-        `Battery capacity: ${batteryCapacity} mAh\n` +
-        `Camera drain: ${cameraDrain} mA\n` +
-        `Processing drain: ${processingDrain} mA\n` +
-        `Total drain: ${totalDrain} mA\n` +
-        `Estimated runtime: ${hoursOfUsage.toFixed(1)} hours`
+          `Battery capacity: ${batteryCapacity} mAh\n` +
+          `Camera drain: ${cameraDrain} mA\n` +
+          `Processing drain: ${processingDrain} mA\n` +
+          `Total drain: ${totalDrain} mA\n` +
+          `Estimated runtime: ${hoursOfUsage.toFixed(1)} hours`
       );
 
       expect(hoursOfUsage).toBeGreaterThan(2);
@@ -464,12 +448,12 @@ describe('Mobile Performance Benchmarks', () => {
 
       console.log('\nPower Mode Comparison:');
 
-      profiles.forEach(profile => {
+      profiles.forEach((profile) => {
         const batteryLife = 4000 / profile.drain;
 
         console.log(
           `${profile.mode.padEnd(25)}: ${batteryLife.toFixed(1)}h runtime ` +
-          `(${profile.drain} mA drain)`
+            `(${profile.drain} mA drain)`
         );
       });
     });

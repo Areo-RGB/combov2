@@ -5,7 +5,7 @@ import {
   DEVICE_PROFILES,
   simulateFrameLoop,
   checkFrameBudget,
-  MemoryLeakDetector
+  MemoryLeakDetector,
 } from '../../test/utils/performance.util';
 
 /**
@@ -29,7 +29,10 @@ describe('DetectorComponent', () => {
     mockVideo = document.createElement('video');
     Object.defineProperty(mockVideo, 'clientWidth', { value: 640, writable: true });
     Object.defineProperty(mockVideo, 'clientHeight', { value: 480, writable: true });
-    Object.defineProperty(mockVideo, 'readyState', { value: HTMLMediaElement.HAVE_ENOUGH_DATA, writable: true });
+    Object.defineProperty(mockVideo, 'readyState', {
+      value: HTMLMediaElement.HAVE_ENOUGH_DATA,
+      writable: true,
+    });
 
     // Mock canvas elements
     mockCanvas = document.createElement('canvas');
@@ -76,9 +79,9 @@ describe('DetectorComponent', () => {
       writable: true,
       value: {
         getUserMedia: vi.fn().mockResolvedValue(mockStream),
-        enumerateDevices: vi.fn().mockResolvedValue([
-          { kind: 'videoinput', deviceId: 'camera-1', label: 'Camera 1' },
-        ]),
+        enumerateDevices: vi
+          .fn()
+          .mockResolvedValue([{ kind: 'videoinput', deviceId: 'camera-1', label: 'Camera 1' }]),
       },
     });
 
@@ -107,7 +110,7 @@ describe('DetectorComponent', () => {
       // Simulate long-running frame processing
       const processFrameMock = async () => {
         processingFrame = true;
-        await new Promise(resolve => setTimeout(resolve, 100)); // Simulate slow processing
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate slow processing
         processingFrame = false;
       };
 
@@ -137,7 +140,7 @@ describe('DetectorComponent', () => {
 
       const initMediaPipe = async () => {
         initializingMediaPipe = true;
-        await new Promise(resolve => setTimeout(resolve, 200)); // Model loading time
+        await new Promise((resolve) => setTimeout(resolve, 200)); // Model loading time
         initializingMediaPipe = false;
         return { detector: 'mediapipe' };
       };
@@ -147,7 +150,7 @@ describe('DetectorComponent', () => {
           raceDetected = true;
           console.warn('⚠️ Race condition: Switched library during initialization');
         }
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         return { detector: 'movenet' };
       };
 
@@ -167,7 +170,7 @@ describe('DetectorComponent', () => {
 
       const mockInit = async (model: string) => {
         initCalls.push(`start-${model}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         initCalls.push(`end-${model}`);
       };
 
@@ -215,7 +218,7 @@ describe('DetectorComponent', () => {
 
       console.log(
         `✓ Frame processing: ${metrics.executionTime.toFixed(2)}ms ` +
-        `(${budget.budgetUsed.toFixed(1)}% of ${profile.frameTime}ms budget)`
+          `(${budget.budgetUsed.toFixed(1)}% of ${profile.frameTime}ms budget)`
       );
     });
 
@@ -224,7 +227,7 @@ describe('DetectorComponent', () => {
 
       // Simulate slow frame processing (e.g., with pose detection)
       const slowFrameProcessing = async () => {
-        await new Promise(resolve => setTimeout(resolve, 80)); // 80ms processing
+        await new Promise((resolve) => setTimeout(resolve, 80)); // 80ms processing
       };
 
       const result = await simulateFrameLoop(slowFrameProcessing, 30, profile);
@@ -234,7 +237,7 @@ describe('DetectorComponent', () => {
 
       console.log(
         `✓ Frame drops detected: ${result.droppedFrames} frames dropped ` +
-        `out of ${result.totalFrames} (avg: ${result.avgFrameTime.toFixed(1)}ms)`
+          `out of ${result.totalFrames} (avg: ${result.avgFrameTime.toFixed(1)}ms)`
       );
     });
 
@@ -243,7 +246,7 @@ describe('DetectorComponent', () => {
 
       // Mock MediaPipe inference (typical time: 200-500ms on mobile)
       const mockMediaPipeInference = async () => {
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
         return { landmarks: [] };
       };
 
@@ -254,7 +257,7 @@ describe('DetectorComponent', () => {
 
       console.log(
         `✓ MediaPipe inference: ${metrics.executionTime.toFixed(0)}ms ` +
-        `(${budget.framesDropped} frames dropped per inference)`
+          `(${budget.framesDropped} frames dropped per inference)`
       );
 
       expect(budget.framesDropped).toBeGreaterThan(0);
@@ -286,7 +289,7 @@ describe('DetectorComponent', () => {
 
       console.log(
         `✓ getImageData() average time: ${avgTime.toFixed(2)}ms ` +
-        `(can cause 10-50ms stalls on mobile)`
+          `(can cause 10-50ms stalls on mobile)`
       );
 
       // On desktop this is fast, but on mobile it can be 10-50ms
@@ -299,7 +302,7 @@ describe('DetectorComponent', () => {
 
       const slowProcessor = async () => {
         processedFrames++;
-        await new Promise(resolve => setTimeout(resolve, 100)); // Slow processing
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Slow processing
       };
 
       // Queue frames faster than they can be processed
@@ -310,7 +313,7 @@ describe('DetectorComponent', () => {
       // Process frames slower
       const processPromises: Promise<void>[] = [];
       for (let i = 0; i < 10; i++) {
-        await new Promise(resolve => setTimeout(resolve, 16));
+        await new Promise((resolve) => setTimeout(resolve, 16));
         processPromises.push(slowProcessor());
       }
 
@@ -323,7 +326,7 @@ describe('DetectorComponent', () => {
 
       console.warn(
         `⚠️ Frame queue buildup: ${queuedFrames} queued, ${processedFrames} processed ` +
-        `(no frame dropping detected)`
+          `(no frame dropping detected)`
       );
     });
   });
@@ -336,7 +339,7 @@ describe('DetectorComponent', () => {
 
       const processFrame = async () => {
         processingWithZone = { ...currentZone };
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Check if zone changed during processing
         if (
@@ -385,7 +388,7 @@ describe('DetectorComponent', () => {
 
       const checkPermissions = async () => {
         permissionDialogShown = true;
-        await new Promise(resolve => setTimeout(resolve, 100)); // User interaction delay
+        await new Promise((resolve) => setTimeout(resolve, 100)); // User interaction delay
 
         if (componentDestroyed) {
           console.warn('⚠️ Race condition: Component destroyed during permission dialog');
@@ -466,12 +469,10 @@ describe('DetectorComponent', () => {
       }
 
       // Should cancel old frames before starting new ones
-      console.warn(
-        `⚠️ Potential memory leak: ${frameIds.length} animation frames not cancelled`
-      );
+      console.warn(`⚠️ Potential memory leak: ${frameIds.length} animation frames not cancelled`);
 
       // Cleanup
-      frameIds.forEach(id => cancelAnimationFrame(id));
+      frameIds.forEach((id) => cancelAnimationFrame(id));
     });
 
     it('should detect memory leak from unclosed video streams', () => {
@@ -487,14 +488,14 @@ describe('DetectorComponent', () => {
         streams.push(stream);
       }
 
-      const activeStreams = streams.filter(s => s.active);
+      const activeStreams = streams.filter((s) => s.active);
 
       console.warn(`⚠️ Potential memory leak: ${activeStreams.length} active video streams`);
 
       expect(activeStreams.length).toBeGreaterThan(0);
 
       // Cleanup
-      streams.forEach(s => s.getTracks().forEach((t: any) => t.stop()));
+      streams.forEach((s) => s.getTracks().forEach((t: any) => t.stop()));
     });
 
     it('should cleanup ResizeObserver on destroy', () => {
@@ -524,7 +525,7 @@ describe('DetectorComponent', () => {
       for (let i = 0; i < 10; i++) {
         // Mock model loading (would normally allocate memory)
         const largeArray = new Float32Array(1000000); // ~4MB
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
 
       // Take final snapshot
@@ -605,7 +606,7 @@ describe('DetectorComponent', () => {
       // Try to detect motion rapidly
       for (let i = 0; i < 10; i++) {
         handleMotion(50);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Should have limited detections due to cooldown
@@ -640,7 +641,9 @@ describe('DetectorComponent', () => {
       expect(processedFrames).toBeLessThan(20);
       expect(processedFrames).toBeGreaterThan(10);
 
-      console.log(`✓ FPS throttling: Processed ${processedFrames} frames out of 60 (target: ${targetFps}fps)`);
+      console.log(
+        `✓ FPS throttling: Processed ${processedFrames} frames out of 60 (target: ${targetFps}fps)`
+      );
     });
   });
 });

@@ -31,7 +31,8 @@ describe('FirebaseService', () => {
       getDatabase: vi.fn(() => mockFirebase.database),
       ref: (db: any, path: string) => mockFirebase.database.ref(path),
       set: async (ref: any, value: any) => await ref.set(value),
-      onValue: (ref: any, callback: Function, errorCallback?: Function) => ref.on('value', callback),
+      onValue: (ref: any, callback: Function, errorCallback?: Function) =>
+        ref.on('value', callback),
       off: (ref: any, event: string) => ref.off(event),
     }));
 
@@ -79,7 +80,7 @@ describe('FirebaseService', () => {
       });
 
       // Wait a bit for listener to fire
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should receive the current value immediately
       expect(receivedValues.length).toBeGreaterThan(0);
@@ -217,7 +218,7 @@ describe('FirebaseService', () => {
       await mockFirebase.database.ref(path).set({ timestamp: 100, intensity: 42 });
 
       // Wait for listeners to fire
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Both listeners should receive the update
       expect(listener1Values.length).toBeGreaterThan(0);
@@ -244,7 +245,7 @@ describe('FirebaseService', () => {
 
       await mockFirebase.database.ref(path).set({ timestamp: 100, intensity: 50 });
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Only second listener should have received update
       expect(listener1Values.length).toBe(0);
@@ -263,7 +264,7 @@ describe('FirebaseService', () => {
 
       await mockFirebase.database.ref(path).set({ timestamp: 100, intensity: 75 });
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       // Should not have received any updates
       expect(listenerValues.length).toBe(0);
@@ -307,7 +308,7 @@ describe('FirebaseService', () => {
       // Normal operation shouldn't trigger error
       await mockFirebase.database.ref(path).set({ timestamp: 100, intensity: 1 });
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       expect(errorCallbackFired).toBe(false);
     });
@@ -426,7 +427,7 @@ describe('FirebaseService', () => {
         mockFirebase.database.ref(path).set({ timestamp: 3, intensity: 30 }),
       ]);
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       // Should have received updates
       expect(receivedValues.length).toBeGreaterThan(0);

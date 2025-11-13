@@ -11,14 +11,14 @@ export class MockFirebaseDatabase {
 
   async get(path: string): Promise<any> {
     if (this.latency > 0) {
-      await new Promise(resolve => setTimeout(resolve, this.latency));
+      await new Promise((resolve) => setTimeout(resolve, this.latency));
     }
     return this.data.get(path);
   }
 
   async set(path: string, value: any): Promise<void> {
     if (this.latency > 0) {
-      await new Promise(resolve => setTimeout(resolve, this.latency));
+      await new Promise((resolve) => setTimeout(resolve, this.latency));
     }
     this.data.set(path, value);
     this.notifyListeners(path, value);
@@ -26,7 +26,7 @@ export class MockFirebaseDatabase {
 
   async update(path: string, updates: any): Promise<void> {
     if (this.latency > 0) {
-      await new Promise(resolve => setTimeout(resolve, this.latency));
+      await new Promise((resolve) => setTimeout(resolve, this.latency));
     }
     const current = this.data.get(path) || {};
     const updated = { ...current, ...updates };
@@ -36,7 +36,7 @@ export class MockFirebaseDatabase {
 
   async remove(path: string): Promise<void> {
     if (this.latency > 0) {
-      await new Promise(resolve => setTimeout(resolve, this.latency));
+      await new Promise((resolve) => setTimeout(resolve, this.latency));
     }
     this.data.delete(path);
     this.notifyListeners(path, null);
@@ -64,7 +64,7 @@ export class MockFirebaseDatabase {
   }
 
   private notifyListeners(path: string, value: any): void {
-    this.listeners.get(path)?.forEach(callback => callback(value));
+    this.listeners.get(path)?.forEach((callback) => callback(value));
   }
 
   clear(): void {
@@ -77,7 +77,7 @@ export class MockFirebaseDatabase {
     const originalSet = this.set.bind(this);
     this.set = async (p: string, v: any) => {
       if (p === path) {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
       return originalSet(p, v);
     };

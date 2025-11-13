@@ -27,7 +27,7 @@ export class MockBluetoothLE {
             deviceId,
             name: device.name,
             uuids: device.uuids,
-          }
+          },
         });
       });
     }, this.scanDelay);
@@ -82,11 +82,14 @@ export class MockBluetoothLE {
     return { value: device.readData.shift() || '' };
   }
 
-  async startNotifications(options: {
-    deviceId: string;
-    service: string;
-    characteristic: string;
-  }, callback: Function): Promise<void> {
+  async startNotifications(
+    options: {
+      deviceId: string;
+      service: string;
+      characteristic: string;
+    },
+    callback: Function
+  ): Promise<void> {
     const device = this.devices.get(options.deviceId);
     if (!device || !device.connected) {
       throw new Error('Device not connected');
@@ -122,7 +125,7 @@ export class MockBluetoothLE {
       device.connected = false;
       device.notificationCallback?.({
         value: '',
-        error: 'Connection lost'
+        error: 'Connection lost',
       });
     }
   }
@@ -157,7 +160,7 @@ export class MockBluetoothLE {
 
   private async simulateDelay(ms: number): Promise<void> {
     if (ms > 0) {
-      await new Promise(resolve => setTimeout(resolve, ms));
+      await new Promise((resolve) => setTimeout(resolve, ms));
     }
   }
 }

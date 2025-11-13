@@ -1,6 +1,17 @@
 import { Injectable, signal } from '@angular/core';
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
-import { getDatabase, ref, set, onValue, off, Database, onDisconnect, push, remove, serverTimestamp } from 'firebase/database';
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue,
+  off,
+  Database,
+  onDisconnect,
+  push,
+  remove,
+  serverTimestamp,
+} from 'firebase/database';
 import { firebaseConfig } from '../firebase.config';
 
 export enum DeviceRole {
@@ -92,7 +103,10 @@ export class SprintTimingService {
     // Heartbeat every 5 seconds
     setInterval(() => {
       if (this.currentSessionId === sessionId) {
-        set(ref(this.db, `sprint-sessions/${sessionId}/presence/${this.clientId}/lastSeen`), Date.now());
+        set(
+          ref(this.db, `sprint-sessions/${sessionId}/presence/${this.clientId}/lastSeen`),
+          Date.now()
+        );
       }
     }, 5000);
   }
@@ -103,7 +117,10 @@ export class SprintTimingService {
   }
 
   updateDeviceCamera(sessionId: string, clientId: string, cameraId: string): void {
-    const cameraRef = ref(this.db, `sprint-sessions/${sessionId}/presence/${clientId}/selectedCameraId`);
+    const cameraRef = ref(
+      this.db,
+      `sprint-sessions/${sessionId}/presence/${clientId}/selectedCameraId`
+    );
     set(cameraRef, cameraId);
   }
 
@@ -116,7 +133,7 @@ export class SprintTimingService {
         const devices: ConnectedDevice[] = Object.values(data);
         // Filter out stale devices (not seen in last 15 seconds)
         const now = Date.now();
-        const activeDevices = devices.filter(d => (now - d.lastSeen) < 15000);
+        const activeDevices = devices.filter((d) => now - d.lastSeen < 15000);
         callback(activeDevices);
       } else {
         callback([]);

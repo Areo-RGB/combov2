@@ -1,6 +1,21 @@
-import { ChangeDetectionStrategy, Component, input, output, signal, OnInit, OnDestroy, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+  signal,
+  OnInit,
+  OnDestroy,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SprintTimingService, DeviceRole, MessageType, ConnectedDevice, CameraInfo } from '../../services/sprint-timing.service';
+import {
+  SprintTimingService,
+  DeviceRole,
+  MessageType,
+  ConnectedDevice,
+  CameraInfo,
+} from '../../services/sprint-timing.service';
 
 export interface MultiDeviceConfig {
   sessionId: string;
@@ -34,12 +49,12 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
 
   readonly DeviceRole = DeviceRole;
   readonly deviceRoles = [DeviceRole.Start, DeviceRole.Split, DeviceRole.Finish];
-  
+
   // Collapsible state for settings
   settingsExpanded = signal(true);
-  
+
   toggleSettings(): void {
-    this.settingsExpanded.update(v => !v);
+    this.settingsExpanded.update((v) => !v);
   }
 
   ngOnInit(): void {
@@ -71,7 +86,7 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
       // Request camera permission to get meaningful labels
       await navigator.mediaDevices.getUserMedia({ video: true });
       const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      const videoDevices = devices.filter((d) => d.kind === 'videoinput');
 
       const cameras: CameraInfo[] = videoDevices.map((d, i) => ({
         deviceId: d.deviceId,
@@ -90,7 +105,7 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
           this.connectedDevices.set(devices);
 
           // Find my role from the updated devices list
-          const myDevice = devices.find(d => d.clientId === this.sprintService.getClientId());
+          const myDevice = devices.find((d) => d.clientId === this.sprintService.getClientId());
           if (myDevice) {
             this.myRole.set(myDevice.role);
           }
@@ -118,7 +133,9 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
 
     if (message.type === MessageType.StartSession) {
       const config = message.data.config;
-      const myDevice = config.connectedDevices.find((d: ConnectedDevice) => d.clientId === this.sprintService.getClientId());
+      const myDevice = config.connectedDevices.find(
+        (d: ConnectedDevice) => d.clientId === this.sprintService.getClientId()
+      );
 
       if (myDevice) {
         const finalConfig: MultiDeviceConfig = {
@@ -213,7 +230,9 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
     });
 
     // Start session for this device (host)
-    const myDevice = this.connectedDevices().find(d => d.clientId === this.sprintService.getClientId());
+    const myDevice = this.connectedDevices().find(
+      (d) => d.clientId === this.sprintService.getClientId()
+    );
     if (myDevice) {
       const finalConfig: MultiDeviceConfig = {
         sessionId: sid,

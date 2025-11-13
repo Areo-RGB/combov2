@@ -17,7 +17,13 @@
     "test:coverage": "vitest --coverage",
     "test:race": "vitest --run --testNamePattern='race condition'",
     "test:perf": "vitest --run --testNamePattern='performance'",
-    "test:ci": "vitest --run --coverage"
+    "test:ci": "vitest --run --coverage",
+    "format": "prettier --write \"src/**/*.{ts,html,css,scss,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,css,scss,json}\"",
+    "lint": "eslint src --ext .ts,.html",
+    "lint:fix": "eslint src --ext .ts,.html --fix",
+    "lint:format": "pnpm run lint:fix && pnpm run format",
+    "check": "pnpm run format:check && pnpm run lint"
   },
   "dependencies": {
     "@angular/build": "^20.3.9",
@@ -47,15 +53,23 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^20.3.9",
+    "@angular-eslint/eslint-plugin": "^20.6.0",
+    "@angular-eslint/eslint-plugin-template": "^20.6.0",
+    "@angular-eslint/template-parser": "^20.6.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
+    "@eslint/js": "^9.39.1",
     "@testing-library/angular": "^18.1.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.19.0",
     "@vitest/ui": "^4.0.8",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
     "happy-dom": "^20.0.10",
     "jsdom": "^27.1.0",
+    "prettier": "^3.6.2",
     "typescript": "~5.8.3",
+    "typescript-eslint": "^8.46.4",
     "vite": "^6.4.1",
     "vitest": "^4.0.8"
   }

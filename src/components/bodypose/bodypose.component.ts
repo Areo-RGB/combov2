@@ -1,4 +1,14 @@
-import { Component, ChangeDetectionStrategy, signal, ViewChild, ElementRef, AfterViewInit, computed, output, OnDestroy } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  signal,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+  computed,
+  output,
+  OnDestroy,
+} from '@angular/core';
 import * as tf from '@tensorflow/tfjs';
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import type { Pose, Keypoint } from '@tensorflow-models/pose-detection';
@@ -7,7 +17,18 @@ type SupportedModel = 'MoveNet' | 'BlazePose';
 type MovenetModelType = 'SINGLEPOSE_LIGHTNING' | 'SINGLEPOSE_THUNDER';
 type BlazeposeModelType = 'lite' | 'full' | 'heavy';
 type ModelVariant = MovenetModelType | BlazeposeModelType;
-type SupportedExercise = 'None' | 'Crunches' | 'HeelTaps' | 'RussianTwists' | 'ToeTouches' | 'AlternatingLegVups' | 'DoubleLegVups' | 'WindshieldWipers' | 'PlankWithBallRoll' | 'SidePlankRotation' | 'PushUp';
+type SupportedExercise =
+  | 'None'
+  | 'Crunches'
+  | 'HeelTaps'
+  | 'RussianTwists'
+  | 'ToeTouches'
+  | 'AlternatingLegVups'
+  | 'DoubleLegVups'
+  | 'WindshieldWipers'
+  | 'PlankWithBallRoll'
+  | 'SidePlankRotation'
+  | 'PushUp';
 type AnalysisMode = 'live' | 'file';
 type ExerciseState = 'up' | 'down' | 'neutral' | 'tapped';
 
@@ -48,7 +69,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     low: { width: 320, height: 240 },
     medium: { width: 640, height: 480 },
     high: { width: 1280, height: 720 },
-    ultra: { width: 1920, height: 1080 }
+    ultra: { width: 1920, height: 1080 },
   };
 
   showStickmanOnly = signal<boolean>(false);
@@ -89,7 +110,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     const armsOk = this.armsColor() === green;
     const legsOk = this.legsColor() === green;
 
-    return (torsoOk && armsOk && legsOk) ? green : '#f87171';
+    return torsoOk && armsOk && legsOk ? green : '#f87171';
   });
 
   availableVariants = computed<ModelVariant[]>(() => {
@@ -100,7 +121,9 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     }
   });
 
-  currentFeedback = computed<FeedbackText | null>(() => this.feedbackTexts[this.selectedExercise()]);
+  currentFeedback = computed<FeedbackText | null>(
+    () => this.feedbackTexts[this.selectedExercise()]
+  );
 
   private detector!: poseDetection.PoseDetector;
   private videoWidth = 640;
@@ -145,7 +168,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     DoubleLegVups: {
       title: 'Double Leg V-Ups',
       torso: `${this.G} Your body forms a sharp 'V' shape. <br> ${this.R} The angle between torso and legs is too wide.`,
-      legs: `${this.G} Your legs are sufficiently straight. <br> ${this.R} Your knees are bent too much.`
+      legs: `${this.G} Your legs are sufficiently straight. <br> ${this.R} Your knees are bent too much.`,
     },
     WindshieldWipers: {
       title: 'Windshield Wipers',
@@ -186,7 +209,9 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
       }
 
       if (message.includes('Permission denied')) {
-        this.errorMessage.set('Camera access was denied. Please allow camera permissions and refresh.');
+        this.errorMessage.set(
+          'Camera access was denied. Please allow camera permissions and refresh.'
+        );
       } else {
         this.errorMessage.set(message);
       }
@@ -209,10 +234,12 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   onFullscreenChange(): void {
-    const isFullscreen = !!(document.fullscreenElement ||
-                           (document as any).webkitFullscreenElement ||
-                           (document as any).mozFullScreenElement ||
-                           (document as any).msFullscreenElement);
+    const isFullscreen = !!(
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).mozFullScreenElement ||
+      (document as any).msFullscreenElement
+    );
     this.isFullscreen.set(isFullscreen);
   }
 
@@ -248,13 +275,13 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   toggleConfig(): void {
-    this.isConfigOpen.update(value => !value);
+    this.isConfigOpen.update((value) => !value);
   }
 
   async toggleCamera(): Promise<void> {
     if (this.analysisMode() !== 'live') return;
 
-    this.isCameraOn.update(v => !v);
+    this.isCameraOn.update((v) => !v);
 
     if (this.isCameraOn()) {
       this.isLoading.set(true);
@@ -384,7 +411,9 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
         this.isDetecting = true;
         this.detectPosesLoop();
       } catch (error: unknown) {
-        this.errorMessage.set(error instanceof Error ? error.message : 'Failed to switch to live mode.');
+        this.errorMessage.set(
+          error instanceof Error ? error.message : 'Failed to switch to live mode.'
+        );
       } finally {
         this.isLoading.set(false);
       }
@@ -434,14 +463,14 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   togglePlayPause(): void {
     const video = this.videoEl.nativeElement;
     if (video.paused) {
-      video.play().catch(e => console.error("Video play failed", e));
+      video.play().catch((e) => console.error('Video play failed', e));
     } else {
       video.pause();
     }
   }
 
   toggleSlowMotion(): void {
-    this.isSlowMotion.update(v => !v);
+    this.isSlowMotion.update((v) => !v);
     this.videoEl.nativeElement.playbackRate = this.isSlowMotion() ? 0.5 : 1.0;
   }
 
@@ -485,7 +514,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     try {
       await this.setupCamera(this.selectedCameraId());
     } catch (error: unknown) {
-       this.errorMessage.set(error instanceof Error ? error.message : 'Failed to switch camera.');
+      this.errorMessage.set(error instanceof Error ? error.message : 'Failed to switch camera.');
     } finally {
       this.isLoading.set(false);
     }
@@ -507,7 +536,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
         requestAnimationFrame(() => this.detectPosesLoop());
       }
     } catch (error: unknown) {
-       this.errorMessage.set(error instanceof Error ? error.message : 'Failed to switch AI model.');
+      this.errorMessage.set(error instanceof Error ? error.message : 'Failed to switch AI model.');
     } finally {
       this.isLoading.set(false);
     }
@@ -522,20 +551,22 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     this.selectedVariant.set(variant);
 
     try {
-        await this.loadPoseDetector();
-        if (this.isCameraOn()) {
-          this.isDetecting = true;
-          requestAnimationFrame(() => this.detectPosesLoop());
-        }
+      await this.loadPoseDetector();
+      if (this.isCameraOn()) {
+        this.isDetecting = true;
+        requestAnimationFrame(() => this.detectPosesLoop());
+      }
     } catch (error: unknown) {
-       this.errorMessage.set(error instanceof Error ? error.message : 'Failed to switch model variant.');
+      this.errorMessage.set(
+        error instanceof Error ? error.message : 'Failed to switch model variant.'
+      );
     } finally {
-        this.isLoading.set(false);
+      this.isLoading.set(false);
     }
   }
 
   toggleRepCounting(): void {
-    this.isCountingReps.update(v => !v);
+    this.isCountingReps.update((v) => !v);
     if (!this.isCountingReps()) {
       this.repCount.set(0);
       this.exerciseState.set(this.selectedExercise() === 'Crunches' ? 'down' : 'neutral');
@@ -558,7 +589,11 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   onResolutionChange(event: Event): void {
-    const resolution = (event.target as HTMLSelectElement).value as 'low' | 'medium' | 'high' | 'ultra';
+    const resolution = (event.target as HTMLSelectElement).value as
+      | 'low'
+      | 'medium'
+      | 'high'
+      | 'ultra';
     this.videoResolution.set(resolution);
     const settings = this.resolutionSettings[resolution];
     this.videoWidth = settings.width;
@@ -584,7 +619,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
       throw new Error('Your browser does not support camera enumeration.');
     }
     const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    const videoDevices = devices.filter((device) => device.kind === 'videoinput');
     this.availableCameras.set(videoDevices);
     if (videoDevices.length > 0) {
       this.selectedCameraId.set(videoDevices[0].deviceId);
@@ -594,7 +629,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private stopStream(): void {
-    this.stream?.getTracks().forEach(track => track.stop());
+    this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
   }
 
@@ -613,8 +648,8 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
         height: { ideal: resolution.height },
         deviceId: deviceId ? { exact: deviceId } : undefined,
         facingMode: 'user',
-        frameRate: { ideal: 60, max: 60 }
-      }
+        frameRate: { ideal: 60, max: 60 },
+      },
     };
 
     this.stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -637,10 +672,16 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   private async loadPoseDetector(): Promise<void> {
     this.detector?.dispose();
 
-    const model = this.selectedModel() === 'BlazePose' ? poseDetection.SupportedModels.BlazePose : poseDetection.SupportedModels.MoveNet;
-    const detectorConfig = this.selectedModel() === 'BlazePose'
-      ? { runtime: 'tfjs' as const, modelType: this.selectedVariant() as BlazeposeModelType }
-      : { modelType: poseDetection.movenet.modelType[this.selectedVariant() as MovenetModelType] };
+    const model =
+      this.selectedModel() === 'BlazePose'
+        ? poseDetection.SupportedModels.BlazePose
+        : poseDetection.SupportedModels.MoveNet;
+    const detectorConfig =
+      this.selectedModel() === 'BlazePose'
+        ? { runtime: 'tfjs' as const, modelType: this.selectedVariant() as BlazeposeModelType }
+        : {
+            modelType: poseDetection.movenet.modelType[this.selectedVariant() as MovenetModelType],
+          };
 
     this.detector = await poseDetection.createDetector(model, detectorConfig);
   }
@@ -655,13 +696,13 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     if (this.isPoseTimerRunning()) {
       if (this.liveStickmanColor() === '#34d399') {
         const delta = now - this.lastTimerTick;
-        this.poseMatchTimer.update(t => {
-            const newTime = t - (delta / 1000);
-            if (newTime <= 0) {
-                this.isPoseTimerRunning.set(false);
-                return 0;
-            }
-            return newTime;
+        this.poseMatchTimer.update((t) => {
+          const newTime = t - delta / 1000;
+          if (newTime <= 0) {
+            this.isPoseTimerRunning.set(false);
+            return 0;
+          }
+          return newTime;
         });
       }
       this.lastTimerTick = now;
@@ -669,29 +710,34 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
 
     const targetFps = this.targetFps();
     if (targetFps > 0) {
-        const targetInterval = 1000 / targetFps;
-        if (this.lastFrameTime > 0 && (now - this.lastFrameTime) < targetInterval) {
-            return;
-        }
-    } else {
-        this.drawResults([]);
+      const targetInterval = 1000 / targetFps;
+      if (this.lastFrameTime > 0 && now - this.lastFrameTime < targetInterval) {
         return;
+      }
+    } else {
+      this.drawResults([]);
+      return;
     }
     this.lastFrameTime = now;
 
     this.frameCount++;
     if (now > this.lastFpsUpdate + 1000) {
-      this.currentFps.set(this.frameCount * 1000 / (now - this.lastFpsUpdate));
+      this.currentFps.set((this.frameCount * 1000) / (now - this.lastFpsUpdate));
       this.frameCount = 0;
       this.lastFpsUpdate = now;
     }
 
-    if (this.videoEl.nativeElement.readyState < 2 || (this.videoEl.nativeElement.paused && this.analysisMode() === 'file')) {
+    if (
+      this.videoEl.nativeElement.readyState < 2 ||
+      (this.videoEl.nativeElement.paused && this.analysisMode() === 'file')
+    ) {
       return;
     }
 
     try {
-      const poses = await this.detector.estimatePoses(this.videoEl.nativeElement, { flipHorizontal: false });
+      const poses = await this.detector.estimatePoses(this.videoEl.nativeElement, {
+        flipHorizontal: false,
+      });
 
       const refPose = this.referencePose();
 
@@ -706,23 +752,42 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
         const currentExercise = this.selectedExercise();
         if (currentExercise !== 'None' && !refPose) {
           switch (currentExercise) {
-            case 'Crunches': this.analyzeCrunches(liveKeypoints); break;
-            case 'HeelTaps': this.analyzeHeelTaps(liveKeypoints); break;
-            case 'RussianTwists': this.analyzeRussianTwists(liveKeypoints); break;
-            case 'ToeTouches': this.analyzeToeTouches(liveKeypoints); break;
-            case 'AlternatingLegVups': this.analyzeAlternatingLegVups(liveKeypoints); break;
-            case 'DoubleLegVups': this.analyzeDoubleLegVups(liveKeypoints); break;
-            case 'WindshieldWipers': this.analyzeWindshieldWipers(liveKeypoints); break;
-            case 'PlankWithBallRoll': this.analyzePlankWithBallRoll(liveKeypoints); break;
-            case 'SidePlankRotation': this.analyzeSidePlankRotation(liveKeypoints); break;
-            case 'PushUp': this.analyzePushUp(liveKeypoints); break;
+            case 'Crunches':
+              this.analyzeCrunches(liveKeypoints);
+              break;
+            case 'HeelTaps':
+              this.analyzeHeelTaps(liveKeypoints);
+              break;
+            case 'RussianTwists':
+              this.analyzeRussianTwists(liveKeypoints);
+              break;
+            case 'ToeTouches':
+              this.analyzeToeTouches(liveKeypoints);
+              break;
+            case 'AlternatingLegVups':
+              this.analyzeAlternatingLegVups(liveKeypoints);
+              break;
+            case 'DoubleLegVups':
+              this.analyzeDoubleLegVups(liveKeypoints);
+              break;
+            case 'WindshieldWipers':
+              this.analyzeWindshieldWipers(liveKeypoints);
+              break;
+            case 'PlankWithBallRoll':
+              this.analyzePlankWithBallRoll(liveKeypoints);
+              break;
+            case 'SidePlankRotation':
+              this.analyzeSidePlankRotation(liveKeypoints);
+              break;
+            case 'PushUp':
+              this.analyzePushUp(liveKeypoints);
+              break;
           }
         } else if (currentExercise === 'None') {
           this.torsoColor.set('#34d399');
           this.armsColor.set('#60a5fa');
           this.legsColor.set('#34d399');
         }
-
       } else {
         this.lastDetectedPose.set(null);
         if (refPose) this.liveStickmanColor.set('#f87171');
@@ -748,27 +813,47 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
 
     this.referencePose() && this.drawSimplifiedStickman(ctx, this.referencePose()!, true);
-    poses.forEach(pose => pose.score! > 0.3 && this.drawSimplifiedStickman(ctx, pose.keypoints, false));
+    poses.forEach(
+      (pose) => pose.score! > 0.3 && this.drawSimplifiedStickman(ctx, pose.keypoints, false)
+    );
   }
 
-  private drawSimplifiedStickman(ctx: CanvasRenderingContext2D, keypoints: Keypoint[], isReference = false): void {
-    const keypointsMap = new Map(keypoints.map(k => [k.name!, k]));
+  private drawSimplifiedStickman(
+    ctx: CanvasRenderingContext2D,
+    keypoints: Keypoint[],
+    isReference = false
+  ): void {
+    const keypointsMap = new Map(keypoints.map((k) => [k.name!, k]));
 
-    const [leftShoulder, rightShoulder, leftHip, rightHip, leftEye, rightEye] =
-      ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip', 'left_eye', 'right_eye'].map(name => keypointsMap.get(name));
+    const [leftShoulder, rightShoulder, leftHip, rightHip, leftEye, rightEye] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+      'left_eye',
+      'right_eye',
+    ].map((name) => keypointsMap.get(name));
 
     if (!leftShoulder || !rightShoulder || !leftHip || !rightHip || !leftEye || !rightEye) return;
 
-    const shoulderMid = { x: (leftShoulder.x + rightShoulder.x) / 2, y: (leftShoulder.y + rightShoulder.y) / 2 };
+    const shoulderMid = {
+      x: (leftShoulder.x + rightShoulder.x) / 2,
+      y: (leftShoulder.y + rightShoulder.y) / 2,
+    };
     const hipMid = { x: (leftHip.x + rightHip.x) / 2, y: (leftHip.y + rightHip.y) / 2 };
     const eyeMid = { x: (leftEye.x + rightEye.x) / 2, y: (leftEye.y + rightEye.y) / 2 };
 
     const isPoseMatchingMode = !!this.referencePose() && !isReference;
-    const isExerciseAnalysisMode = this.selectedExercise() !== 'None' && !isPoseMatchingMode && !isReference;
+    const isExerciseAnalysisMode =
+      this.selectedExercise() !== 'None' && !isPoseMatchingMode && !isReference;
     const lineWidth = isReference ? 6 : 4;
     const jointRadius = isReference ? 6 : 5;
 
-    let torsoColor: string, neckColor: string, armColor: string, legColor: string, jointColor: string;
+    let torsoColor: string,
+      neckColor: string,
+      armColor: string,
+      legColor: string,
+      jointColor: string;
     const referenceColor = '#a855f7';
 
     if (isReference) {
@@ -784,30 +869,103 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
       neckColor = this.torsoColor();
       jointColor = '#f0f9ff';
     } else {
-      torsoColor = '#34d399'; neckColor = '#fbbf24'; armColor = '#60a5fa'; legColor = '#34d399'; jointColor = '#f0f9ff';
+      torsoColor = '#34d399';
+      neckColor = '#fbbf24';
+      armColor = '#60a5fa';
+      legColor = '#34d399';
+      jointColor = '#f0f9ff';
     }
 
     this.drawSegment(ctx, shoulderMid, hipMid, torsoColor, lineWidth);
     this.drawSegment(ctx, shoulderMid, eyeMid, neckColor, lineWidth);
 
-    const [leftElbow, leftWrist, rightElbow, rightWrist, leftKnee, leftAnkle, leftToe, rightKnee, rightAnkle, rightToe] =
-      ['left_elbow', 'left_wrist', 'right_elbow', 'right_wrist', 'left_knee', 'left_ankle', 'left_foot_index', 'right_knee', 'right_ankle', 'right_foot_index'].map(name => keypointsMap.get(name));
+    const [
+      leftElbow,
+      leftWrist,
+      rightElbow,
+      rightWrist,
+      leftKnee,
+      leftAnkle,
+      leftToe,
+      rightKnee,
+      rightAnkle,
+      rightToe,
+    ] = [
+      'left_elbow',
+      'left_wrist',
+      'right_elbow',
+      'right_wrist',
+      'left_knee',
+      'left_ankle',
+      'left_foot_index',
+      'right_knee',
+      'right_ankle',
+      'right_foot_index',
+    ].map((name) => keypointsMap.get(name));
 
-    if(leftElbow && leftWrist) { this.drawSegment(ctx, shoulderMid, leftElbow, armColor, lineWidth); this.drawSegment(ctx, leftElbow, leftWrist, armColor, lineWidth); }
-    if(rightElbow && rightWrist) { this.drawSegment(ctx, shoulderMid, rightElbow, armColor, lineWidth); this.drawSegment(ctx, rightElbow, rightWrist, armColor, lineWidth); }
-    if(leftKnee && leftAnkle) { this.drawSegment(ctx, hipMid, leftKnee, legColor, lineWidth); this.drawSegment(ctx, leftKnee, leftAnkle, legColor, lineWidth); leftToe && this.drawSegment(ctx, leftAnkle, leftToe, legColor, lineWidth); }
-    if(rightKnee && rightAnkle) { this.drawSegment(ctx, hipMid, rightKnee, legColor, lineWidth); this.drawSegment(ctx, rightKnee, rightAnkle, legColor, lineWidth); rightToe && this.drawSegment(ctx, rightAnkle, rightToe, legColor, lineWidth); }
+    if (leftElbow && leftWrist) {
+      this.drawSegment(ctx, shoulderMid, leftElbow, armColor, lineWidth);
+      this.drawSegment(ctx, leftElbow, leftWrist, armColor, lineWidth);
+    }
+    if (rightElbow && rightWrist) {
+      this.drawSegment(ctx, shoulderMid, rightElbow, armColor, lineWidth);
+      this.drawSegment(ctx, rightElbow, rightWrist, armColor, lineWidth);
+    }
+    if (leftKnee && leftAnkle) {
+      this.drawSegment(ctx, hipMid, leftKnee, legColor, lineWidth);
+      this.drawSegment(ctx, leftKnee, leftAnkle, legColor, lineWidth);
+      leftToe && this.drawSegment(ctx, leftAnkle, leftToe, legColor, lineWidth);
+    }
+    if (rightKnee && rightAnkle) {
+      this.drawSegment(ctx, hipMid, rightKnee, legColor, lineWidth);
+      this.drawSegment(ctx, rightKnee, rightAnkle, legColor, lineWidth);
+      rightToe && this.drawSegment(ctx, rightAnkle, rightToe, legColor, lineWidth);
+    }
 
-    [shoulderMid, hipMid, eyeMid, leftElbow, leftWrist, rightElbow, rightWrist, leftKnee, leftAnkle, rightKnee, rightAnkle, leftToe, rightToe].forEach(joint => joint && this.drawPoint(ctx, joint.x, joint.y, jointRadius, jointColor));
+    [
+      shoulderMid,
+      hipMid,
+      eyeMid,
+      leftElbow,
+      leftWrist,
+      rightElbow,
+      rightWrist,
+      leftKnee,
+      leftAnkle,
+      rightKnee,
+      rightAnkle,
+      leftToe,
+      rightToe,
+    ].forEach((joint) => joint && this.drawPoint(ctx, joint.x, joint.y, jointRadius, jointColor));
   }
 
-  private drawSegment = (ctx: CanvasRenderingContext2D, p1: {x:number, y:number}, p2: {x:number, y:number}, color: string, lineWidth: number) => {
-    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineWidth = lineWidth; ctx.strokeStyle = color; ctx.stroke();
-  }
+  private drawSegment = (
+    ctx: CanvasRenderingContext2D,
+    p1: { x: number; y: number },
+    p2: { x: number; y: number },
+    color: string,
+    lineWidth: number
+  ) => {
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = color;
+    ctx.stroke();
+  };
 
-  private drawPoint = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, color: string) => {
-    ctx.beginPath(); ctx.arc(x, y, radius, 0, 2 * Math.PI); ctx.fillStyle = color; ctx.fill();
-  }
+  private drawPoint = (
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radius: number,
+    color: string
+  ) => {
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = color;
+    ctx.fill();
+  };
 
   private getAngle(p1: Keypoint, p2: Keypoint, p3: Keypoint): number {
     if (p1.z != null && p2.z != null && p3.z != null) {
@@ -818,7 +976,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
 
   private getAngle2D(p1: Keypoint, p2: Keypoint, p3: Keypoint): number {
     const angleRad = Math.atan2(p3.y - p2.y, p3.x - p2.x) - Math.atan2(p1.y - p2.y, p1.x - p2.x);
-    let angleDeg = Math.abs(angleRad * 180 / Math.PI);
+    let angleDeg = Math.abs((angleRad * 180) / Math.PI);
     return angleDeg > 180 ? 360 - angleDeg : angleDeg;
   }
 
@@ -834,42 +992,67 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     const clampedCosTheta = Math.max(-1.0, Math.min(1.0, cosTheta));
 
     const angleRad = Math.acos(clampedCosTheta);
-    return angleRad * 180 / Math.PI;
+    return (angleRad * 180) / Math.PI;
   }
 
-  private getDistance = (p1: Keypoint, p2: Keypoint) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+  private getDistance = (p1: Keypoint, p2: Keypoint) =>
+    Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
 
   private analyzePoseAlignment(liveKps: Keypoint[], refKps: Keypoint[]): void {
-    const liveMap = new Map(liveKps.map(k => [k.name!, k]));
-    const refMap = new Map(refKps.map(k => [k.name!, k]));
-    let totalDist = 0, count = 0;
+    const liveMap = new Map(liveKps.map((k) => [k.name!, k]));
+    const refMap = new Map(refKps.map((k) => [k.name!, k]));
+    let totalDist = 0,
+      count = 0;
     const refShoulders = [refMap.get('left_shoulder'), refMap.get('right_shoulder')];
-    if (!refShoulders[0] || !refShoulders[1]) { this.liveStickmanColor.set('#f87171'); return; }
+    if (!refShoulders[0] || !refShoulders[1]) {
+      this.liveStickmanColor.set('#f87171');
+      return;
+    }
     const normFactor = this.getDistance(refShoulders[0], refShoulders[1]);
-    if (normFactor === 0) { this.liveStickmanColor.set('#f87171'); return; }
+    if (normFactor === 0) {
+      this.liveStickmanColor.set('#f87171');
+      return;
+    }
 
     refMap.forEach((refKp, name) => {
-        const liveKp = liveMap.get(name);
-        if (liveKp?.score! > 0.3 && refKp?.score! > 0.3) {
-            totalDist += this.getDistance(liveKp, refKp);
-            count++;
-        }
+      const liveKp = liveMap.get(name);
+      if (liveKp?.score! > 0.3 && refKp?.score! > 0.3) {
+        totalDist += this.getDistance(liveKp, refKp);
+        count++;
+      }
     });
 
-    if (count < 5) { this.liveStickmanColor.set('#f87171'); return; }
-    const avgNormDist = (totalDist / count) / normFactor;
+    if (count < 5) {
+      this.liveStickmanColor.set('#f87171');
+      return;
+    }
+    const avgNormDist = totalDist / count / normFactor;
     this.liveStickmanColor.set(avgNormDist < 0.15 ? '#34d399' : '#f87171');
   }
 
   private analyzeCrunches(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lShoulder, rShoulder, lHip, rHip, lKnee, rKnee, lWrist, rWrist] = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip', 'left_knee', 'right_knee', 'left_wrist', 'right_wrist'].map(n => map.get(n));
-    if (!lShoulder || !rShoulder || !lHip || !rHip || !lKnee || !rKnee || !lWrist || !rWrist) return;
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder, lHip, rHip, lKnee, rKnee, lWrist, rWrist] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+      'left_knee',
+      'right_knee',
+      'left_wrist',
+      'right_wrist',
+    ].map((n) => map.get(n));
+    if (!lShoulder || !rShoulder || !lHip || !rHip || !lKnee || !rKnee || !lWrist || !rWrist)
+      return;
 
-    const shoulderMid = { ...lShoulder, x: (lShoulder.x + rShoulder.x)/2, y: (lShoulder.y + rShoulder.y)/2 };
-    const hipMid = { ...lHip, x: (lHip.x + rHip.x)/2, y: (lHip.y + rHip.y)/2 };
-    const kneeMid = { ...lKnee, x: (lKnee.x + rKnee.x)/2, y: (lKnee.y + rKnee.y)/2 };
-    const wristMid = { ...lWrist, x: (lWrist.x + rWrist.x)/2, y: (lWrist.y + rWrist.y)/2 };
+    const shoulderMid = {
+      ...lShoulder,
+      x: (lShoulder.x + rShoulder.x) / 2,
+      y: (lShoulder.y + rShoulder.y) / 2,
+    };
+    const hipMid = { ...lHip, x: (lHip.x + rHip.x) / 2, y: (lHip.y + rHip.y) / 2 };
+    const kneeMid = { ...lKnee, x: (lKnee.x + rKnee.x) / 2, y: (lKnee.y + rKnee.y) / 2 };
+    const wristMid = { ...lWrist, x: (lWrist.x + rWrist.x) / 2, y: (lWrist.y + rWrist.y) / 2 };
 
     const torsoLength = this.getDistance(shoulderMid, hipMid);
     const shoulderLiftAngle = this.getAngle(kneeMid, hipMid, shoulderMid);
@@ -888,22 +1071,32 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
       if (this.exerciseState() === 'down' && isUp) {
         this.exerciseState.set('up');
       } else if (this.exerciseState() === 'up' && isDown) {
-        this.repCount.update(count => count + 1);
+        this.repCount.update((count) => count + 1);
         this.exerciseState.set('down');
       }
     }
   }
 
   private analyzeHeelTaps(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lShoulder, rShoulder, lHip, rHip, lWrist, lAnkle, rWrist, rAnkle] = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip', 'left_wrist', 'left_ankle', 'right_wrist', 'right_ankle'].map(n => map.get(n));
-    if (!lShoulder || !rShoulder || !lHip || !rHip || !lWrist || !lAnkle || !rWrist || !rAnkle) return;
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder, lHip, rHip, lWrist, lAnkle, rWrist, rAnkle] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+      'left_wrist',
+      'left_ankle',
+      'right_wrist',
+      'right_ankle',
+    ].map((n) => map.get(n));
+    if (!lShoulder || !rShoulder || !lHip || !rHip || !lWrist || !lAnkle || !rWrist || !rAnkle)
+      return;
 
     const shoulderMidY = (lShoulder.y + rShoulder.y) / 2;
     const hipMidY = (lHip.y + rHip.y) / 2;
     const torsoHeight = Math.abs(hipMidY - shoulderMidY);
 
-    const shoulderLiftOk = shoulderMidY < hipMidY - (torsoHeight * 0.1);
+    const shoulderLiftOk = shoulderMidY < hipMidY - torsoHeight * 0.1;
     const reachLeftOk = this.getDistance(lWrist, lAnkle) < torsoHeight * 0.5;
     const reachRightOk = this.getDistance(rWrist, rAnkle) < torsoHeight * 0.5;
     const hasTapped = reachLeftOk || reachRightOk;
@@ -915,7 +1108,7 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     if (this.isCountingReps()) {
       if (this.exerciseState() === 'neutral' && hasTapped) {
         this.exerciseState.set('tapped');
-        this.repCount.update(count => count + 1);
+        this.repCount.update((count) => count + 1);
       } else if (this.exerciseState() === 'tapped' && !hasTapped) {
         this.exerciseState.set('neutral');
       }
@@ -923,8 +1116,8 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzeRussianTwists(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lShoulder, rShoulder] = ['left_shoulder', 'right_shoulder'].map(n => map.get(n));
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder] = ['left_shoulder', 'right_shoulder'].map((n) => map.get(n));
     if (!lShoulder || !rShoulder) return;
 
     const shoulderYDiff = Math.abs(lShoulder.y - rShoulder.y);
@@ -937,15 +1130,24 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzeToeTouches(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lHip, lKnee, lAnkle, rHip, rKnee, rAnkle, lWrist, rWrist] = ['left_hip', 'left_knee', 'left_ankle', 'right_hip', 'right_knee', 'right_ankle', 'left_wrist', 'right_wrist'].map(n => map.get(n));
-    if(!lHip || !lKnee || !lAnkle || !rHip || !rKnee || !rAnkle || !lWrist || !rWrist) return;
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lHip, lKnee, lAnkle, rHip, rKnee, rAnkle, lWrist, rWrist] = [
+      'left_hip',
+      'left_knee',
+      'left_ankle',
+      'right_hip',
+      'right_knee',
+      'right_ankle',
+      'left_wrist',
+      'right_wrist',
+    ].map((n) => map.get(n));
+    if (!lHip || !lKnee || !lAnkle || !rHip || !rKnee || !rAnkle || !lWrist || !rWrist) return;
 
     const legAngleL = this.getAngle(lHip, lKnee, lAnkle);
     const legAngleR = this.getAngle(rHip, rKnee, rAnkle);
     const legsStraight = legAngleL > 150 && legAngleR > 150;
-    const wristMidY = (lWrist.y + rWrist.y)/2;
-    const ankleMidY = (lAnkle.y + rAnkle.y)/2;
+    const wristMidY = (lWrist.y + rWrist.y) / 2;
+    const ankleMidY = (lAnkle.y + rAnkle.y) / 2;
     const reachOk = wristMidY < ankleMidY + 50;
 
     this.legsColor.set(legsStraight ? '#34d399' : '#f87171');
@@ -954,11 +1156,16 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzeAlternatingLegVups(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lAnkle, rAnkle, lWrist, rWrist] = ['left_ankle', 'right_ankle', 'left_wrist', 'right_wrist'].map(n => map.get(n));
-    if(!lAnkle || !rAnkle || !lWrist || !rWrist) return;
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lAnkle, rAnkle, lWrist, rWrist] = [
+      'left_ankle',
+      'right_ankle',
+      'left_wrist',
+      'right_wrist',
+    ].map((n) => map.get(n));
+    if (!lAnkle || !rAnkle || !lWrist || !rWrist) return;
 
-    const wristMid = { ...lWrist, x: (lWrist.x+rWrist.x)/2, y: (lWrist.y+rWrist.y)/2 };
+    const wristMid = { ...lWrist, x: (lWrist.x + rWrist.x) / 2, y: (lWrist.y + rWrist.y) / 2 };
     const distL = this.getDistance(wristMid, lAnkle);
     const distR = this.getDistance(wristMid, rAnkle);
     const contact = Math.min(distL, distR) < 100;
@@ -969,20 +1176,39 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzeDoubleLegVups(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [
-      lShoulder, rShoulder, lHip, rHip,
-      lKnee, rKnee, lAnkle, rAnkle
-    ] = [
-      'left_shoulder', 'right_shoulder', 'left_hip', 'right_hip',
-      'left_knee', 'right_knee', 'left_ankle', 'right_ankle'
-    ].map(n => map.get(n));
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder, lHip, rHip, lKnee, rKnee, lAnkle, rAnkle] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+      'left_knee',
+      'right_knee',
+      'left_ankle',
+      'right_ankle',
+    ].map((n) => map.get(n));
 
-    if(!lShoulder || !rShoulder || !lHip || !rHip || !lKnee || !rKnee || !lAnkle || !rAnkle) return;
+    if (!lShoulder || !rShoulder || !lHip || !rHip || !lKnee || !rKnee || !lAnkle || !rAnkle)
+      return;
 
-    const shoulderMid = { ...lShoulder, x: (lShoulder.x + rShoulder.x)/2, y: (lShoulder.y + rShoulder.y)/2, z: ((lShoulder.z || 0) + (rShoulder.z || 0))/2 };
-    const hipMid = { ...lHip, x: (lHip.x + rHip.x)/2, y: (lHip.y + rHip.y)/2, z: ((lHip.z || 0) + (rHip.z || 0))/2 };
-    const ankleMid = { ...lAnkle, x: (lAnkle.x + rAnkle.x)/2, y: (lAnkle.y + rAnkle.y)/2, z: ((lAnkle.z || 0) + (rAnkle.z || 0))/2 };
+    const shoulderMid = {
+      ...lShoulder,
+      x: (lShoulder.x + rShoulder.x) / 2,
+      y: (lShoulder.y + rShoulder.y) / 2,
+      z: ((lShoulder.z || 0) + (rShoulder.z || 0)) / 2,
+    };
+    const hipMid = {
+      ...lHip,
+      x: (lHip.x + rHip.x) / 2,
+      y: (lHip.y + rHip.y) / 2,
+      z: ((lHip.z || 0) + (rHip.z || 0)) / 2,
+    };
+    const ankleMid = {
+      ...lAnkle,
+      x: (lAnkle.x + rAnkle.x) / 2,
+      y: (lAnkle.y + rAnkle.y) / 2,
+      z: ((lAnkle.z || 0) + (rAnkle.z || 0)) / 2,
+    };
 
     const vAngle = this.getAngle(shoulderMid, hipMid, ankleMid);
     const vShapeOk = vAngle < 100;
@@ -999,14 +1225,19 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzeWindshieldWipers(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lShoulder, rShoulder, lHip, rHip] = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip'].map(n => map.get(n));
-    if(!lShoulder || !rShoulder || !lHip || !rHip) return;
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder, lHip, rHip] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+    ].map((n) => map.get(n));
+    if (!lShoulder || !rShoulder || !lHip || !rHip) return;
 
     const shoulderYDiff = Math.abs(lShoulder.y - rShoulder.y);
     const shouldersStable = shoulderYDiff < 50;
     const hipAngleRad = Math.atan2(rHip.y - lHip.y, rHip.x - lHip.x);
-    const hipAngleDeg = Math.abs(hipAngleRad * 180 / Math.PI);
+    const hipAngleDeg = Math.abs((hipAngleRad * 180) / Math.PI);
     const hipRotationOk = hipAngleDeg > 20 && hipAngleDeg < 160;
 
     this.torsoColor.set(shouldersStable ? '#34d399' : '#f87171');
@@ -1019,13 +1250,35 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzeSidePlankRotation(kps: Keypoint[]): void {
-    const map = new Map(kps.map(k => [k.name!, k]));
-    const [lShoulder, rShoulder, lHip, rHip, lAnkle, rAnkle] = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip', 'left_ankle', 'right_ankle'].map(n => map.get(n));
+    const map = new Map(kps.map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder, lHip, rHip, lAnkle, rAnkle] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+      'left_ankle',
+      'right_ankle',
+    ].map((n) => map.get(n));
     if (!lShoulder || !rShoulder || !lHip || !rHip || !lAnkle || !rAnkle) return;
 
-    const shoulderMid = { ...lShoulder, x: (lShoulder.x + rShoulder.x)/2, y: (lShoulder.y + rShoulder.y)/2, z: ((lShoulder.z || 0) + (rShoulder.z || 0))/2 };
-    const hipMid = { ...lHip, x: (lHip.x + rHip.x)/2, y: (lHip.y + rHip.y)/2, z: ((lHip.z || 0) + (rHip.z || 0))/2 };
-    const ankleMid = { ...lAnkle, x: (lAnkle.x + rAnkle.x)/2, y: (lAnkle.y + rAnkle.y)/2, z: ((lAnkle.z || 0) + (rAnkle.z || 0))/2 };
+    const shoulderMid = {
+      ...lShoulder,
+      x: (lShoulder.x + rShoulder.x) / 2,
+      y: (lShoulder.y + rShoulder.y) / 2,
+      z: ((lShoulder.z || 0) + (rShoulder.z || 0)) / 2,
+    };
+    const hipMid = {
+      ...lHip,
+      x: (lHip.x + rHip.x) / 2,
+      y: (lHip.y + rHip.y) / 2,
+      z: ((lHip.z || 0) + (rHip.z || 0)) / 2,
+    };
+    const ankleMid = {
+      ...lAnkle,
+      x: (lAnkle.x + rAnkle.x) / 2,
+      y: (lAnkle.y + rAnkle.y) / 2,
+      z: ((lAnkle.z || 0) + (rAnkle.z || 0)) / 2,
+    };
 
     const bodyLineAngle = this.getAngle(shoulderMid, hipMid, ankleMid);
     const hipsNotSagging = bodyLineAngle > 150;
@@ -1036,13 +1289,26 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   private analyzePushUp(keypoints: Keypoint[]): void {
-    const keypointsMap = new Map(keypoints.filter(k => k.score! > 0.3).map(k => [k.name!, k]));
-    const [lShoulder, rShoulder, lHip, rHip, lAnkle, rAnkle] = ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip', 'left_ankle', 'right_ankle'].map(n => keypointsMap.get(n));
+    const keypointsMap = new Map(keypoints.filter((k) => k.score! > 0.3).map((k) => [k.name!, k]));
+    const [lShoulder, rShoulder, lHip, rHip, lAnkle, rAnkle] = [
+      'left_shoulder',
+      'right_shoulder',
+      'left_hip',
+      'right_hip',
+      'left_ankle',
+      'right_ankle',
+    ].map((n) => keypointsMap.get(n));
     if (!lShoulder || !rShoulder || !lHip || !rHip || !lAnkle || !rAnkle) {
-      this.torsoColor.set('#f87171'); this.legsColor.set('#f87171'); return;
+      this.torsoColor.set('#f87171');
+      this.legsColor.set('#f87171');
+      return;
     }
-    const isLeftVisible = (lShoulder.score! + lHip.score! + lAnkle.score!) > (rShoulder.score! + rHip.score! + rAnkle.score!);
-    const [shoulder, hip, ankle] = isLeftVisible ? [lShoulder, lHip, lAnkle] : [rShoulder, rHip, rAnkle];
+    const isLeftVisible =
+      lShoulder.score! + lHip.score! + lAnkle.score! >
+      rShoulder.score! + rHip.score! + rAnkle.score!;
+    const [shoulder, hip, ankle] = isLeftVisible
+      ? [lShoulder, lHip, lAnkle]
+      : [rShoulder, rHip, rAnkle];
 
     const angle = this.getAngle(shoulder, hip, ankle);
     const formOk = angle > 160;

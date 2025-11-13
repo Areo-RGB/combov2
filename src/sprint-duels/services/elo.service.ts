@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class EloService {
   // K-factor determines how much ratings change. Higher K = more volatile.
@@ -24,18 +24,22 @@ export class EloService {
    * @param result Result from player A's perspective: 1 for win, 0.5 for draw, 0 for loss.
    * @returns An object with the new ratings and the change for each player.
    */
-  calculateNewRatings(eloA: number, eloB: number, result: 1 | 0.5 | 0): { newEloA: number, newEloB: number, changeA: number, changeB: number } {
+  calculateNewRatings(
+    eloA: number,
+    eloB: number,
+    result: 1 | 0.5 | 0
+  ): { newEloA: number; newEloB: number; changeA: number; changeB: number } {
     const probabilityA = this.calculateWinProbability(eloA, eloB);
     const probabilityB = 1 - probabilityA;
 
     const changeA = Math.round(this.K_FACTOR * (result - probabilityA));
-    const changeB = Math.round(this.K_FACTOR * ((1 - result) - probabilityB));
+    const changeB = Math.round(this.K_FACTOR * (1 - result - probabilityB));
 
     return {
       newEloA: eloA + changeA,
       newEloB: eloB + changeB,
       changeA,
-      changeB
+      changeB,
     };
   }
 }

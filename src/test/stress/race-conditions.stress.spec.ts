@@ -18,7 +18,7 @@ describe('Race Condition Stress Tests', () => {
 
       const increment = async () => {
         const current = sharedState.count;
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 10)); // Random delay
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 10)); // Random delay
         sharedState.count = current + 1;
       };
 
@@ -30,9 +30,7 @@ describe('Race Condition Stress Tests', () => {
         sharedState = { count: 0 };
 
         // Run concurrent increments
-        await Promise.all(
-          Array.from({ length: concurrentOps }, () => increment())
-        );
+        await Promise.all(Array.from({ length: concurrentOps }, () => increment()));
 
         // If no race condition, count should be exactly concurrentOps
         if (sharedState.count !== concurrentOps) {
@@ -44,7 +42,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ Race conditions detected in ${raceDetected}/${iterations} iterations ` +
-        `(${racePercentage.toFixed(1)}%)`
+          `(${racePercentage.toFixed(1)}%)`
       );
 
       expect(raceDetected).toBeGreaterThan(0); // Should detect races
@@ -56,7 +54,7 @@ describe('Race Condition Stress Tests', () => {
 
       const write = async (sessionId: string, value: any) => {
         const delay = Math.random() * 50; // Simulate network latency
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
 
         writeHistory.push({ sessionId, value, timestamp: Date.now() });
         mockDatabase.set(sessionId, value);
@@ -83,7 +81,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ Concurrent writes stress test: ${concurrentWrites} writes ` +
-        `in ${duration}ms (avg: ${(duration / concurrentWrites).toFixed(1)}ms per write)`
+          `in ${duration}ms (avg: ${(duration / concurrentWrites).toFixed(1)}ms per write)`
       );
     });
 
@@ -94,7 +92,7 @@ describe('Race Condition Stress Tests', () => {
       const stateTransitions: State[] = [];
 
       const setState = async (newState: State, delay: number = 10) => {
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
         currentState = newState;
         stateTransitions.push(newState);
       };
@@ -113,7 +111,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ State transition race: Final state "${currentState}", ` +
-        `transitions: ${stateTransitions.join(' → ')}`
+          `transitions: ${stateTransitions.join(' → ')}`
       );
     });
   });
@@ -139,7 +137,7 @@ describe('Race Condition Stress Tests', () => {
         const buffer: string[] = new Array(chunks.length).fill('');
         const deliveryPromises = chunks.map(async (chunk, idx) => {
           const delay = Math.random() * 50;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
           buffer[idx] = chunk;
         });
 
@@ -159,7 +157,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ Chunk reassembly stress: ${successfulMessages}/${totalMessages} ` +
-        `successful (${successRate.toFixed(1)}% success rate)`
+          `successful (${successRate.toFixed(1)}% success rate)`
       );
 
       expect(successfulMessages).toBe(totalMessages); // Should reassemble correctly
@@ -181,14 +179,14 @@ describe('Race Condition Stress Tests', () => {
         buffer.parts[idx] = data;
 
         // Check if complete
-        if (buffer.parts.every(p => p !== '')) {
+        if (buffer.parts.every((p) => p !== '')) {
           return buffer.parts.join('');
         }
 
         return null;
       };
 
-      const messages = ['msg-1', 'msg-2', 'msg-3'].map(key => ({
+      const messages = ['msg-1', 'msg-2', 'msg-3'].map((key) => ({
         key,
         content: `Content for ${key}: ${'x'.repeat(100)}`,
       }));
@@ -211,9 +209,9 @@ describe('Race Condition Stress Tests', () => {
       allChunks.sort(() => Math.random() - 0.5);
 
       // Process all chunks concurrently
-      const results = await Promise.all(allChunks.map(chunk => processChunk(chunk)));
+      const results = await Promise.all(allChunks.map((chunk) => processChunk(chunk)));
 
-      const completed = results.filter(r => r !== null);
+      const completed = results.filter((r) => r !== null);
 
       expect(completed).toHaveLength(messages.length);
 
@@ -228,12 +226,12 @@ describe('Race Condition Stress Tests', () => {
       let failed = 0;
 
       const createOffer = async () => {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 20));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 20));
         return `offer-${Date.now()}`;
       };
 
       const createAnswer = async (offer: string) => {
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 20));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 20));
         return `answer-for-${offer}`;
       };
 
@@ -254,7 +252,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ WebRTC offer/answer stress: ${successful}/${exchanges} successful ` +
-        `(${((successful / exchanges) * 100).toFixed(1)}%)`
+          `(${((successful / exchanges) * 100).toFixed(1)}%)`
       );
 
       expect(successful).toBe(exchanges);
@@ -270,7 +268,7 @@ describe('Race Condition Stress Tests', () => {
         state = 'connecting';
         stateHistory.push('connecting');
 
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 50));
 
         state = 'connected';
         stateHistory.push('connected');
@@ -324,7 +322,7 @@ describe('Race Condition Stress Tests', () => {
 
         // Variable processing time (simulating complex vs simple frames)
         const processingTime = Math.random() * 100;
-        await new Promise(resolve => setTimeout(resolve, processingTime));
+        await new Promise((resolve) => setTimeout(resolve, processingTime));
 
         processing = false;
       };
@@ -337,12 +335,12 @@ describe('Race Condition Stress Tests', () => {
       }, 16.67); // 60fps
 
       // Run for 1 second
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       clearInterval(frameInterval);
 
       console.log(
         `✓ Frame queue stress: ${droppedFrames} frames dropped ` +
-        `(${frames.length} still queued, ${frameNumber} total)`
+          `(${frames.length} still queued, ${frameNumber} total)`
       );
 
       expect(droppedFrames).toBeGreaterThan(0); // Should drop some due to varying processing time
@@ -365,7 +363,7 @@ describe('Race Condition Stress Tests', () => {
 
         while (frameQueue.length > 0) {
           frameQueue.shift(); // Process frame
-          await new Promise(resolve => setTimeout(resolve, 100)); // Slow processing
+          await new Promise((resolve) => setTimeout(resolve, 100)); // Slow processing
         }
 
         processing = false;
@@ -380,7 +378,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ Frame queue memory: ${frameQueue.length} frames queued ` +
-        `(~${queuedMemory.toFixed(2)} MB)`
+          `(~${queuedMemory.toFixed(2)} MB)`
       );
 
       expect(frameQueue.length).toBeGreaterThan(0);
@@ -406,7 +404,7 @@ describe('Race Condition Stress Tests', () => {
       };
 
       const emit = (path: string, value: any) => {
-        listeners.get(path)?.forEach(cb => cb(value));
+        listeners.get(path)?.forEach((cb) => cb(value));
       };
 
       const cycles = 1000;
@@ -425,7 +423,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ Listener stress: ${cycles} attach/detach cycles, ` +
-        `${remainingListeners} listeners remaining`
+          `${remainingListeners} listeners remaining`
       );
     });
   });
@@ -444,7 +442,7 @@ describe('Race Condition Stress Tests', () => {
         }
 
         loadingModel = modelName;
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 100));
+        await new Promise((resolve) => setTimeout(resolve, Math.random() * 100));
         currentModel = modelName;
         loadingModel = null;
         switchCount++;
@@ -462,7 +460,7 @@ describe('Race Condition Stress Tests', () => {
 
       console.log(
         `✓ Model switching stress: ${switchCount} switches completed, ` +
-        `${collisions} collisions detected`
+          `${collisions} collisions detected`
       );
 
       expect(switchCount).toBe(20);

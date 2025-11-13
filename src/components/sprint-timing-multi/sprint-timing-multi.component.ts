@@ -1,8 +1,25 @@
-import { ChangeDetectionStrategy, Component, input, output, signal, viewChild, ElementRef, inject, Renderer2, OnInit, OnDestroy } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+  signal,
+  viewChild,
+  ElementRef,
+  inject,
+  Renderer2,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
 import { HeaderComponent } from '../header/header.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { SprintTimingService, DeviceRole, MessageType, LapData } from '../../services/sprint-timing.service';
+import {
+  SprintTimingService,
+  DeviceRole,
+  MessageType,
+  LapData,
+} from '../../services/sprint-timing.service';
 
 type StartMode = 'manual' | 'flying';
 
@@ -107,7 +124,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
             deviceRole: lapData.deviceRole,
           };
 
-          this.lapResults.update(laps => [...laps, newLap].sort((a, b) => a.time - b.time));
+          this.lapResults.update((laps) => [...laps, newLap].sort((a, b) => a.time - b.time));
 
           // If this was a FINISH device, stop timing
           if (lapData.deviceRole === DeviceRole.Finish) {
@@ -141,7 +158,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
     if (this.detectionStartTimeout) {
       clearTimeout(this.detectionStartTimeout);
     }
-    
+
     const detector = this.detectorComponent();
     if (detector && detector.status() === 'ready') {
       this.detectionStartTimeout = setTimeout(() => {
@@ -183,12 +200,12 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
 
   handleArm(): void {
     this.isArmed.set(true);
-    
+
     // Start detection after 1 second delay for flying start mode
     if (this.detectionStartTimeout) {
       clearTimeout(this.detectionStartTimeout);
     }
-    
+
     const detector = this.detectorComponent();
     if (detector && detector.status() === 'ready') {
       this.detectionStartTimeout = setTimeout(() => {
@@ -209,7 +226,12 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
     this.lastDetectionTime = now;
 
     // Flying start mode: START device - first motion starts the timer
-    if (this.startMode() === 'flying' && this.deviceRole() === DeviceRole.Start && this.isArmed() && !this.isTiming()) {
+    if (
+      this.startMode() === 'flying' &&
+      this.deviceRole() === DeviceRole.Start &&
+      this.isArmed() &&
+      !this.isTiming()
+    ) {
       this.startTime.set(now);
       this.isTiming.set(true);
       this.isArmed.set(false);
@@ -232,7 +254,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
 
   private recordLap(): void {
     const lapTime = Date.now() - this.startTime();
-    this.lapCounter.update(c => c + 1);
+    this.lapCounter.update((c) => c + 1);
 
     const lapNumber = this.lapResults().length + 1;
     const athleteName = this.deviceRole() === DeviceRole.Finish ? 'Finish' : `Lap ${lapNumber}`;
@@ -253,7 +275,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
         deviceRole: this.deviceRole(),
       };
 
-      this.lapResults.update(laps => [...laps, newLap].sort((a, b) => a.time - b.time));
+      this.lapResults.update((laps) => [...laps, newLap].sort((a, b) => a.time - b.time));
 
       if (this.deviceRole() === DeviceRole.Finish) {
         this.stopTimer();
@@ -297,13 +319,13 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
     this.isArmed.set(this.startMode() === 'flying' && this.deviceRole() === DeviceRole.Start);
     this.lastDetectionTime = 0;
     this.lapCounter.set(0);
-    
+
     // Stop detection if it was started
     const detector = this.detectorComponent();
     if (detector && detector.status() === 'detecting') {
       detector.stopDetection();
     }
-    
+
     // Clear any pending detection start timeout
     if (this.detectionStartTimeout) {
       clearTimeout(this.detectionStartTimeout);
@@ -316,7 +338,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   }
 
   deleteLap(id: number): void {
-    this.lapResults.update(laps => laps.filter(lap => lap.id !== id));
+    this.lapResults.update((laps) => laps.filter((lap) => lap.id !== id));
   }
 
   private formatTime(time: number): string {
@@ -396,7 +418,12 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   }
 
   shouldShowArm(): boolean {
-    return this.startMode() === 'flying' && this.deviceRole() === DeviceRole.Start && !this.isTiming() && this.lapResults().length === 0;
+    return (
+      this.startMode() === 'flying' &&
+      this.deviceRole() === DeviceRole.Start &&
+      !this.isTiming() &&
+      this.lapResults().length === 0
+    );
   }
 
   shouldShowReset(): boolean {

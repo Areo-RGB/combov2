@@ -27,18 +27,25 @@ export class FirebaseService {
         intensity: intensity,
       });
     } catch (error) {
-      console.error("Error writing to Firebase:", error);
+      console.error('Error writing to Firebase:', error);
     }
   }
 
-  listenForMotion(sessionId: string, callback: (data: { timestamp: number, intensity?: number } | null) => void): void {
+  listenForMotion(
+    sessionId: string,
+    callback: (data: { timestamp: number; intensity?: number } | null) => void
+  ): void {
     const motionRef = ref(this.db, `sessions/${sessionId}`);
-    onValue(motionRef, (snapshot) => {
-      callback(snapshot.val());
-    }, (error) => {
-      console.error("Error listening to Firebase:", error);
-      callback(null);
-    });
+    onValue(
+      motionRef,
+      (snapshot) => {
+        callback(snapshot.val());
+      },
+      (error) => {
+        console.error('Error listening to Firebase:', error);
+        callback(null);
+      }
+    );
   }
 
   cleanupListener(sessionId: string): void {

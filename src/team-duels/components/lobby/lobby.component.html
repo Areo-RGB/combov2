@@ -1,21 +1,38 @@
 <div class="w-full max-w-4xl mx-auto flex flex-col items-center">
   <!-- Header -->
   <div class="w-full flex justify-between items-center mb-6">
-    <button (click)="goBack.emit()" title="Back to App Selection" class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <button
+      (click)="goBack.emit()"
+      title="Back to App Selection"
+      class="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-full transition"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
       </svg>
     </button>
     <h2 class="text-3xl font-bold text-white">Multi-Device Lobby</h2>
-    <div class="w-20"></div> <!-- Spacer for centering -->
+    <div class="w-20"></div>
+    <!-- Spacer for centering -->
   </div>
 
   <div class="grid md:grid-cols-2 gap-8 w-full">
     <!-- Display (Host) Card -->
     <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
       <h2 class="text-2xl font-semibold mb-4 text-purple-400">1. Start a Display</h2>
-      <p class="text-gray-300 text-center mb-6">Use this device as the main screen. It will show scores and play sounds.</p>
-      <button (click)="createSessionAndStart('display')" class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300">
+      <p class="text-gray-300 text-center mb-6">
+        Use this device as the main screen. It will show scores and play sounds.
+      </p>
+      <button
+        (click)="createSessionAndStart('display')"
+        class="w-full bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-purple-300"
+      >
         Become Display
       </button>
     </div>
@@ -23,20 +40,25 @@
     <!-- Game (Client) Card -->
     <div class="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg">
       <h2 class="text-2xl font-semibold mb-4 text-cyan-400">2. Join as a Game</h2>
-      <p class="text-gray-300 text-center mb-6">Use this device's camera to play. Enter the Session ID from the Display screen.</p>
+      <p class="text-gray-300 text-center mb-6">
+        Use this device's camera to play. Enter the Session ID from the Display screen.
+      </p>
       <div class="w-full flex flex-col items-center">
-        <input 
-          type="text" 
+        <input
+          type="text"
           [value]="inputSessionId()"
           (input)="handleSessionIdInput($event)"
           placeholder="Enter Session ID"
           maxlength="6"
           class="w-full text-center bg-gray-700 border border-gray-600 rounded-lg py-3 px-4 mb-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 uppercase tracking-widest"
-        >
+        />
         @if (errorMessage()) {
           <p class="text-red-400 text-sm mb-4">{{ errorMessage() }}</p>
         }
-        <button (click)="joinSession()" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300">
+        <button
+          (click)="joinSession()"
+          class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-300"
+        >
           Join Game
         </button>
       </div>

@@ -10,15 +10,24 @@
     [class.mb-0]="overlayMode()"
     [class.p-4]="overlayMode()"
     [class.z-10]="overlayMode()"
-    [class.pointer-events-none]="overlayMode()">
+    [class.pointer-events-none]="overlayMode()"
+  >
     <div class="pointer-events-auto">
       <button
         (click)="onGoBack()"
         title="Back"
         [class.bg-opacity-90]="overlayMode()"
         [class.backdrop-blur-sm]="overlayMode()"
-        class="bg-neutral-800 hover:bg-neutral-700 text-white p-3 rounded-lg transition-all hover:scale-105 border border-neutral-700">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        class="bg-neutral-800 hover:bg-neutral-700 text-white p-3 rounded-lg transition-all hover:scale-105 border border-neutral-700"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
@@ -48,4 +57,3 @@
     <ng-content></ng-content>
   </header>
 }
-

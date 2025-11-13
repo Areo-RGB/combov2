@@ -6,7 +6,7 @@ import { RtcService } from './rtc.service';
 // Custom native plugin for peripheral mode (advertising + GATT server)
 const BleSignaling: any = registerPlugin('BleSignaling');
 
-type ChunkEnvelope = { t: 'offer' | 'answer', idx: number, total: number, data: string };
+type ChunkEnvelope = { t: 'offer' | 'answer'; idx: number; total: number; data: string };
 
 @Injectable({
   providedIn: 'root',
@@ -20,7 +20,10 @@ export class SignalingService {
   private readonly NAME_PREFIX = 'Motion-';
 
   private centralConnectedDeviceId: string | null = null;
-  private incomingBuffers = new Map<string, { total: number, parts: string[], type: 'offer' | 'answer' }>();
+  private incomingBuffers = new Map<
+    string,
+    { total: number; parts: string[]; type: 'offer' | 'answer' }
+  >();
   private advertisingSession: string | null = null;
   private scanningSession: string | null = null;
 
@@ -80,41 +83,42 @@ export class SignalingService {
   private async startScanAndConnect(sessionId: string): Promise<void> {
     let resolved = false;
 
-    await BleClient.requestLEScan(
-      { services: [this.SERVICE_ID] },
-      async (result) => {
-        const name = (result.localName || (result as any).name || (result as any).device?.name) as string | undefined;
-        const deviceId = (result.device?.deviceId || (result as any).deviceId) as string | undefined;
-        if (!name || !deviceId) return;
-        if (!name.startsWith(`${this.NAME_PREFIX}${sessionId}`)) return;
-        if (resolved) return;
-        resolved = true;
-        await BleClient.stopLEScan();
-        await BleClient.connect(deviceId);
-        this.centralConnectedDeviceId = deviceId;
-        await BleClient.startNotifications(deviceId, this.SERVICE_ID, this.TX_ID, async (value) => {
-          const bytes = Array.from(new Uint8Array(value.buffer));
-          const decoded = this.parseEnvelope(bytes);
-          if (!decoded) return;
-          await this.handleIncomingChunk('central-answer', decoded, async (full) => {
-            await this.rtc.setRemoteAnswer(full);
-          });
+    await BleClient.requestLEScan({ services: [this.SERVICE_ID] }, async (result) => {
+      const name = (result.localName || (result as any).name || (result as any).device?.name) as
+        | string
+        | undefined;
+      const deviceId = (result.device?.deviceId || (result as any).deviceId) as string | undefined;
+      if (!name || !deviceId) return;
+      if (!name.startsWith(`${this.NAME_PREFIX}${sessionId}`)) return;
+      if (resolved) return;
+      resolved = true;
+      await BleClient.stopLEScan();
+      await BleClient.connect(deviceId);
+      this.centralConnectedDeviceId = deviceId;
+      await BleClient.startNotifications(deviceId, this.SERVICE_ID, this.TX_ID, async (value) => {
+        const bytes = Array.from(new Uint8Array(value.buffer));
+        const decoded = this.parseEnvelope(bytes);
+        if (!decoded) return;
+        await this.handleIncomingChunk('central-answer', decoded, async (full) => {
+          await this.rtc.setRemoteAnswer(full);
         });
-        // Create and send offer
-        const offer = await this.rtc.createOfferWithDataChannel();
-        await this.writeChunks(deviceId, { t: 'offer', sdp: offer });
-      }
-    );
+      });
+      // Create and send offer
+      const offer = await this.rtc.createOfferWithDataChannel();
+      await this.writeChunks(deviceId, { t: 'offer', sdp: offer });
+    });
 
     // Safety timeout
     setTimeout(async () => {
       if (!resolved) {
-        try { await BleClient.stopLEScan(); } catch {}
+        try {
+          await BleClient.stopLEScan();
+        } catch {}
       }
     }, 15000);
   }
 
-  private async writeChunks(deviceId: string, payload: { t: 'offer', sdp: string }): Promise<void> {
+  private async writeChunks(deviceId: string, payload: { t: 'offer'; sdp: string }): Promise<void> {
     const raw = JSON.stringify(payload);
     const chunkSize = 180;
     const total = Math.ceil(raw.length / chunkSize);
@@ -129,14 +133,18 @@ export class SignalingService {
 
   // ---- Chunk helpers ----
 
-  private async handleIncomingChunk(key: string, env: ChunkEnvelope, onComplete: (fullText: string) => Promise<void>): Promise<void> {
+  private async handleIncomingChunk(
+    key: string,
+    env: ChunkEnvelope,
+    onComplete: (fullText: string) => Promise<void>
+  ): Promise<void> {
     let entry = this.incomingBuffers.get(key);
     if (!entry || entry.total !== env.total || entry.type !== env.t) {
       entry = { total: env.total, parts: new Array(env.total).fill(''), type: env.t };
       this.incomingBuffers.set(key, entry);
     }
     entry.parts[env.idx] = env.data;
-    if (entry.parts.every(p => p !== '')) {
+    if (entry.parts.every((p) => p !== '')) {
       const joined = entry.parts.join('');
       try {
         const parsed = JSON.parse(joined);
@@ -158,7 +166,7 @@ export class SignalingService {
   private toDataView(bytes: number[]): DataView {
     const arr = new Uint8Array(bytes);
     return new DataView(arr.buffer);
-    }
+  }
 
   private parseEnvelope(value: any): ChunkEnvelope | null {
     try {

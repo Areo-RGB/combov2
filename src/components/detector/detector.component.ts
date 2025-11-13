@@ -1,4 +1,20 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, output, viewChild, input, signal, AfterViewInit, effect, inject, NgZone, Injector, runInInjectionContext } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  OnDestroy,
+  OnInit,
+  output,
+  viewChild,
+  input,
+  signal,
+  AfterViewInit,
+  effect,
+  inject,
+  NgZone,
+  Injector,
+  runInInjectionContext,
+} from '@angular/core';
 import { Camera } from '@capacitor/camera';
 import { PoseLandmarker, FilesetResolver, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import * as poseDetection from '@tensorflow-models/pose-detection';
@@ -24,7 +40,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private canvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   // FIX: Corrected typo from `viewchild` to `viewChild`.
   private overlayCanvasRef = viewChild.required<ElementRef<HTMLCanvasElement>>('overlayCanvas');
-  
+
   status = signal<'idle' | 'initializing' | 'ready' | 'detecting' | 'error' | 'no_camera'>('idle');
   lastMotionSignal = signal<string | null>(null);
   settingsExpanded = signal<boolean>(true); // Settings expanded by default
@@ -36,19 +52,45 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private detectionSettings = inject(DetectionSettingsService);
 
   // Expose settings from the centralized service for template binding
-  get sensitivity() { return this.detectionSettings.sensitivity; }
-  get motionCooldown() { return this.detectionSettings.motionCooldown; }
-  get signalCadence() { return this.detectionSettings.signalCadence; }
-  get zoneWidthPercent() { return this.detectionSettings.zoneWidthPercent; }
-  get zonePositionPercent() { return this.detectionSettings.zonePositionPercent; }
-  get useFullScreenDetection() { return this.detectionSettings.useFullScreenDetection; }
-  get detectionMethod() { return this.detectionSettings.detectionMethod; }
-  get poseLibrary() { return this.detectionSettings.poseLibrary; }
-  get poseModel() { return this.detectionSettings.poseModel; }
-  get moveNetModel() { return this.detectionSettings.moveNetModel; }
-  get useDiffyJS() { return this.detectionSettings.useDiffyJS; }
-  get useSpeedyVision() { return this.detectionSettings.useSpeedyVision; }
-  get selectedCameraId() { return this.detectionSettings.selectedCameraId; }
+  get sensitivity() {
+    return this.detectionSettings.sensitivity;
+  }
+  get motionCooldown() {
+    return this.detectionSettings.motionCooldown;
+  }
+  get signalCadence() {
+    return this.detectionSettings.signalCadence;
+  }
+  get zoneWidthPercent() {
+    return this.detectionSettings.zoneWidthPercent;
+  }
+  get zonePositionPercent() {
+    return this.detectionSettings.zonePositionPercent;
+  }
+  get useFullScreenDetection() {
+    return this.detectionSettings.useFullScreenDetection;
+  }
+  get detectionMethod() {
+    return this.detectionSettings.detectionMethod;
+  }
+  get poseLibrary() {
+    return this.detectionSettings.poseLibrary;
+  }
+  get poseModel() {
+    return this.detectionSettings.poseModel;
+  }
+  get moveNetModel() {
+    return this.detectionSettings.moveNetModel;
+  }
+  get useDiffyJS() {
+    return this.detectionSettings.useDiffyJS;
+  }
+  get useSpeedyVision() {
+    return this.detectionSettings.useSpeedyVision;
+  }
+  get selectedCameraId() {
+    return this.detectionSettings.selectedCameraId;
+  }
 
   private stream: MediaStream | null = null;
   private animationFrameId: number | null = null;
@@ -57,9 +99,9 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private detectionCounter = 0;
   readonly CANVAS_WIDTH = 160;
   readonly CANVAS_HEIGHT = 120;
-  
-  private videoDimensions: { width: number, height: number } | null = null;
-  
+
+  private videoDimensions: { width: number; height: number } | null = null;
+
   // Performance and cleanup improvements
   private zone = inject(NgZone);
   private injector = inject(Injector);
@@ -82,7 +124,6 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // MoveNet Pose Detection
   private moveNetDetector: poseDetection.PoseDetector | null = null;
-
 
   constructor() {
     // Effect moved to ngAfterViewInit to ensure viewChild refs are available.
@@ -113,13 +154,13 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: modelUrl,
-          delegate: 'GPU'
+          delegate: 'GPU',
         },
         runningMode: 'VIDEO',
         numPoses: 2, // Detect up to 2 people (for duels)
         minPoseDetectionConfidence: 0.5,
         minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5
+        minTrackingConfidence: 0.5,
       });
     } catch (error) {
       console.error('Failed to initialize MediaPipe:', error);
@@ -138,14 +179,15 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         detectorConfig = {
           modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING,
           enableTracking: true,
-          trackerType: poseDetection.TrackerType.BoundingBox
+          trackerType: poseDetection.TrackerType.BoundingBox,
         };
       } else {
         model = poseDetection.SupportedModels.MoveNet;
         detectorConfig = {
-          modelType: modelType === 'lightning'
-            ? poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
-            : poseDetection.movenet.modelType.SINGLEPOSE_THUNDER
+          modelType:
+            modelType === 'lightning'
+              ? poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
+              : poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
         };
       }
 
@@ -180,18 +222,24 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         } else {
           if (percent > 0) {
             const zoneWidth = Math.floor(this.CANVAS_WIDTH * (percent / 100));
-            
+
             const centerX = this.CANVAS_WIDTH * (positionPercent / 100);
             let zoneX = Math.floor(centerX - zoneWidth / 2);
             zoneX = Math.max(0, Math.min(zoneX, this.CANVAS_WIDTH - zoneWidth));
 
-            this.detectionZone.set({ x: zoneX, y: 0, width: zoneWidth, height: this.CANVAS_HEIGHT });
-          } else { // percent is 0, which means 'off'
+            this.detectionZone.set({
+              x: zoneX,
+              y: 0,
+              width: zoneWidth,
+              height: this.CANVAS_HEIGHT,
+            });
+          } else {
+            // percent is 0, which means 'off'
             // An empty zone to detect nothing
-            this.detectionZone.set({ x: 0, y: 0, width: 0, height: 0 }); 
+            this.detectionZone.set({ x: 0, y: 0, width: 0, height: 0 });
           }
         }
-        
+
         // Reset last image data when zone changes to prevent comparing differently sized areas
         this.lastImageData = null;
         this.drawPersistentZone();
@@ -199,7 +247,6 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.zoneEffectCleanup = () => zoneEffect.destroy();
     });
-
 
     this.startCamera();
   }
@@ -224,7 +271,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async startCamera(): Promise<void> {
     if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
+      this.stream.getTracks().forEach((t) => t.stop());
       this.videoRef().nativeElement.srcObject = null;
       this.stream = null;
     }
@@ -251,7 +298,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (this.availableCameras().length === 0) {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        const videoDevices = devices.filter((d) => d.kind === 'videoinput');
         this.availableCameras.set(videoDevices);
         if (videoDevices.length > 0 && !this.selectedCameraId()) {
           this.selectedCameraId.set(videoDevices[0].deviceId);
@@ -267,7 +314,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
             ? { deviceId: { exact: this.selectedCameraId() } }
             : { facingMode: { ideal: 'environment' } }),
         },
-        audio: false
+        audio: false,
       };
 
       this.stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -278,9 +325,8 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.status() !== 'detecting') {
         this.status.set('ready');
       }
-
     } catch (err) {
-      console.error("Error accessing camera:", err);
+      console.error('Error accessing camera:', err);
       this.status.set('error');
     }
   }
@@ -311,7 +357,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       detectionZone: this.detectionZone(),
       cooldown: this.motionCooldown(),
       cadence: this.signalCadence(),
-      debug: false // Set to true to see diff visualization
+      debug: false, // Set to true to see diff visualization
     });
 
     // Listen for motion detection events
@@ -357,7 +403,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         detectionZone: this.detectionZone(),
         cooldown: this.motionCooldown(),
         cadence: this.signalCadence(),
-        debug: false
+        debug: false,
       });
 
       // Listen for motion detection events
@@ -418,7 +464,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     this.processFrame();
     this.queueNextFrame();
   }
-  
+
   private processFrame(): void {
     const video = this.videoRef().nativeElement;
     if (!video || video.readyState < video.HAVE_ENOUGH_DATA) return;
@@ -455,9 +501,19 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const current = ctx.getImageData(x, y, width, height);
 
-    if (this.lastImageData && (current.width === this.lastImageData.width && current.height === this.lastImageData.height)) {
+    if (
+      this.lastImageData &&
+      current.width === this.lastImageData.width &&
+      current.height === this.lastImageData.height
+    ) {
       const motionThreshold = 11 - this.sensitivity();
-      const changedPct = this.calculateDifferenceFast(current.data, this.lastImageData.data, 30, motionThreshold, 2);
+      const changedPct = this.calculateDifferenceFast(
+        current.data,
+        this.lastImageData.data,
+        30,
+        motionThreshold,
+        2
+      );
 
       if (changedPct > motionThreshold) {
         const now = Date.now();
@@ -498,9 +554,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       // Detect motion when person enters the frame (transition from no person to person detected)
       if (personDetected && !this.previousPersonDetected) {
         // Calculate confidence score as intensity (0-100)
-        const intensity = result.landmarks.length > 0
-          ? Math.min(100, result.landmarks.length * 50) // Scale based on number of people detected
-          : 0;
+        const intensity =
+          result.landmarks.length > 0
+            ? Math.min(100, result.landmarks.length * 50) // Scale based on number of people detected
+            : 0;
 
         if (now - this.lastPoseDetectionTime > this.motionCooldown()) {
           this.lastPoseDetectionTime = now;
@@ -537,9 +594,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       // Detect motion when person enters the frame (transition from no person to person detected)
       if (personDetected && !this.previousPersonDetected) {
         // Calculate confidence score as intensity (0-100)
-        const avgScore = poses.length > 0
-          ? poses.reduce((sum, pose) => sum + (pose.score || 0), 0) / poses.length
-          : 0;
+        const avgScore =
+          poses.length > 0
+            ? poses.reduce((sum, pose) => sum + (pose.score || 0), 0) / poses.length
+            : 0;
         const intensity = Math.min(100, Math.round(avgScore * 100));
 
         if (now - this.lastPoseDetectionTime > this.motionCooldown()) {
@@ -581,9 +639,18 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Define pose connections (MediaPipe pose connections)
       const connections = [
-        [11, 12], [11, 13], [13, 15], [12, 14], [14, 16], // Arms
-        [11, 23], [12, 24], [23, 24], // Torso
-        [23, 25], [25, 27], [24, 26], [26, 28] // Legs
+        [11, 12],
+        [11, 13],
+        [13, 15],
+        [12, 14],
+        [14, 16], // Arms
+        [11, 23],
+        [12, 24],
+        [23, 24], // Torso
+        [23, 25],
+        [25, 27],
+        [24, 26],
+        [26, 28], // Legs
       ];
 
       // Draw connections
@@ -627,7 +694,9 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     // Draw landmarks for each detected person
     for (const pose of poses) {
       // Define pose connections for MoveNet
-      const adjacentKeyPoints = poseDetection.util.getAdjacentPairs(poseDetection.SupportedModels.MoveNet);
+      const adjacentKeyPoints = poseDetection.util.getAdjacentPairs(
+        poseDetection.SupportedModels.MoveNet
+      );
 
       // Draw connections
       ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
@@ -672,9 +741,9 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     let changed = 0;
     for (let i = 0; i < a.length; i += 4 * pixelStride) {
       const dr = Math.abs(a[i] - b[i]);
-      const dg = Math.abs(a[i+1] - b[i+1]);
-      const db = Math.abs(a[i+2] - b[i+2]);
-      if ((dr + dg + db) > colorThreshold) {
+      const dg = Math.abs(a[i + 1] - b[i + 1]);
+      const db = Math.abs(a[i + 2] - b[i + 2]);
+      if (dr + dg + db > colorThreshold) {
         changed++;
         if (changed >= earlyExitCount) {
           // Return a value guaranteed to be over the threshold
@@ -687,16 +756,17 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private handleMotionDetected(intensity: number): void {
     this.detectionCounter++;
-    
+
     if (this.detectionCounter >= this.signalCadence()) {
       this.detectionCounter = 0; // Reset counter
       this.motionDetected.emit(intensity);
       this.lastMotionSignal.set('Motion signal sent!');
-      
+
       setTimeout(() => this.lastMotionSignal.set(null), 2000);
     } else {
       const cadence = this.signalCadence();
-      if (cadence > 1) { // Only show progress if cadence is more than 1
+      if (cadence > 1) {
+        // Only show progress if cadence is more than 1
         this.lastMotionSignal.set(`Detected ${this.detectionCounter} of ${cadence}`);
         setTimeout(() => {
           if (this.lastMotionSignal() && this.lastMotionSignal()!.startsWith('Detected')) {
@@ -765,7 +835,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.stream) {
-      this.stream.getTracks().forEach(track => track.stop());
+      this.stream.getTracks().forEach((track) => track.stop());
       if (video) video.srcObject = null;
       this.stream = null;
     }
@@ -790,8 +860,8 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     const numValue = Number(value);
     if (!isNaN(numValue) && numValue >= 0) {
-        this.motionCooldown.set(numValue);
-        this.detectionSettings.saveSettings();
+      this.motionCooldown.set(numValue);
+      this.detectionSettings.saveSettings();
     }
   }
 
@@ -799,9 +869,9 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
     const value = (event.target as HTMLInputElement).value;
     const numValue = Number(value);
     if (!isNaN(numValue) && numValue >= 1) {
-        this.signalCadence.set(numValue);
-        this.detectionCounter = 0; // Reset on change
-        this.detectionSettings.saveSettings();
+      this.signalCadence.set(numValue);
+      this.detectionCounter = 0; // Reset on change
+      this.detectionSettings.saveSettings();
     }
   }
 
@@ -831,7 +901,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   toggleSettings(): void {
-    this.settingsExpanded.update(expanded => !expanded);
+    this.settingsExpanded.update((expanded) => !expanded);
   }
 
   onDetectionMethodChange(method: 'motion' | 'pose'): void {
@@ -936,7 +1006,10 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onMoveNetModelChange(event: Event): Promise<void> {
-    const model = (event.target as HTMLSelectElement).value as 'lightning' | 'thunder' | 'multipose';
+    const model = (event.target as HTMLSelectElement).value as
+      | 'lightning'
+      | 'thunder'
+      | 'multipose';
     this.moveNetModel.set(model);
     this.detectionSettings.saveSettings();
 
@@ -970,7 +1043,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         x: zone.x * scaleX,
         y: zone.y * scaleY,
         width: zone.width * scaleX,
-        height: zone.height * scaleY
+        height: zone.height * scaleY,
       };
       this.drawRect(displayZone, 'rgba(239, 68, 68, 0.7)');
     }

@@ -10,7 +10,7 @@ globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
 // Mock matchMedia for responsive tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -50,7 +50,7 @@ const localStorageMock = (() => {
     key: (index: number) => {
       const keys = Object.keys(store);
       return keys[index] || null;
-    }
+    },
   };
 })();
 

@@ -1,11 +1,20 @@
 import { Injectable } from '@angular/core';
 import { Match } from '../sprint-duels.types';
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
-import { getDatabase, ref, set, get, query, orderByChild, remove, Database } from 'firebase/database';
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  query,
+  orderByChild,
+  remove,
+  Database,
+} from 'firebase/database';
 import { firebaseConfig } from '../../firebase.config';
 
-@Injectable({ 
-  providedIn: 'root' 
+@Injectable({
+  providedIn: 'root',
 })
 export class SprintDuelsFirebaseService {
   private app: FirebaseApp;
@@ -25,7 +34,7 @@ export class SprintDuelsFirebaseService {
     const newMatchRef = ref(this.db, `${this.matchesRefPath}/${match.id}`);
     await set(newMatchRef, match);
   }
-  
+
   async getMatches(): Promise<Match[]> {
     try {
       const matchesRef = ref(this.db, this.matchesRefPath);
@@ -39,9 +48,9 @@ export class SprintDuelsFirebaseService {
         });
       }
       return matches.sort((a, b) => b.timestamp - a.timestamp);
-    } catch(error) {
-        console.error("Could not fetch matches from Firebase:", error);
-        return [];
+    } catch (error) {
+      console.error('Could not fetch matches from Firebase:', error);
+      return [];
     }
   }
 

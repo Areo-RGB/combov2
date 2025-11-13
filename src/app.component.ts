@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, signal, inject, effect, OnDestroy, viewChild, ElementRef, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  signal,
+  inject,
+  effect,
+  OnDestroy,
+  viewChild,
+  ElementRef,
+  OnInit,
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { DetectorComponent } from './components/detector/detector.component';
 import { DisplayComponent } from './components/display/display.component';
@@ -17,22 +27,50 @@ import { SignalingService } from './services/signaling.service';
 import { CameraService } from './services/camera.service';
 
 // Define the shape of signals for the display component
-type DisplaySignal = 
-  | { type: 'color', value: string, timestamp: number, intensity?: number } 
-  | { type: 'math_op', op: string, sum: number, timestamp: number, intensity?: number }
-  | { type: 'math_result', sum: number, timestamp: number, intensity?: number }
-  | { type: 'wechsel_text', value: 'Rechts' | 'Links', timestamp: number, intensity?: number }
-  | { type: 'counter', count: number, timestamp: number, intensity?: number }
+type DisplaySignal =
+  | { type: 'color'; value: string; timestamp: number; intensity?: number }
+  | { type: 'math_op'; op: string; sum: number; timestamp: number; intensity?: number }
+  | { type: 'math_result'; sum: number; timestamp: number; intensity?: number }
+  | { type: 'wechsel_text'; value: 'Rechts' | 'Links'; timestamp: number; intensity?: number }
+  | { type: 'counter'; count: number; timestamp: number; intensity?: number }
   | null;
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DetectorComponent, DisplayComponent, SingleDeviceComponent, SprintTimingComponent, SprintMultiSetupComponent, SprintTimingMultiComponent, SprintDuelsComponent, TeamDuelsComponent, HeaderComponent, SettingsComponent, BodyposeComponent],
+  imports: [
+    DetectorComponent,
+    DisplayComponent,
+    SingleDeviceComponent,
+    SprintTimingComponent,
+    SprintMultiSetupComponent,
+    SprintTimingMultiComponent,
+    SprintDuelsComponent,
+    TeamDuelsComponent,
+    HeaderComponent,
+    SettingsComponent,
+    BodyposeComponent,
+  ],
 })
 export class AppComponent implements OnDestroy, OnInit {
-  mode = signal<'selection' | 'motion-games' | 'detector' | 'display' | 'single' | 'sprint-timing-menu' | 'sprint-timing-single-menu' | 'sprint-timing-manual' | 'sprint-timing-flying' | 'sprint-multi-setup' | 'sprint-multi-timing' | 'sprint-duels' | 'team-duels' | 'detection-settings' | 'bodypose'>('selection');
+  mode = signal<
+    | 'selection'
+    | 'motion-games'
+    | 'detector'
+    | 'display'
+    | 'single'
+    | 'sprint-timing-menu'
+    | 'sprint-timing-single-menu'
+    | 'sprint-timing-manual'
+    | 'sprint-timing-flying'
+    | 'sprint-multi-setup'
+    | 'sprint-multi-timing'
+    | 'sprint-duels'
+    | 'team-duels'
+    | 'detection-settings'
+    | 'bodypose'
+  >('selection');
   sessionId = signal('');
   inputSessionId = signal('');
   errorMessage = signal('');
@@ -51,12 +89,12 @@ export class AppComponent implements OnDestroy, OnInit {
 
   // Counter state
   detectionCount = signal(0);
-  
+
   // Collapsible state for settings
   displaySettingsExpanded = signal(true);
-  
+
   toggleDisplaySettings(): void {
-    this.displaySettingsExpanded.update(v => !v);
+    this.displaySettingsExpanded.update((v) => !v);
   }
 
   private firebaseService = inject(FirebaseService);
@@ -65,7 +103,15 @@ export class AppComponent implements OnDestroy, OnInit {
   private camera = inject(CameraService);
   motionSignal = signal<DisplaySignal>(null);
   private currentSessionIdForListener: string | null = null;
-  private readonly colors = ['#ef4444', '#22c55e', '#3b82f6', '#f1f5f9', '#facc15', '#a855f7', '#22d3ee'];
+  private readonly colors = [
+    '#ef4444',
+    '#22c55e',
+    '#3b82f6',
+    '#f1f5f9',
+    '#facc15',
+    '#a855f7',
+    '#22d3ee',
+  ];
   private resultTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   private displayContainer = viewChild<ElementRef>('displayContainer');
@@ -75,49 +121,65 @@ export class AppComponent implements OnDestroy, OnInit {
 
   constructor() {
     effect((onCleanup) => {
-        const mode = this.mode();
-        const sid = this.sessionId();
-        const contentType = this.displayContentType();
+      const mode = this.mode();
+      const sid = this.sessionId();
+      const contentType = this.displayContentType();
 
-        // If we enter display mode with a valid session ID, start listening / advertising (RTC or Firebase)
-        if (mode === 'display' && sid) {
-            if (this.useRtc()) {
-              this.signaling.startDisplayHandshake(sid).catch(() => {});
+      // If we enter display mode with a valid session ID, start listening / advertising (RTC or Firebase)
+      if (mode === 'display' && sid) {
+        if (this.useRtc()) {
+          this.signaling.startDisplayHandshake(sid).catch(() => {});
+        }
+        this.currentSessionIdForListener = sid;
+        this.firebaseService.listenForMotion(sid, (data) => {
+          if (data) {
+            const intensity = data.intensity ?? 20; // Use a default intensity if none is provided
+            if (contentType === 'color') {
+              const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+              this.motionSignal.set({
+                type: 'color',
+                value: randomColor,
+                timestamp: data.timestamp,
+                intensity,
+              });
+            } else if (contentType === 'math') {
+              this.runMathGameStep(intensity);
+            } else if (contentType === 'counter') {
+              this.detectionCount.update((c) => c + 1);
+              this.motionSignal.set({
+                type: 'counter',
+                count: this.detectionCount(),
+                timestamp: data.timestamp,
+                intensity,
+              });
+            } else {
+              // 'wechsel'
+              const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
+              this.motionSignal.set({
+                type: 'wechsel_text',
+                value: text,
+                timestamp: data.timestamp,
+                intensity,
+              });
             }
-            this.currentSessionIdForListener = sid;
-            this.firebaseService.listenForMotion(sid, (data) => {
-                if (data) {
-                    const intensity = data.intensity ?? 20; // Use a default intensity if none is provided
-                    if (contentType === 'color') {
-                        const randomColor = this.colors[Math.floor(Math.random() * this.colors.length)];
-                        this.motionSignal.set({ type: 'color', value: randomColor, timestamp: data.timestamp, intensity });
-                    } else if (contentType === 'math') {
-                        this.runMathGameStep(intensity);
-                    } else if (contentType === 'counter') {
-                        this.detectionCount.update(c => c + 1);
-                        this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp: data.timestamp, intensity });
-                    } else { // 'wechsel'
-                        const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
-                        this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp: data.timestamp, intensity });
-                    }
-                }
-            });
+          }
+        });
 
-            onCleanup(() => {
-                if (this.currentSessionIdForListener) {
-                   this.firebaseService.cleanupListener(this.currentSessionIdForListener);
-                   this.currentSessionIdForListener = null;
-                }
-            });
-        }
+        onCleanup(() => {
+          if (this.currentSessionIdForListener) {
+            this.firebaseService.cleanupListener(this.currentSessionIdForListener);
+            this.currentSessionIdForListener = null;
+          }
+        });
+      }
 
-        // If we enter detector mode with a session ID, start discovery/signaling for RTC
-        if (mode === 'detector' && sid && this.useRtc()) {
-          this.signaling.startDetectorHandshake(sid).catch(() => {});
-        }
+      // If we enter detector mode with a session ID, start discovery/signaling for RTC
+      if (mode === 'detector' && sid && this.useRtc()) {
+        this.signaling.startDetectorHandshake(sid).catch(() => {});
+      }
     });
   }
-  
+
   ngOnInit(): void {
     this.document.addEventListener('fullscreenchange', this.onFullscreenChange);
     // Hook RTC messages to trigger display actions when in display mode
@@ -154,13 +216,14 @@ export class AppComponent implements OnDestroy, OnInit {
     }
 
     done++;
-    const operator = (sum === 0) ? '+' : (Math.random() < 0.5 ? '+' : '-');
+    const operator = sum === 0 ? '+' : Math.random() < 0.5 ? '+' : '-';
     let value;
 
     if (operator === '+') {
       value = Math.floor(Math.random() * 9) + 1;
       sum += value;
-    } else { // operator is '-'
+    } else {
+      // operator is '-'
       value = Math.floor(Math.random() * Math.min(sum, 9)) + 1;
       sum -= value;
     }
@@ -174,7 +237,7 @@ export class AppComponent implements OnDestroy, OnInit {
       op: `${operator} ${value}`,
       sum: sum,
       timestamp: Date.now(),
-      intensity
+      intensity,
     });
 
     if (done >= max) {
@@ -187,7 +250,7 @@ export class AppComponent implements OnDestroy, OnInit {
             type: 'math_result',
             sum: this.currentSum(),
             timestamp: Date.now(),
-            intensity
+            intensity,
           });
         }
         this.resultTimeoutId = null;
@@ -281,7 +344,7 @@ export class AppComponent implements OnDestroy, OnInit {
     const value = (event.target as HTMLInputElement).value;
     this.lingerDuration.set(Number(value));
   }
-  
+
   onMaxOperationsChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.maxOperations.set(Number(value));
@@ -314,9 +377,15 @@ export class AppComponent implements OnDestroy, OnInit {
     } else if (contentType === 'math') {
       this.runMathGameStep(intensity);
     } else if (contentType === 'counter') {
-      this.detectionCount.update(c => c + 1);
-      this.motionSignal.set({ type: 'counter', count: this.detectionCount(), timestamp, intensity });
-    } else { // 'wechsel'
+      this.detectionCount.update((c) => c + 1);
+      this.motionSignal.set({
+        type: 'counter',
+        count: this.detectionCount(),
+        timestamp,
+        intensity,
+      });
+    } else {
+      // 'wechsel'
       const text = Math.random() < 0.5 ? 'Rechts' : 'Links';
       this.motionSignal.set({ type: 'wechsel_text', value: text, timestamp, intensity });
     }
@@ -338,20 +407,20 @@ export class AppComponent implements OnDestroy, OnInit {
       }
     }
   }
-  
+
   toggleAppFullscreen(): void {
     if (!this.document.fullscreenElement) {
-        this.document.documentElement.requestFullscreen();
+      this.document.documentElement.requestFullscreen();
     } else {
-        if (this.document.exitFullscreen) {
-            this.document.exitFullscreen();
-        }
+      if (this.document.exitFullscreen) {
+        this.document.exitFullscreen();
+      }
     }
   }
 
   private onFullscreenChange = (): void => {
     this.isAppFullScreen.set(!!this.document.fullscreenElement);
-  }
+  };
 
   ngOnDestroy(): void {
     if (this.resultTimeoutId) {

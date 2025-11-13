@@ -1,0 +1,39 @@
+# Build outputs
+dist/
+build/
+.angular/
+coverage/
+
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Capacitor
+android/
+ios/
+.capacitor/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+*.spec.ts.snap
+
+# Generated files
+*.d.ts
+!src/**/*.d.ts
