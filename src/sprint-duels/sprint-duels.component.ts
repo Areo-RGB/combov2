@@ -38,7 +38,7 @@ export class SprintDuelsComponent {
 
   getTabClass(tab: ActiveTab): string {
     return this.activeTab() === tab
-      ? 'bg-cyan-600 text-white'
-      : 'text-gray-300 hover:text-white';
+      ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-lg shadow-cyan-500/30'
+      : 'text-neutral-300 hover:text-white hover:bg-neutral-700/50';
   }
 }
