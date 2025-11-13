@@ -114,7 +114,9 @@ export class LocalLobbyService {
     try {
       // Create RTC connection
       const rtc = new RtcConnection();
-      device.rtcConnection = rtc;
+
+      // Update device with RTC connection (using signal update pattern)
+      this.updateDeviceRtcConnection(device.id, rtc);
 
       // Set up callbacks
       rtc.onOpen(() => {
@@ -187,12 +189,19 @@ export class LocalLobbyService {
     switch (msg.type) {
       case 'device-info':
         if (this.role() === 'host') {
-          this.addDevice({
+          const newDevice: ConnectedDevice = {
             id: msg.deviceId,
             name: msg.deviceName || 'Unknown',
             connected: true,
             rtcReady: false,
             rtcConnection: null,
+          };
+          this.addDevice(newDevice);
+
+          // Automatically establish WebRTC connection
+          console.log('Auto-establishing WebRTC for device:', msg.deviceId);
+          this.createWebRTCConnection(newDevice).catch((err) => {
+            console.error('Failed to auto-establish WebRTC for device:', msg.deviceId, err);
           });
         }
         break;
@@ -235,6 +244,14 @@ export class LocalLobbyService {
     const current = this.devices();
     const updated = current.map((d) =>
       d.id === deviceId ? { ...d, rtcReady: ready } : d
+    );
+    this.devices.set(updated);
+  }
+
+  private updateDeviceRtcConnection(deviceId: string, rtcConnection: RtcConnection | null): void {
+    const current = this.devices();
+    const updated = current.map((d) =>
+      d.id === deviceId ? { ...d, rtcConnection } : d
     );
     this.devices.set(updated);
   }
