@@ -292,18 +292,8 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     const newValue = !this.useBodypose();
     this.useBodypose.set(newValue);
 
-    // When bodypose is toggled, switch detection method
-    const detector = this.detectorComponent();
-    if (detector) {
-      if (newValue) {
-        detector.onDetectionMethodChange('pose');
-        // Enable landmark position tracking mode
-        detector.enableLandmarkTracking();
-      } else {
-        detector.onDetectionMethodChange('motion');
-        detector.disableLandmarkTracking();
-      }
-    }
+    // Note: Bodypose mode now uses motion detection with ready button.
+    // The detector component no longer supports pose landmark detection.
   }
 
   handleReady() {

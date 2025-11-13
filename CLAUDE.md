@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Motion Signal & Sprint Duels is an Angular application combining real-time motion detection with a sprint competition management system. The app uses device cameras for motion detection and Firebase/WebRTC for real-time communication between devices.
+Sprint Duels is an Angular application focused on competitive sprint timing and team challenges. The app provides three main features:
+
+1. **Sprint Duels**: Player rankings with Elo ratings, match-making, match history, and tournament management
+2. **Team Duels**: Multi-device team competitions with real-time synchronization via Firebase
+3. **Sprint Timing**: Single and multi-device sprint timing with camera-based motion detection
+
+The app uses device cameras for motion detection and Firebase for real-time communication between devices.
 
 ## Development Commands
 
@@ -60,53 +66,51 @@ pnpm build:android
 ### Core Application Structure
 - **Main App Component**: Central state management using Angular Signals (`src/app.component.ts`)
 - **Mode-based Navigation**: Single app with multiple modes controlled by `mode` signal
-- **Component Organization**: Feature-based organization under `/src/components/`
+- **Component Organization**: Feature-based organization
 
-### Key Modes
-- `selection`: Main menu
-- `motion-games`: Motion detection games
-- `detector`: Camera motion detection mode
-- `display`: Signal visualization mode
-- `single`: Combined detector + display
-- `sprint-*`: Sprint timing variants
-- `sprint-duels`: Competition management
-- `team-duels`: Team-based competitions
-- `bodypose`: Body pose analysis
+### Application Modes
+- `selection`: Main menu (3 lobby cards)
+- `sprint-duels`: Competition management lobby
+- `team-duels`: Team-based competitions lobby
+- `sprint-timing-menu`: Sprint timing options
+- `sprint-timing-single-menu`: Single device timing options
+- `sprint-timing-manual`: Manual start timing
+- `sprint-timing-flying`: Flying start timing
+- `sprint-multi-setup`: Multi-device setup
+- `sprint-multi-timing`: Multi-device timing
 
 ### Services Architecture
 
 #### Core Services (`src/services/`)
 - `FirebaseService`: Firebase real-time database operations
 - `CameraService`: Camera access and photo capture
-- `RtcService`: WebRTC peer-to-peer communication
-- `SignalingService`: WebRTC signaling via Firebase
 - `SprintTimingService`: Sprint timing logic
 
 #### Detection Services (`src/services/`)
-- `DiffyDetectionService`: Motion detection using diffyjs
-- `SpeedyDetectionService`: High-performance motion detection
+- `DiffyDetectionService`: Motion detection using diffyjs (CPU-based)
+- `SpeedyDetectionService`: GPU-accelerated motion detection using speedy-vision
 - `DetectionSettingsService`: Centralized detection configuration
 
 #### Feature-Specific Services
-- **Sprint Duels** (`src/sprint-duels/services/`): Elo ranking, matches, tournaments
-- **Team Duels** (`src/team-duels/services/`): WebRTC team communication
+- **Sprint Duels** (`src/sprint-duels/services/`): Elo ranking, player management, matches, tournaments, storage
+- **Team Duels** (`src/team-duels/services/`): Firebase-based team communication
 
 ### Technology Stack
 
 #### Frontend
 - **Angular 20**: Standalone components, zoneless, signals-based
 - **TypeScript**: Strict typing with advanced patterns
-- **Tailwind CSS**: Utility-first styling
+- **Tailwind CSS**: Utility-first styling with mobile-first design
 - **Vite**: Build tool and development server
 
-#### ML/Vision
-- **MediaPipe Pose**: Body pose detection
-- **TensorFlow.js**: ML models and backend
-- **Speedy-Vision**: High-performance computer vision
+#### Motion Detection
+- **DiffyJS**: CPU-based motion detection library
+- **Speedy-Vision**: GPU-accelerated computer vision (WebGL2)
+- **Camera API**: Device camera access via Capacitor
 
-#### Mobile
+#### Backend & Communication
+- **Firebase**: Real-time database for session management and synchronization
 - **Capacitor**: Cross-platform mobile development
-- **Bluetooth LE**: Low-energy Bluetooth communication
 
 #### Testing
 - **Vitest**: Test runner with UI
@@ -118,33 +122,21 @@ pnpm build:android
 #### Signal-Based State Management
 All state uses Angular Signals for reactivity:
 ```typescript
-mode = signal<'selection' | 'detector' | 'display' | ...>('selection');
+mode = signal<'selection' | 'sprint-duels' | 'team-duels' | ...>('selection');
 sessionId = signal('');
-motionSignal = signal<DisplaySignal>(null);
 ```
 
-#### Effect-Based Lifecycle
-Effects handle mode-dependent setup/cleanup:
-```typescript
-effect((onCleanup) => {
-  const mode = this.mode();
-  // Setup logic based on mode
+#### Firebase-Based Communication
+- Real-time data synchronization across devices
+- Session management for multi-device features
+- Player data persistence for Sprint Duels
 
-  onCleanup(() => {
-    // Cleanup logic
-  });
-});
-```
-
-#### Dual Communication Channels
-- **Firebase**: Fallback for real-time data sync
-- **WebRTC**: Direct peer-to-peer communication when available
-
-#### Modular Detection System
+#### Motion Detection System
 Pluggable detection services with unified interface:
 - Centralized settings via `DetectionSettingsService`
-- Multiple detection algorithms (diffyjs, speedy-vision)
-- Body pose analysis with MediaPipe
+- Two detection algorithms: DiffyJS (CPU) and Speedy-Vision (GPU)
+- Configurable detection zones and sensitivity
+- Used for sprint timing start/stop triggers
 
 ### Component Organization
 
@@ -152,34 +144,28 @@ Pluggable detection services with unified interface:
 All components are standalone with `ChangeDetectionStrategy.OnPush`.
 
 #### Feature Modules
-- **Core Components**: Shared UI components (`header`, `display`, `detector`)
-- **Sprint Duels**: Complete competition management system
-- **Team Duels**: Multi-player real-time competitions
-- **Motion Detection**: Camera-based motion detection components
+- **Core Components**: Shared UI components (`header`, `detector`)
+- **Sprint Timing**: Single and multi-device timing components
+- **Sprint Duels**: Complete competition management system with rankings, match-making, history
+- **Team Duels**: Multi-player real-time competitions with lobby system
 
-### Testing Strategy
+### Mobile Optimization
 
-#### Test Structure
-- Unit tests: `.spec.ts` files alongside components
-- Integration tests: Service interaction testing
-- Performance tests: Mobile and timing benchmarks
-- Stress tests: Race condition and concurrent operation testing
-
-#### Test Categories
-- Standard unit tests: `pnpm test`
-- Performance benchmarks: `pnpm test:perf`
-- Race condition tests: `pnpm test:race`
-
-### Mobile Development Notes
+#### Touch-Friendly UI
+- All buttons use `touch-manipulation` CSS for better touch response
+- Responsive grid layouts (mobile-first approach)
+- Large touch targets for mobile devices
 
 #### Capacitor Configuration
 - Web directory: `dist`
 - App ID: `com.motionsignal.app`
 - Android platform integration
+- Camera plugin for motion detection
 
 #### Performance Considerations
-- Vision processing optimized for mobile devices
-- WebGPU/WebGL backends for TensorFlow.js
+- GPU-accelerated motion detection (Speedy-Vision preferred on mobile)
+- Efficient canvas operations with minimal redraws
+- Optimized video frame processing (12 FPS target)
 - Memory management for real-time video processing
 
 ### Development Workflow
@@ -192,9 +178,8 @@ All components are standalone with `ChangeDetectionStrategy.OnPush`.
 
 #### State Management
 - Signals for component state
-- Effects for reactive side effects
 - Services for shared application state
-- Firebase/WebRTC for distributed state
+- Firebase for distributed state across devices
 
 #### Testing Approach
 - Comprehensive unit test coverage
