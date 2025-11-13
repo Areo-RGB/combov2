@@ -289,7 +289,7 @@ export class LocalLobbyService {
 
   // ---- Cleanup ----
 
-  cleanup(): void {
+  async cleanup(): Promise<void> {
     const devices = this.devices();
 
     devices.forEach((device) => {
@@ -301,7 +301,7 @@ export class LocalLobbyService {
       }
     });
 
-    this.bluetooth.cleanup();
+    await this.bluetooth.cleanup();
 
     this.lobbyId.set(null);
     this.role.set(null);

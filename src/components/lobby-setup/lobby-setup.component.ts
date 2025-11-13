@@ -106,8 +106,8 @@ export class LobbySetupComponent {
 
   // ---- Utility ----
 
-  back(): void {
-    this.lobbyService.cleanup();
+  async back(): Promise<void> {
+    await this.lobbyService.cleanup();
     this.viewState.set('selection');
     this.error.set(null);
   }

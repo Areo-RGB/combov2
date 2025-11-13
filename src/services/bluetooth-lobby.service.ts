@@ -110,7 +110,37 @@ export class BluetoothLobbyService {
     return Array.from(this.connectedClients.values());
   }
 
-  cleanup(): void {
+  async cleanup(): Promise<void> {
+    // Stop BLE advertising if host
+    if (this.role === 'host') {
+      try {
+        await BleSignaling.stopAdvertising();
+        console.log('BLE advertising stopped');
+      } catch (err) {
+        console.error('Error stopping advertising:', err);
+      }
+
+      // Remove event listeners
+      try {
+        await BleSignaling.removeAllListeners('rxWritten');
+        await BleSignaling.removeAllListeners('connectionStateChange');
+        console.log('BLE event listeners removed');
+      } catch (err) {
+        console.error('Error removing listeners:', err);
+      }
+    }
+
+    // Disconnect from host if client
+    if (this.role === 'client' && this.hostDeviceId) {
+      try {
+        await BleClient.disconnect(this.hostDeviceId);
+        console.log('Disconnected from host');
+      } catch (err) {
+        console.error('Error disconnecting:', err);
+      }
+    }
+
+    // Clear state
     this.messageCallbacks = [];
     this.connectedClients.clear();
     this.incomingBuffers.clear();

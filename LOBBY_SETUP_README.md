@@ -285,6 +285,45 @@ cd android
 - No authentication implemented (devices trust lobby ID)
 - Consider adding lobby password for production use
 
+## 🧹 Cleanup and Resource Management
+
+The lobby system properly cleans up all resources when:
+- User taps "Back" button from lobby view
+- User creates a new lobby (cleans up old one first)
+- App switches away from lobby mode
+
+**Cleanup includes:**
+
+### Host Device (when leaving lobby):
+- ✅ **Stops BLE advertising** - Releases Bluetooth LE advertiser
+- ✅ **Closes GATT server** - Frees native Android resources
+- ✅ **Removes event listeners** - Prevents memory leaks from BLE callbacks
+- ✅ **Closes WebRTC connections** - Closes all peer connections and data channels
+- ✅ **Clears state** - Resets lobby ID, devices list, and connection status
+
+### Client Device (when leaving lobby):
+- ✅ **Disconnects from host** - Closes BLE connection to host device
+- ✅ **Closes WebRTC connections** - Closes peer connection and data channel
+- ✅ **Clears state** - Resets lobby ID and connection status
+
+**Implementation:**
+```typescript
+// BluetoothLobbyService.cleanup()
+async cleanup(): Promise<void> {
+  if (this.role === 'host') {
+    await BleSignaling.stopAdvertising();
+    await BleSignaling.removeAllListeners('rxWritten');
+    await BleSignaling.removeAllListeners('connectionStateChange');
+  }
+  if (this.role === 'client' && this.hostDeviceId) {
+    await BleClient.disconnect(this.hostDeviceId);
+  }
+  // Clear all state...
+}
+```
+
+This ensures no Bluetooth or WebRTC resources are leaked when users navigate away from the lobby.
+
 ## 📱 Android Version Compatibility
 
 | Android Version | API Level | BLE Support | Notes |
