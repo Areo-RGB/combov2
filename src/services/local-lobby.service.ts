@@ -55,13 +55,14 @@ export class LocalLobbyService {
   // ---- Host Methods ----
 
   async createLobby(hostName: string): Promise<void> {
+    const hostId = this.generateClientId(); // Reuse client ID generator
     this.lobbyId.set('default');
     this.role.set('host');
     this.hostName.set(hostName);
     this.devices.set([]);
     this.isSetupComplete.set(false);
 
-    await this.bluetooth.startHostLobby(hostName);
+    await this.bluetooth.startHostLobby(hostName, hostId);
   }
 
   async completeSetup(): Promise<void> {
