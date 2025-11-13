@@ -45,6 +45,10 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
   showSettings = signal(false);
   minDetectionDelay = signal(2000);
 
+  // Bodypose mode
+  useBodypose = signal(false);
+  isReady = signal(false);
+
   private timerInterval: any = null;
   private lastDetectionTime = 0;
   private detectionStartTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -130,6 +134,13 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     }
     this.lastDetectionTime = now;
 
+    // Bodypose mode: wait for ready state, then start timer on first large movement
+    if (this.useBodypose() && this.isReady() && !this.isTiming()) {
+      this.playStartBeep();
+      this.startTimer();
+      return;
+    }
+
     // Flying start mode: first motion starts the timer
     if (this.startMode() === 'flying' && this.isArmed() && !this.isTiming()) {
       this.startTimer();
@@ -181,6 +192,7 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
     this.startTime.set(0);
     this.elapsedTime.set(0);
     this.isArmed.set(this.startMode() === 'flying');
+    this.isReady.set(false);
     this.lastDetectionTime = 0;
 
     // Stop detection if it was started
@@ -274,5 +286,34 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
   onMinDelayChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.minDetectionDelay.set(Number(value));
+  }
+
+  toggleBodypose() {
+    const newValue = !this.useBodypose();
+    this.useBodypose.set(newValue);
+
+    // When bodypose is toggled, switch detection method
+    const detector = this.detectorComponent();
+    if (detector) {
+      if (newValue) {
+        detector.onDetectionMethodChange('pose');
+        // Enable landmark position tracking mode
+        detector.enableLandmarkTracking();
+      } else {
+        detector.onDetectionMethodChange('motion');
+        detector.disableLandmarkTracking();
+      }
+    }
+  }
+
+  handleReady() {
+    if (this.useBodypose()) {
+      this.isReady.set(true);
+      const detector = this.detectorComponent();
+      if (detector && detector.status() === 'ready') {
+        // Start detection with landmark position tracking
+        detector.startDetection();
+      }
+    }
   }
 }

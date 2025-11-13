@@ -125,6 +125,11 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   // MoveNet Pose Detection
   private moveNetDetector: poseDetection.PoseDetector | null = null;
 
+  // Landmark position tracking
+  private landmarkTrackingEnabled = signal(false);
+  private previousLandmarks: Array<{ x: number; y: number; z?: number }> | null = null;
+  private readonly POSITION_CHANGE_THRESHOLD = 0.15; // 15% of frame dimension
+
   constructor() {
     // Effect moved to ngAfterViewInit to ensure viewChild refs are available.
   }
@@ -551,8 +556,23 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       // Check if a person is detected
       const personDetected = result.landmarks && result.landmarks.length > 0;
 
-      // Detect motion when person enters the frame (transition from no person to person detected)
-      if (personDetected && !this.previousPersonDetected) {
+      // Landmark tracking mode: detect large position changes
+      if (this.landmarkTrackingEnabled() && personDetected) {
+        const currentLandmarks = result.landmarks[0]; // Use first person's landmarks
+        const positionChange = this.calculateLandmarkPositionChange(currentLandmarks);
+
+        // Trigger if position change exceeds threshold
+        if (positionChange > this.POSITION_CHANGE_THRESHOLD) {
+          if (now - this.lastPoseDetectionTime > this.motionCooldown()) {
+            this.lastPoseDetectionTime = now;
+            // Scale intensity based on position change (0-100)
+            const intensity = Math.min(100, Math.round((positionChange / this.POSITION_CHANGE_THRESHOLD) * 50));
+            this.zone.run(() => this.handleMotionDetected(intensity));
+          }
+        }
+      }
+      // Standard mode: detect motion when person enters the frame
+      else if (!this.landmarkTrackingEnabled() && personDetected && !this.previousPersonDetected) {
         // Calculate confidence score as intensity (0-100)
         const intensity =
           result.landmarks.length > 0
@@ -591,8 +611,24 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       // Check if a person is detected
       const personDetected = poses && poses.length > 0;
 
-      // Detect motion when person enters the frame (transition from no person to person detected)
-      if (personDetected && !this.previousPersonDetected) {
+      // Landmark tracking mode: detect large position changes
+      if (this.landmarkTrackingEnabled() && personDetected) {
+        const currentPose = poses[0]; // Use first person's pose
+        const currentLandmarks = currentPose.keypoints.map((kp) => ({ x: kp.x, y: kp.y }));
+        const positionChange = this.calculateLandmarkPositionChange(currentLandmarks);
+
+        // Trigger if position change exceeds threshold
+        if (positionChange > this.POSITION_CHANGE_THRESHOLD) {
+          if (now - this.lastPoseDetectionTime > this.motionCooldown()) {
+            this.lastPoseDetectionTime = now;
+            // Scale intensity based on position change (0-100)
+            const intensity = Math.min(100, Math.round((positionChange / this.POSITION_CHANGE_THRESHOLD) * 50));
+            this.zone.run(() => this.handleMotionDetected(intensity));
+          }
+        }
+      }
+      // Standard mode: detect motion when person enters the frame
+      else if (!this.landmarkTrackingEnabled() && personDetected && !this.previousPersonDetected) {
         // Calculate confidence score as intensity (0-100)
         const avgScore =
           poses.length > 0
@@ -775,6 +811,52 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
         }, 1000);
       }
     }
+  }
+
+  enableLandmarkTracking(): void {
+    this.landmarkTrackingEnabled.set(true);
+    this.previousLandmarks = null;
+  }
+
+  disableLandmarkTracking(): void {
+    this.landmarkTrackingEnabled.set(false);
+    this.previousLandmarks = null;
+  }
+
+  private calculateLandmarkPositionChange(
+    currentLandmarks: Array<{ x: number; y: number; z?: number }>
+  ): number {
+    if (!this.previousLandmarks || this.previousLandmarks.length !== currentLandmarks.length) {
+      this.previousLandmarks = currentLandmarks;
+      return 0;
+    }
+
+    // Calculate average position change across key landmarks
+    // Focus on core body landmarks (shoulders, hips, knees) for reliable detection
+    const keyLandmarkIndices = [11, 12, 23, 24, 25, 26]; // shoulders, hips, knees
+
+    let totalChange = 0;
+    let validLandmarks = 0;
+
+    for (const idx of keyLandmarkIndices) {
+      if (idx < currentLandmarks.length && idx < this.previousLandmarks.length) {
+        const current = currentLandmarks[idx];
+        const previous = this.previousLandmarks[idx];
+
+        // Calculate Euclidean distance
+        const dx = current.x - previous.x;
+        const dy = current.y - previous.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        totalChange += distance;
+        validLandmarks++;
+      }
+    }
+
+    // Update previous landmarks
+    this.previousLandmarks = currentLandmarks;
+
+    return validLandmarks > 0 ? totalChange / validLandmarks : 0;
   }
 
   ngOnDestroy(): void {
