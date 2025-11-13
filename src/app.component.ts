@@ -22,9 +22,11 @@ import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
 import { SettingsComponent } from './sprint-duels/components/settings/settings.component';
 import { BodyposeComponent } from './components/bodypose/bodypose.component';
+import { LobbySetupComponent } from './components/lobby-setup/lobby-setup.component';
 import { RtcService } from './services/rtc.service';
 import { SignalingService } from './services/signaling.service';
 import { CameraService } from './services/camera.service';
+import { LocalLobbyService } from './services/local-lobby.service';
 
 // Define the shape of signals for the display component
 type DisplaySignal =
@@ -51,6 +53,7 @@ type DisplaySignal =
     HeaderComponent,
     SettingsComponent,
     BodyposeComponent,
+    LobbySetupComponent,
   ],
 })
 export class AppComponent implements OnDestroy, OnInit {
@@ -70,6 +73,7 @@ export class AppComponent implements OnDestroy, OnInit {
     | 'team-duels'
     | 'detection-settings'
     | 'bodypose'
+    | 'lobby-setup'
   >('selection');
   sessionId = signal('');
   inputSessionId = signal('');
@@ -101,6 +105,7 @@ export class AppComponent implements OnDestroy, OnInit {
   private rtc = inject(RtcService);
   private signaling = inject(SignalingService);
   private camera = inject(CameraService);
+  private localLobby = inject(LocalLobbyService);
   motionSignal = signal<DisplaySignal>(null);
   private currentSessionIdForListener: string | null = null;
   private readonly colors = [
@@ -178,6 +183,20 @@ export class AppComponent implements OnDestroy, OnInit {
         this.signaling.startDetectorHandshake(sid).catch(() => {});
       }
     });
+
+    // Effect to broadcast mode changes to lobby clients
+    effect(() => {
+      const mode = this.mode();
+      const isHost = this.localLobby.role() === 'host';
+      const setupComplete = this.localLobby.isSetupComplete();
+
+      // If host with completed setup changes mode (except to lobby-setup or selection), broadcast it
+      if (isHost && setupComplete && mode !== 'lobby-setup' && mode !== 'selection') {
+        this.localLobby.selectModeForAll(mode).catch((err) => {
+          console.error('Failed to broadcast mode change:', err);
+        });
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -186,6 +205,16 @@ export class AppComponent implements OnDestroy, OnInit {
     this.rtc.onMessage((msg) => {
       if (!msg || msg.t !== 'motion') return;
       this.handleRtcTrigger(msg.intensity ?? 20, msg.ts ?? Date.now());
+    });
+
+    // Hook lobby messages for mode selection
+    this.localLobby.onMessage((msg) => {
+      if (msg.type === 'mode-selected') {
+        // Client receives mode selection from host
+        if (this.localLobby.role() === 'client' && msg.mode) {
+          this.mode.set(msg.mode as any);
+        }
+      }
     });
   }
 
