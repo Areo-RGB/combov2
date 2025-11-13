@@ -14,6 +14,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
+import { AdvancedLobbySetupComponent } from './components/advanced-lobby-setup/advanced-lobby-setup.component';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ import { TeamDuelsComponent } from './team-duels/team-duels.component';
     SprintTimingMultiComponent,
     SprintDuelsComponent,
     TeamDuelsComponent,
+    AdvancedLobbySetupComponent,
     HeaderComponent,
   ],
 })
@@ -39,6 +41,7 @@ export class AppComponent implements OnDestroy, OnInit {
     | 'sprint-multi-timing'
     | 'sprint-duels'
     | 'team-duels'
+    | 'advanced-lobby-setup'
   >('selection');
   sessionId = signal('');
   multiDeviceConfig = signal<any>(null);
