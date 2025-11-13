@@ -15,24 +15,222 @@
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
           },
+          colors: {
+            // Override gray scale to use dark theme colors
+            gray: {
+              50: '#fafafa',
+              100: 'oklch(97% 0 0)',
+              200: 'oklch(92.2% 0 0)',
+              300: 'oklch(87% 0 0)',
+              400: 'oklch(70.8% 0 0)',
+              500: 'oklch(55.6% 0 0)',
+              600: 'oklch(43.9% 0 0)',
+              700: 'oklch(37.1% 0 0)',
+              800: '#171717', // Card background
+              900: '#0a0a0a', // Main background
+              950: 'oklch(14.5% 0 0)',
+            },
+            // Neutral colors
+            neutral: {
+              100: 'oklch(97% 0 0)',
+              200: 'oklch(92.2% 0 0)',
+              300: 'oklch(87% 0 0)',
+              400: 'oklch(70.8% 0 0)',
+              500: 'oklch(55.6% 0 0)',
+              600: 'oklch(43.9% 0 0)',
+              700: 'oklch(37.1% 0 0)',
+              800: 'oklch(26.9% 0 0)',
+              900: 'oklch(20.5% 0 0)',
+              950: 'oklch(14.5% 0 0)',
+            },
+            // Red colors
+            red: {
+              200: 'oklch(88.5% .062 18.334)',
+              300: 'oklch(80.8% .114 19.571)',
+              400: 'oklch(70.4% .191 22.216)',
+              500: 'oklch(63.7% .237 25.331)',
+              600: 'oklch(57.7% .245 27.325)',
+              700: 'oklch(50% .2 26)',
+              800: 'oklch(44.4% .177 26.899)',
+              900: 'oklch(35% .15 26)',
+              950: 'oklch(25.8% .092 26.042)',
+            },
+            // Green colors
+            green: {
+              200: 'oklch(92.5% .084 155.995)',
+              300: 'oklch(87.1% .15 154.449)',
+              400: 'oklch(79.2% .209 151.711)',
+              500: 'oklch(72.3% .219 149.579)',
+              600: 'oklch(62.7% .194 149.214)',
+              700: 'oklch(55% .17 150)',
+              800: 'oklch(44.8% .119 151.328)',
+              900: 'oklch(35% .1 151)',
+            },
+            // Blue colors
+            blue: {
+              100: 'oklch(93.2% .032 255.585)',
+              200: 'oklch(85% .1 258)',
+              300: 'oklch(78% .14 256)',
+              400: 'oklch(70.7% .165 254.624)',
+              500: 'oklch(62.3% .214 259.815)',
+              600: 'oklch(54.6% .245 262.881)',
+              700: 'oklch(47% .22 264)',
+              800: 'oklch(40% .18 265)',
+              900: 'oklch(37.9% .146 265.522)',
+              950: 'oklch(28.2% .091 267.935)',
+            },
+            // Cyan colors
+            cyan: {
+              300: 'oklch(85% .12 195)',
+              400: 'oklch(76.5% .177 163.223)',
+              500: 'oklch(70.4% .14 182.503)',
+              600: 'oklch(60% .118 184.704)',
+              700: 'oklch(52% .1 186)',
+            },
+            // Purple colors
+            purple: {
+              100: 'oklch(94.6% .033 307.174)',
+              200: 'oklch(88% .1 305)',
+              300: 'oklch(78% .18 304)',
+              400: 'oklch(71% .22 304)',
+              500: 'oklch(62.7% .265 303.9)',
+              600: 'oklch(55% .24 304)',
+              700: 'oklch(47% .2 304)',
+              800: 'oklch(40% .16 304)',
+              900: 'oklch(38% .189 293.745)',
+            },
+            // Pink colors
+            pink: {
+              300: 'oklch(80% .15 350)',
+              400: 'oklch(71.8% .202 349.761)',
+              500: 'oklch(65.6% .241 354.308)',
+              600: 'oklch(59.2% .249 .584)',
+              700: 'oklch(52% .22 355)',
+            },
+            // Orange/Yellow colors
+            orange: {
+              300: 'oklch(85% .15 75)',
+              400: 'oklch(82.8% .189 84.429)',
+              500: 'oklch(76.9% .188 70.08)',
+              600: 'oklch(70% .17 72)',
+              700: 'oklch(63% .15 73)',
+            },
+            yellow: {
+              300: 'oklch(90% .14 90)',
+              400: 'oklch(82.8% .189 84.429)',
+              500: 'oklch(79.5% .184 86.047)',
+              600: 'oklch(73% .17 87)',
+              700: 'oklch(66% .15 88)',
+            },
+            // Semantic colors
+            primary: {
+              DEFAULT: '#171717',
+              foreground: '#fafafa',
+            },
+            secondary: {
+              DEFAULT: '#262626',
+              foreground: '#fafafa',
+            },
+            accent: {
+              DEFAULT: '#2a2a2a',
+              foreground: '#fafafa',
+            },
+          },
         }
       }
     }
   </script>
   <style>
-    /* Custom scrollbar for a more modern look */
+    /* Animate UI Color System - Dark Theme */
+    :root {
+      /* Base Colors */
+      --color-black: #000;
+      --color-white: #fff;
+
+      /* Dark Theme Backgrounds */
+      --color-background: #0a0a0a;
+      --color-foreground: #fafafa;
+      --color-card: #171717;
+      --color-card-foreground: #fafafa;
+      --color-muted: #262626;
+      --color-muted-foreground: #a3a3a3;
+      --color-border: rgba(255, 255, 255, 0.1);
+
+      /* Neutral Color Palette */
+      --color-neutral-100: oklch(97% 0 0);
+      --color-neutral-200: oklch(92.2% 0 0);
+      --color-neutral-300: oklch(87% 0 0);
+      --color-neutral-400: oklch(70.8% 0 0);
+      --color-neutral-500: oklch(55.6% 0 0);
+      --color-neutral-600: oklch(43.9% 0 0);
+      --color-neutral-700: oklch(37.1% 0 0);
+      --color-neutral-800: oklch(26.9% 0 0);
+      --color-neutral-900: oklch(20.5% 0 0);
+      --color-neutral-950: oklch(14.5% 0 0);
+
+      /* Red Color Palette */
+      --color-red-200: oklch(88.5% .062 18.334);
+      --color-red-300: oklch(80.8% .114 19.571);
+      --color-red-400: oklch(70.4% .191 22.216);
+      --color-red-500: oklch(63.7% .237 25.331);
+      --color-red-600: oklch(57.7% .245 27.325);
+      --color-red-800: oklch(44.4% .177 26.899);
+      --color-red-950: oklch(25.8% .092 26.042);
+
+      /* Green Color Palette */
+      --color-green-200: oklch(92.5% .084 155.995);
+      --color-green-300: oklch(87.1% .15 154.449);
+      --color-green-400: oklch(79.2% .209 151.711);
+      --color-green-500: oklch(72.3% .219 149.579);
+      --color-green-600: oklch(62.7% .194 149.214);
+      --color-green-800: oklch(44.8% .119 151.328);
+
+      /* Blue Color Palette */
+      --color-blue-100: oklch(93.2% .032 255.585);
+      --color-blue-400: oklch(70.7% .165 254.624);
+      --color-blue-500: oklch(62.3% .214 259.815);
+      --color-blue-600: oklch(54.6% .245 262.881);
+      --color-blue-900: oklch(37.9% .146 265.522);
+      --color-blue-950: oklch(28.2% .091 267.935);
+
+      /* Yellow/Amber Color Palette */
+      --color-amber-400: oklch(82.8% .189 84.429);
+      --color-yellow-500: oklch(79.5% .184 86.047);
+
+      /* Semantic Colors */
+      --color-primary: #171717;
+      --color-primary-foreground: #fafafa;
+      --color-secondary: #262626;
+      --color-secondary-foreground: #fafafa;
+      --color-accent: #2a2a2a;
+      --color-accent-foreground: #fafafa;
+
+      /* Status Colors */
+      --color-info: oklch(62.3% .214 259.815);
+      --color-warning: oklch(79.5% .184 86.047);
+      --color-error: oklch(63.7% .237 25.331);
+      --color-success: oklch(72.3% .219 149.579);
+    }
+
+    /* Custom scrollbar with Animate UI colors */
     ::-webkit-scrollbar {
       width: 8px;
     }
     ::-webkit-scrollbar-track {
-      background: #1a202c; /* dark gray */
+      background: var(--color-background);
     }
     ::-webkit-scrollbar-thumb {
-      background: #4a5568; /* medium gray */
+      background: var(--color-muted);
       border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #718096; /* light gray */
+      background: var(--color-neutral-700);
+    }
+
+    /* Base styles with Animate UI colors */
+    body {
+      background-color: var(--color-background);
+      color: var(--color-foreground);
     }
   </style>
 <script type="importmap">
@@ -54,7 +252,7 @@
 }
 </script>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans antialiased">
+<body class="font-sans antialiased">
   <app-root></app-root>
 </body>
 </html>
