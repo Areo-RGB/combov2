@@ -187,6 +187,38 @@
               </div>
             </div>
 
+            <!-- Advanced Lobby Setup Card -->
+            <div
+              class="group bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-neutral-700 hover:border-emerald-500/50"
+            >
+              <div class="p-6">
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center"
+                  >
+                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
+                    </svg>
+                  </div>
+                  <h2 class="text-xl font-bold text-gray-50">Advanced Lobby</h2>
+                </div>
+                <p class="text-neutral-300 mb-4 text-sm leading-relaxed">
+                  Production-ready WebRTC with trickle ICE, message queuing & connection monitoring.
+                </p>
+                <button
+                  (click)="mode.set('advanced-lobby-setup')"
+                  class="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-md text-sm"
+                >
+                  Setup →
+                </button>
+              </div>
+            </div>
+
             <!-- Detection Settings Card -->
             <div
               class="group bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-neutral-700 hover:border-blue-500/50"
@@ -767,6 +799,9 @@
       }
       @case ('lobby-setup') {
         <app-lobby-setup></app-lobby-setup>
+      }
+      @case ('advanced-lobby-setup') {
+        <app-advanced-lobby-setup></app-advanced-lobby-setup>
       }
     }
   </main>

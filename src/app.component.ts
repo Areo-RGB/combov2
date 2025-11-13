@@ -23,6 +23,7 @@ import { TeamDuelsComponent } from './team-duels/team-duels.component';
 import { SettingsComponent } from './sprint-duels/components/settings/settings.component';
 import { BodyposeComponent } from './components/bodypose/bodypose.component';
 import { LobbySetupComponent } from './components/lobby-setup/lobby-setup.component';
+import { AdvancedLobbySetupComponent } from './components/advanced-lobby-setup/advanced-lobby-setup.component';
 import { RtcService } from './services/rtc.service';
 import { SignalingService } from './services/signaling.service';
 import { CameraService } from './services/camera.service';
@@ -54,6 +55,7 @@ type DisplaySignal =
     SettingsComponent,
     BodyposeComponent,
     LobbySetupComponent,
+    AdvancedLobbySetupComponent,
   ],
 })
 export class AppComponent implements OnDestroy, OnInit {
@@ -74,6 +76,7 @@ export class AppComponent implements OnDestroy, OnInit {
     | 'detection-settings'
     | 'bodypose'
     | 'lobby-setup'
+    | 'advanced-lobby-setup'
   >('selection');
   sessionId = signal('');
   inputSessionId = signal('');

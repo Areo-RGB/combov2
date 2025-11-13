@@ -16,10 +16,11 @@ export interface LobbyDevice {
 }
 
 export interface LobbyMessage {
-  type: 'device-info' | 'offer' | 'answer' | 'mode-change';
+  type: 'device-info' | 'offer' | 'answer' | 'ice-candidate' | 'mode-change';
   deviceId: string;
   deviceName?: string;
   sdp?: string;
+  candidate?: RTCIceCandidateInit;
   mode?: string;
 }
 
@@ -98,6 +99,24 @@ export class BluetoothLobbyService {
 
     // Send answer to host (no specific 'to' needed, host is only recipient)
     await this.writeChunks(this.hostDeviceId, JSON.stringify(msg), undefined);
+  }
+
+  async sendIceCandidate(targetId: string, candidate: RTCIceCandidateInit): Promise<void> {
+    if (!this.myDeviceId) return;
+
+    const msg: LobbyMessage = {
+      type: 'ice-candidate',
+      deviceId: this.myDeviceId,
+      candidate,
+    };
+
+    if (this.role === 'host') {
+      // Host sends to specific client
+      await this.notifyChunks(JSON.stringify(msg), targetId);
+    } else if (this.role === 'client' && this.hostDeviceId) {
+      // Client sends to host
+      await this.writeChunks(this.hostDeviceId, JSON.stringify(msg), undefined);
+    }
   }
 
   async broadcastModeChange(mode: string): Promise<void> {
