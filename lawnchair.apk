@@ -1,0 +1,54 @@
+<HTML><HEAD>
+ <TITLE>Not here, not there, not anywhere... (404)</TITLE>
+ <META content="text/html; charset=utf-8" http-equiv=Content-Type>
+ <META NAME="robots" CONTENT="noindex">
+ <STYLE TYPE='text/css'>
+  body,table,p { font-family:Verdana,Helvetica,Arial,sans-serif; }
+  table,th { background-color:#e5e4e2; }
+  table.message {
+    margin-top:100px;max-width:800px;
+    border:2px groove #625d5d;
+    border-radius:7px;
+    box-shadow:8px 8px 8px #666;
+  }
+  table.message th { color:#aa0000; }
+  td { padding:0.5em; background-color:#ffffff; }
+  p { text-align:justify; }
+  p.center { text-align:center; }
+  .blackbox {
+    font-family: monospace;
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #000000;
+    border:2px groove #625d5d;
+    padding: 0.2em;
+  }
+ </STYLE>
+</HEAD>
+<BODY BGCOLOR='#ffff00'>
+
+<TABLE ALIGN='center' CLASS='message'>
+  <TR><TH>Sorry, but I simply couldn't find that!</TH></TR>
+  <TR><TD>
+    <P>
+     <A HREF='http://en.wikipedia.org/wiki/I_Still_Haven%27t_Found_What_I%27m_Looking_For'>I
+     still haven't found what you're looking for</A>. Either it was never there
+     in the first place (maybe a typo on your end? Or did we announce a wrong URL?),
+     it's temporarily gone (needs to be fixed first), or will never be here (yeah,
+     <A HREF='http://en.wikipedia.org/wiki/I_Want_It_All'>I want it all</A>, too,
+     but that rarely works out – we need something left to dream of, finally).
+    </P>
+    <P>
+     So here are my recommendations:
+    </P>
+    <UL>
+      <LI>If you typed in the URL manually, check it for typos</LI>
+      <LI>If you've followed a link, do the same and report it if found</LI>
+      <LI><A HREF='http://www.google.com/'>Google it</A></LI>
+      <LI><A HREF='https://duckduckgo.com/'>Duck it</A></LI>
+      <LI>Take a nap, and try again later. Fresh eyes can see better.</LI>
+    </UL>
+  </TD></TR>
+</TABLE>
+
+</BODY></HTML>
