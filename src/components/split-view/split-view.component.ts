@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { WebSocketService } from '../../services/websocket.service';
 import { DetectorComponent } from '../detector/detector.component';
 import { ConnectionStatus } from '../../models/connection-status.enum';
@@ -10,7 +9,7 @@ import { ConnectionStatus } from '../../models/connection-status.enum';
   templateUrl: './split-view.component.html',
   styleUrls: ['./split-view.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, DetectorComponent],
+  imports: [CommonModule, DetectorComponent],
 })
 export class SplitViewComponent {
   goBack = output<void>();

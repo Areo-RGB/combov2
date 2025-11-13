@@ -22,7 +22,8 @@
           <label class="block text-sm text-gray-400 mb-2">Master Server IP</label>
           <input
             type="text"
-            [(ngModel)]="masterIP"
+            [value]="masterIP()"
+            (input)="masterIP.set(($event.target as HTMLInputElement).value)"
             placeholder="192.168.1.100"
             class="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -32,7 +33,8 @@
           <label class="block text-sm text-gray-400 mb-2">Split Number</label>
           <input
             type="number"
-            [(ngModel)]="splitNumber"
+            [value]="splitNumber()"
+            (input)="splitNumber.set(+($event.target as HTMLInputElement).value)"
             min="1"
             max="10"
             class="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

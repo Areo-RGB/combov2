@@ -52,8 +52,15 @@
       <div class="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
         <div class="flex items-center gap-4">
           <div class="text-2xl">
-            @if (client.splitNumber === 1) { 🥇 } @else if (client.splitNumber === 2) { 🥈 } @else
-            if (client.splitNumber === 3) { 🥉 } @else { 📱 }
+            @if (client.splitNumber === 1) {
+              🥇
+            } @else if (client.splitNumber === 2) {
+              🥈
+            } @else if (client.splitNumber === 3) {
+              🥉
+            } @else {
+              📱
+            }
           </div>
           <div>
             <div class="font-semibold">Split {{ client.splitNumber }}</div>
