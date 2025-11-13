@@ -225,6 +225,76 @@
               </div>
             </div>
           </div>
+
+          <!-- WebSocket Multi-Device Sprint Timer Section -->
+          <div class="mt-6">
+            <h3 class="text-xl font-semibold mb-4 text-gray-50">WebSocket Multi-Device Sprint Timer</h3>
+            <div class="grid md:grid-cols-2 gap-5 md:gap-6">
+              <!-- WebSocket Master View Card -->
+              <div
+                class="group bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-neutral-700 hover:border-teal-500/50"
+              >
+                <div class="p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div
+                      class="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center"
+                    >
+                      <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                        />
+                      </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-50">Master View</h2>
+                  </div>
+                  <p class="text-neutral-300 mb-4 text-sm leading-relaxed">
+                    Aggregator dashboard that displays all split connections and detection events.
+                  </p>
+                  <button
+                    (click)="mode.set('websocket-master')"
+                    class="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-md text-sm"
+                  >
+                    Launch Master →
+                  </button>
+                </div>
+              </div>
+
+              <!-- WebSocket Split View Card -->
+              <div
+                class="group bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-neutral-700 hover:border-indigo-500/50"
+              >
+                <div class="p-6">
+                  <div class="flex items-center gap-3 mb-3">
+                    <div
+                      class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center"
+                    >
+                      <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-50">Split Timer</h2>
+                  </div>
+                  <p class="text-neutral-300 mb-4 text-sm leading-relaxed">
+                    Motion detection device that sends timing events to the master server.
+                  </p>
+                  <button
+                    (click)="mode.set('websocket-split')"
+                    class="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-md text-sm"
+                  >
+                    Launch Split →
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       }
       @case ('motion-games') {
@@ -732,6 +802,12 @@
       }
       @case ('bodypose') {
         <app-bodypose (goBack)="goBackToSelection()"></app-bodypose>
+      }
+      @case ('websocket-master') {
+        <app-master-view (goBack)="goBackToSelection()"></app-master-view>
+      }
+      @case ('websocket-split') {
+        <app-split-view (goBack)="goBackToSelection()"></app-split-view>
       }
     }
   </main>

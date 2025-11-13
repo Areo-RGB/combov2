@@ -1,0 +1,118 @@
+<div class="split-container min-h-screen bg-gray-900 text-white">
+  <!-- Header with Back Button -->
+  <div class="flex items-center justify-between p-4 bg-gray-800">
+    <h1 class="text-xl font-bold">Split Timer Device</h1>
+    <button
+      (click)="onGoBack()"
+      class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+    >
+      Back
+    </button>
+  </div>
+
+  <!-- Connection Panel -->
+  <div class="connection-panel p-4">
+    @if (ws.connectionStatus() === ConnectionStatus.DISCONNECTED || ws.connectionStatus() ===
+    ConnectionStatus.ERROR) {
+    <div class="bg-gray-800 rounded-lg p-6 max-w-md mx-auto">
+      <h2 class="text-lg font-semibold mb-4">Connect to Master Server</h2>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Master Server IP</label>
+          <input
+            type="text"
+            [(ngModel)]="masterIP"
+            placeholder="192.168.1.100"
+            class="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm text-gray-400 mb-2">Split Number</label>
+          <input
+            type="number"
+            [(ngModel)]="splitNumber"
+            min="1"
+            max="10"
+            class="w-full px-3 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p class="text-xs text-gray-500 mt-1">Enter a unique number for this split (1-10)</p>
+        </div>
+
+        @if (connectionError()) {
+        <div class="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded">
+          {{ connectionError() }}
+        </div>
+        }
+
+        <button
+          (click)="connect()"
+          [disabled]="isConnecting()"
+          class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition font-semibold"
+        >
+          @if (isConnecting()) { Connecting... } @else { Connect to Master }
+        </button>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-gray-700">
+        <p class="text-sm text-gray-400 mb-2">Instructions:</p>
+        <ol class="text-sm text-gray-400 space-y-1 list-decimal list-inside">
+          <li>Make sure the master server is running</li>
+          <li>Enter the master server's IP address</li>
+          <li>Choose a unique split number for this device</li>
+          <li>Click "Connect to Master"</li>
+        </ol>
+      </div>
+    </div>
+    } @else {
+    <!-- Connected Status Bar -->
+    <div class="bg-gray-800 rounded-lg p-4 mb-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">{{ getConnectionStatusIcon() }}</span>
+        <div>
+          <div class="font-semibold">{{ getConnectionStatusText() }}</div>
+          <div class="text-sm text-gray-400">
+            Split {{ splitNumber() }} • {{ masterIP() }}:8080
+          </div>
+        </div>
+      </div>
+      <button
+        (click)="disconnect()"
+        class="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg transition"
+      >
+        Disconnect
+      </button>
+    </div>
+    }
+  </div>
+
+  <!-- Detection Component (only shown when connected) -->
+  @if (ws.connectionStatus() === ConnectionStatus.CONNECTED) {
+  <div class="detection-wrapper px-4">
+    <div class="bg-gray-800 rounded-lg p-4 mb-4">
+      <h2 class="text-lg font-semibold mb-2">Motion Detection Active</h2>
+      <p class="text-sm text-gray-400">
+        Detection events will be automatically sent to the master server when motion is detected.
+      </p>
+    </div>
+
+    <!-- Existing Detection Component -->
+    <app-detector
+      [sessionId]="sessionId()"
+      [showBackButton]="false"
+      (motionDetected)="onDetectionEvent($event)"
+    ></app-detector>
+  </div>
+  }
+
+  <!-- Not Connected Message -->
+  @if (ws.connectionStatus() === ConnectionStatus.DISCONNECTED || ws.connectionStatus() ===
+  ConnectionStatus.ERROR) {
+  <div class="text-center py-12 px-4">
+    <div class="text-6xl mb-4">📱</div>
+    <h3 class="text-xl font-semibold mb-2">Not Connected</h3>
+    <p class="text-gray-400">Connect to the master server to start detection</p>
+  </div>
+  }
+</div>

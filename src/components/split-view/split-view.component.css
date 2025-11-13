@@ -1,0 +1,45 @@
+/* Split View Component Styles */
+
+.split-container {
+  min-height: 100vh;
+}
+
+.connection-panel {
+  /* Connection panel styles */
+}
+
+.detection-wrapper {
+  /* Detection wrapper styles */
+}
+
+/* Status indicators */
+.status-connected {
+  color: #10b981; /* green-500 */
+}
+
+.status-connecting {
+  color: #f59e0b; /* yellow-500 */
+}
+
+.status-error {
+  color: #ef4444; /* red-500 */
+}
+
+.status-disconnected {
+  color: #6b7280; /* gray-500 */
+}
+
+/* Pulse animation for connecting status */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-connecting {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

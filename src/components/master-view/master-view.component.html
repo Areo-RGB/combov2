@@ -1,0 +1,146 @@
+<div class="min-h-screen bg-gray-900 text-white p-4">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Sprint Timer Master View</h1>
+    <button
+      (click)="onGoBack()"
+      class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition"
+    >
+      Back
+    </button>
+  </div>
+
+  <!-- Server Status Panel -->
+  <div class="bg-gray-800 rounded-lg p-6 mb-6">
+    <div class="flex items-center mb-4">
+      <div class="text-4xl mr-4">🖥️</div>
+      <div class="flex-1">
+        <h2 class="text-xl font-semibold mb-2">Master Server</h2>
+        <div class="flex items-center gap-4">
+          <code class="bg-gray-700 px-3 py-1 rounded">{{ serverUrl() }}</code>
+          <button
+            (click)="copyUrl()"
+            class="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded transition text-sm"
+          >
+            Copy URL
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mt-4">
+      <div class="bg-gray-700 p-3 rounded">
+        <div class="text-sm text-gray-400">Connected Splits</div>
+        <div class="text-2xl font-bold">{{ connectedClientsCount() }}</div>
+      </div>
+      <div class="bg-gray-700 p-3 rounded">
+        <div class="text-sm text-gray-400">Total Detections</div>
+        <div class="text-2xl font-bold">{{ totalDetections() }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connected Splits -->
+  <div class="bg-gray-800 rounded-lg p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">Connected Splits</h2>
+    @if ((connectedClients$ | async) === null || (connectedClients$ | async)?.length === 0) {
+    <div class="text-gray-400 text-center py-8">
+      No splits connected yet. Split devices will appear here when they connect.
+    </div>
+    } @else {
+    <div class="space-y-2">
+      @for (client of connectedClients$ | async; track trackByClientId($index, client)) {
+      <div class="bg-gray-700 p-4 rounded-lg flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="text-2xl">
+            @if (client.splitNumber === 1) { 🥇 } @else if (client.splitNumber === 2) { 🥈 } @else
+            if (client.splitNumber === 3) { 🥉 } @else { 📱 }
+          </div>
+          <div>
+            <div class="font-semibold">Split {{ client.splitNumber }}</div>
+            <div class="text-sm text-gray-400">{{ client.ipAddress }}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-green-500 text-xl">✓</div>
+          <div class="text-sm text-gray-400">
+            {{ formatTimestamp(client.connectedAt) }}
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Detection Events Stream -->
+  <div class="bg-gray-800 rounded-lg p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold">Detection Events</h2>
+      <div class="flex gap-2">
+        <button
+          (click)="clearEventLog()"
+          class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded transition text-sm"
+        >
+          Clear
+        </button>
+        <button
+          (click)="exportEventLog()"
+          class="px-3 py-1 bg-green-600 hover:bg-green-500 rounded transition text-sm"
+        >
+          Export
+        </button>
+      </div>
+    </div>
+
+    @if (eventLog().length === 0) {
+    <div class="text-gray-400 text-center py-8">
+      No detection events yet. Events from split devices will appear here.
+    </div>
+    } @else {
+    <div class="space-y-2 max-h-96 overflow-y-auto">
+      @for (entry of eventLog(); track trackByTimestamp($index, entry)) {
+      <div class="bg-gray-700 p-3 rounded flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="text-xs text-gray-400 w-20">
+            {{ formatTimestamp(entry.timestamp) }}
+          </div>
+          <div class="text-sm">
+            @if (entry.splitNumber === 0) {
+            <span class="text-blue-400">[System]</span>
+            } @else {
+            <span class="text-green-400">[Split {{ entry.splitNumber }}]</span>
+            }
+            {{ entry.message }}
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+    @if (lastEventTime()) {
+    <div class="mt-4 text-sm text-gray-400 text-center">
+      Last event: {{ getTimeSinceLastEvent() }}
+    </div>
+    }
+  </div>
+
+  <!-- Statistics Panel -->
+  <div class="bg-gray-800 rounded-lg p-6">
+    <h2 class="text-xl font-semibold mb-4">Session Statistics</h2>
+    <div class="grid grid-cols-3 gap-4">
+      <div class="bg-gray-700 p-4 rounded text-center">
+        <div class="text-3xl mb-2">{{ totalDetections() }}</div>
+        <div class="text-sm text-gray-400">Total Detections</div>
+      </div>
+      <div class="bg-gray-700 p-4 rounded text-center">
+        <div class="text-3xl mb-2">{{ connectedClientsCount() }}</div>
+        <div class="text-sm text-gray-400">Active Splits</div>
+      </div>
+      <div class="bg-gray-700 p-4 rounded text-center">
+        <div class="text-3xl mb-2">{{ eventLog().length }}</div>
+        <div class="text-sm text-gray-400">Events Logged</div>
+      </div>
+    </div>
+  </div>
+</div>

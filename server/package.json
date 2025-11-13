@@ -1,0 +1,21 @@
+{
+  "name": "sprint-timer-websocket-server",
+  "version": "1.0.0",
+  "description": "WebSocket server for Sprint Timer multi-device coordination",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "websocket",
+    "sprint",
+    "timing",
+    "detection"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

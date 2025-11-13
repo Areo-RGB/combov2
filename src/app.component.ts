@@ -22,6 +22,8 @@ import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
 import { SettingsComponent } from './sprint-duels/components/settings/settings.component';
 import { BodyposeComponent } from './components/bodypose/bodypose.component';
+import { MasterViewComponent } from './components/master-view/master-view.component';
+import { SplitViewComponent } from './components/split-view/split-view.component';
 import { RtcService } from './services/rtc.service';
 import { SignalingService } from './services/signaling.service';
 import { CameraService } from './services/camera.service';
@@ -51,6 +53,8 @@ type DisplaySignal =
     HeaderComponent,
     SettingsComponent,
     BodyposeComponent,
+    MasterViewComponent,
+    SplitViewComponent,
   ],
 })
 export class AppComponent implements OnDestroy, OnInit {
@@ -70,6 +74,8 @@ export class AppComponent implements OnDestroy, OnInit {
     | 'team-duels'
     | 'detection-settings'
     | 'bodypose'
+    | 'websocket-master'
+    | 'websocket-split'
   >('selection');
   sessionId = signal('');
   inputSessionId = signal('');
