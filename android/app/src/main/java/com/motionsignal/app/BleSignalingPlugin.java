@@ -28,13 +28,28 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.PermissionState;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-@CapacitorPlugin(name = "BleSignaling")
+@CapacitorPlugin(
+    name = "BleSignaling",
+    permissions = {
+        @Permission(
+            alias = "bluetooth",
+            strings = {
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_ADVERTISE
+            }
+        )
+    }
+)
 public class BleSignalingPlugin extends Plugin {
     private static final String TAG = "BleSignalingPlugin";
     private BluetoothLeAdvertiser advertiser;
@@ -48,6 +63,34 @@ public class BleSignalingPlugin extends Plugin {
 
     private BluetoothGattCharacteristic rxChar;
     private BluetoothGattCharacteristic txChar;
+
+    @PluginMethod
+    public void requestPermissions(PluginCall call) {
+        Log.d(TAG, "requestPermissions called");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (getPermissionState("bluetooth") != PermissionState.GRANTED) {
+                requestPermissionForAlias("bluetooth", call, "bluetoothPermsCallback");
+            } else {
+                Log.d(TAG, "Bluetooth permissions already granted");
+                call.resolve();
+            }
+        } else {
+            Log.d(TAG, "Android < 12, no runtime Bluetooth permissions needed");
+            call.resolve();
+        }
+    }
+
+    @PermissionCallback
+    private void bluetoothPermsCallback(PluginCall call) {
+        if (getPermissionState("bluetooth") == PermissionState.GRANTED) {
+            Log.d(TAG, "Bluetooth permissions granted by user");
+            call.resolve();
+        } else {
+            Log.e(TAG, "Bluetooth permissions denied by user");
+            call.reject("Bluetooth permissions required for lobby functionality");
+        }
+    }
 
     @PluginMethod
     public void startAdvertising(PluginCall call) {
@@ -77,16 +120,12 @@ public class BleSignalingPlugin extends Plugin {
 
         // Check runtime permissions (Android 12+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.BLUETOOTH_ADVERTISE) != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "Missing BLUETOOTH_ADVERTISE permission");
-                call.reject("Missing BLUETOOTH_ADVERTISE permission");
+            if (getPermissionState("bluetooth") != PermissionState.GRANTED) {
+                Log.w(TAG, "Bluetooth permissions not granted, requesting...");
+                call.reject("Bluetooth permissions required. Please call requestPermissions() first.");
                 return;
             }
-            if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                Log.e(TAG, "Missing BLUETOOTH_CONNECT permission");
-                call.reject("Missing BLUETOOTH_CONNECT permission");
-                return;
-            }
+            Log.d(TAG, "Bluetooth permissions verified");
         }
 
         BluetoothManager manager = (BluetoothManager) getContext().getSystemService(Context.BLUETOOTH_SERVICE);

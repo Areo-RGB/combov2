@@ -193,6 +193,15 @@ export class BluetoothLobbyService {
   // ---- Peripheral (Host) Mode ----
 
   private async initializePeripheral(): Promise<void> {
+    // Request Bluetooth permissions first (Android 12+)
+    try {
+      await BleSignaling.requestPermissions();
+      console.log('Bluetooth permissions granted');
+    } catch (err) {
+      console.error('Failed to get Bluetooth permissions:', err);
+      throw new Error('Bluetooth permissions required for lobby hosting');
+    }
+
     // Listen for client connections and store handle
     const rxHandle = await BleSignaling.addListener('rxWritten', async (event: any) => {
       const decoded = this.parseEnvelope(event?.value);

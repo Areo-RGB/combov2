@@ -59,6 +59,8 @@ type DisplaySignal =
   ],
 })
 export class AppComponent implements OnDestroy, OnInit {
+  readonly version = '0.1.0';
+
   mode = signal<
     | 'selection'
     | 'motion-games'

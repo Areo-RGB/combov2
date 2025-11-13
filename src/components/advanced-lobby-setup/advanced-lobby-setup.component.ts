@@ -1,4 +1,4 @@
-import { Component, inject, signal, effect, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, effect, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdvancedLobbyService, AdvancedDevice } from '../../services/advanced-lobby.service';
@@ -12,6 +12,9 @@ import { AdvancedLobbyService, AdvancedDevice } from '../../services/advanced-lo
 })
 export class AdvancedLobbySetupComponent {
   private lobbyService = inject(AdvancedLobbyService);
+
+  // Output event to navigate back to main menu
+  goBack = output<void>();
 
   // View state
   viewState = signal<'selection' | 'host' | 'client'>('selection');
@@ -97,6 +100,7 @@ export class AdvancedLobbySetupComponent {
     await this.lobbyService.cleanup();
     this.viewState.set('selection');
     this.error.set(null);
+    this.goBack.emit();
   }
 
   private generateDefaultDeviceName(): string {

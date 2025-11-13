@@ -290,6 +290,13 @@
             </div>
           </div>
         </div>
+
+        <!-- Version Footer -->
+        <div class="text-center mt-8 pt-6 border-t border-neutral-700">
+          <p class="text-neutral-500 text-sm">
+            Version {{ version }}
+          </p>
+        </div>
       }
       @case ('motion-games') {
         <div
@@ -798,10 +805,10 @@
         <app-bodypose (goBack)="goBackToSelection()"></app-bodypose>
       }
       @case ('lobby-setup') {
-        <app-lobby-setup></app-lobby-setup>
+        <app-lobby-setup (goBack)="goBackToSelection()"></app-lobby-setup>
       }
       @case ('advanced-lobby-setup') {
-        <app-advanced-lobby-setup></app-advanced-lobby-setup>
+        <app-advanced-lobby-setup (goBack)="goBackToSelection()"></app-advanced-lobby-setup>
       }
     }
   </main>
