@@ -64,6 +64,33 @@
             />
           </div>
 
+          <div class="flex items-center justify-between">
+            <label for="bodypose-toggle" class="text-sm font-medium text-gray-300"
+              >Use Bodypose Detection</label
+            >
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                id="bodypose-toggle"
+                class="sr-only peer"
+                [checked]="useBodypose()"
+                (change)="toggleBodypose()"
+              />
+              <div
+                class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"
+              ></div>
+            </label>
+          </div>
+
+          @if (useBodypose()) {
+            <div class="p-3 bg-blue-900/50 rounded-lg border border-blue-500">
+              <p class="text-xs text-blue-200">
+                When enabled, the timer will start when large body movements are detected using pose landmarks
+                instead of general motion.
+              </p>
+            </div>
+          }
+
           <button
             (click)="showSettings.set(false)"
             class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition"
@@ -86,28 +113,49 @@
   <div class="px-4 pb-4">
     <div class="bg-gray-700/50 rounded-lg border border-gray-600 p-4">
       <div class="grid grid-cols-2 gap-4">
-        <!-- Start Detection Button -->
-        @if (detectorComponent().status() === 'ready') {
+        <!-- Ready Button (when bodypose mode is enabled and not ready) -->
+        @if (useBodypose() && !isReady() && !isTiming()) {
           <button
-            (click)="detectorComponent().startDetection()"
-            class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+            (click)="handleReady()"
+            [disabled]="detectorComponent().status() !== 'ready'"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105 disabled:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Start Detection
+            READY
           </button>
-        } @else if (detectorComponent().status() === 'detecting') {
-          <button
-            (click)="detectorComponent().stopDetection()"
-            class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+        } @else if (useBodypose() && isReady() && !isTiming()) {
+          <div
+            class="w-full bg-yellow-500 text-white font-bold py-3 px-4 rounded-lg text-base text-center flex flex-col items-center justify-center"
           >
-            Stop Detection
-          </button>
+            <span>READY</span>
+            <span class="text-xs font-normal">Waiting for movement...</span>
+          </div>
+        } @else if (!useBodypose()) {
+          <!-- Start Detection Button (standard motion mode) -->
+          @if (detectorComponent().status() === 'ready') {
+            <button
+              (click)="detectorComponent().startDetection()"
+              class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+            >
+              Start Detection
+            </button>
+          } @else if (detectorComponent().status() === 'detecting') {
+            <button
+              (click)="detectorComponent().stopDetection()"
+              class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-base transition-transform transform hover:scale-105"
+            >
+              Stop Detection
+            </button>
+          } @else {
+            <button
+              disabled
+              class="w-full bg-gray-600 text-gray-400 font-bold py-3 px-4 rounded-lg text-base cursor-not-allowed"
+            >
+              Start Detection
+            </button>
+          }
         } @else {
-          <button
-            disabled
-            class="w-full bg-gray-600 text-gray-400 font-bold py-3 px-4 rounded-lg text-base cursor-not-allowed"
-          >
-            Start Detection
-          </button>
+          <!-- Empty space when timing -->
+          <div></div>
         }
 
         <!-- START Button -->
