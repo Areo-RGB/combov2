@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion Detection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .panel {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            background: #000;
+            border-radius: 4px;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0051cc;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .motion-indicator {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 20px auto;
+            transition: all 0.3s;
+        }
+        .motion-indicator.active {
+            background: #00ff00;
+            animation: pulse 0.5s infinite;
+        }
+        .motion-indicator.inactive {
+            background: #ccc;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Motion Detection & Firebase Test</h1>
+
+    <div class="container">
+        <!-- Camera & Detection Panel -->
+        <div class="panel">
+            <h2>📹 Camera & Detection</h2>
+            <video id="video" autoplay playsinline muted></video>
+            <div class="motion-indicator inactive" id="motionIndicator"></div>
+            <div>
+                <button id="startCamera">Start Camera</button>
+                <button id="stopCamera" disabled>Stop Camera</button>
+            </div>
+            <div id="cameraStatus" class="status warning">Camera not started</div>
+
+            <h3>Detection Mode:</h3>
+            <div>
+                <button id="useDiffy" disabled>Use DiffyJS</button>
+                <button id="useSpeedy" disabled>Use Speedy Vision</button>
+            </div>
+            <div id="detectionStatus" class="status warning">Detection not active</div>
+        </div>
+
+        <!-- Firebase Panel -->
+        <div class="panel">
+            <h2>🔥 Firebase Test</h2>
+            <div>
+                <label for="sessionId">Session ID:</label>
+                <input type="text" id="sessionId" value="TEST123" style="padding: 5px; font-size: 14px; margin: 10px 0; width: 200px;">
+            </div>
+            <div>
+                <button id="connectFirebase">Connect to Firebase</button>
+                <button id="disconnectFirebase" disabled>Disconnect</button>
+            </div>
+            <div id="firebaseStatus" class="status warning">Not connected</div>
+
+            <h3>Send Test Data:</h3>
+            <button id="sendMotion">Send Motion Event</button>
+            <button id="sendReset">Send Reset Event</button>
+
+            <h3>Received Messages:</h3>
+            <div id="messages" style="max-height: 300px; overflow-y: auto; background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                <div style="color: #666;">Waiting for messages...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, onValue, off, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: 'AIzaSyD-WdiDLQAHeHg9UYrZxJnnJadPz33_1m8',
+            authDomain: 'db-motion-1.firebaseapp.com',
+            databaseURL: 'https://db-motion-1-default-rtdb.europe-west1.firebasedatabase.app',
+            projectId: 'db-motion-1',
+            storageBucket: 'db-motion-1.appspot.com',
+            messagingSenderId: '611585824193',
+            appId: '1:611585824193:web:567fc857724dd1ffcb8b40',
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const clientId = 'test-client-' + Math.random().toString(36).substring(2, 9);
+
+        // DOM elements
+        const video = document.getElementById('video');
+        const motionIndicator = document.getElementById('motionIndicator');
+        const cameraStatus = document.getElementById('cameraStatus');
+        const detectionStatus = document.getElementById('detectionStatus');
+        const firebaseStatus = document.getElementById('firebaseStatus');
+        const messagesDiv = document.getElementById('messages');
+        const sessionIdInput = document.getElementById('sessionId');
+
+        let stream = null;
+        let detectionActive = false;
+        let firebaseConnected = false;
+
+        // Camera controls
+        document.getElementById('startCamera').addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                video.srcObject = stream;
+                cameraStatus.className = 'status success';
+                cameraStatus.textContent = '✓ Camera active';
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('stopCamera').disabled = false;
+                document.getElementById('useDiffy').disabled = false;
+                document.getElementById('useSpeedy').disabled = false;
+            } catch (error) {
+                cameraStatus.className = 'status error';
+                cameraStatus.textContent = '✗ Camera error: ' + error.message;
+            }
+        });
+
+        document.getElementById('stopCamera').addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                stream = null;
+                detectionActive = false;
+                cameraStatus.className = 'status warning';
+                cameraStatus.textContent = 'Camera stopped';
+                detectionStatus.className = 'status warning';
+                detectionStatus.textContent = 'Detection stopped';
+                document.getElementById('startCamera').disabled = false;
+                document.getElementById('stopCamera').disabled = true;
+                document.getElementById('useDiffy').disabled = true;
+                document.getElementById('useSpeedy').disabled = true;
+            }
+        });
+
+        // Simulated motion detection (basic frame difference)
+        let lastFrame = null;
+        document.getElementById('useDiffy').addEventListener('click', () => {
+            detectionActive = true;
+            detectionStatus.className = 'status success';
+            detectionStatus.textContent = '✓ DiffyJS detection active';
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 160;
+            canvas.height = 120;
+
+            const detectMotion = () => {
+                if (!detectionActive || !video.videoWidth) {
+                    requestAnimationFrame(detectMotion);
+                    return;
+                }
+
+                ctx.drawImage(video, 0, 0, 160, 120);
+                const currentFrame = ctx.getImageData(0, 0, 160, 120);
+
+                if (lastFrame) {
+                    let diff = 0;
+                    for (let i = 0; i < currentFrame.data.length; i += 4) {
+                        diff += Math.abs(currentFrame.data[i] - lastFrame.data[i]);
+                    }
+
+                    const threshold = 100000; // Adjust sensitivity
+                    if (diff > threshold) {
+                        motionIndicator.className = 'motion-indicator active';
+                        setTimeout(() => {
+                            motionIndicator.className = 'motion-indicator inactive';
+                        }, 500);
+
+                        // Send to Firebase if connected
+                        if (firebaseConnected) {
+                            sendMotionEvent(diff);
+                        }
+                    }
+                }
+
+                lastFrame = currentFrame;
+                requestAnimationFrame(detectMotion);
+            };
+
+            detectMotion();
+        });
+
+        document.getElementById('useSpeedy').addEventListener('click', () => {
+            detectionStatus.className = 'status warning';
+            detectionStatus.textContent = '⚠ Speedy Vision requires library import (simulated)';
+            alert('Speedy Vision would require loading the library. This is a simplified test.');
+        });
+
+        // Firebase controls
+        document.getElementById('connectFirebase').addEventListener('click', () => {
+            const sessionId = sessionIdInput.value.trim();
+            if (!sessionId) {
+                alert('Please enter a session ID');
+                return;
+            }
+
+            // Connect and listen for messages
+            const messagesRef = ref(db, `sprint-sessions/${sessionId}/messages`);
+            onValue(messagesRef, (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const messages = Object.values(data);
+                    displayMessages(messages);
+                }
+            });
+
+            firebaseConnected = true;
+            firebaseStatus.className = 'status success';
+            firebaseStatus.textContent = `✓ Connected to session: ${sessionId}`;
+            document.getElementById('connectFirebase').disabled = true;
+            document.getElementById('disconnectFirebase').disabled = false;
+        });
+
+        document.getElementById('disconnectFirebase').addEventListener('click', () => {
+            const sessionId = sessionIdInput.value.trim();
+            const messagesRef = ref(db, `sprint-sessions/${sessionId}/messages`);
+            off(messagesRef);
+
+            firebaseConnected = false;
+            firebaseStatus.className = 'status warning';
+            firebaseStatus.textContent = 'Disconnected';
+            document.getElementById('connectFirebase').disabled = false;
+            document.getElementById('disconnectFirebase').disabled = true;
+        });
+
+        document.getElementById('sendMotion').addEventListener('click', () => {
+            if (!firebaseConnected) {
+                alert('Please connect to Firebase first');
+                return;
+            }
+            sendMotionEvent(Math.random() * 1000);
+        });
+
+        document.getElementById('sendReset').addEventListener('click', () => {
+            if (!firebaseConnected) {
+                alert('Please connect to Firebase first');
+                return;
+            }
+            sendMessage('RESET', {});
+        });
+
+        function sendMotionEvent(intensity) {
+            sendMessage('START', { intensity, timestamp: Date.now() });
+        }
+
+        function sendMessage(type, data) {
+            const sessionId = sessionIdInput.value.trim();
+            const messagesRef = ref(db, `sprint-sessions/${sessionId}/messages`);
+            const messageRef = push(messagesRef);
+
+            set(messageRef, {
+                type,
+                timestamp: Date.now(),
+                clientId,
+                data
+            });
+        }
+
+        function displayMessages(messages) {
+            messagesDiv.innerHTML = messages
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .slice(0, 20)
+                .map(msg => {
+                    const time = new Date(msg.timestamp).toLocaleTimeString();
+                    const isFromMe = msg.clientId === clientId;
+                    return `<div style="padding: 5px; margin: 2px 0; background: ${isFromMe ? '#e3f2fd' : '#fff'}; border-left: 3px solid ${isFromMe ? '#2196f3' : '#4caf50'};">
+                        <strong>${time}</strong> - ${msg.type} ${isFromMe ? '(You)' : ''}
+                        ${msg.data ? '<br>' + JSON.stringify(msg.data) : ''}
+                    </div>`;
+                })
+                .join('');
+        }
+    </script>
+</body>
+</html>
