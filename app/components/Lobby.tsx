@@ -17,7 +17,7 @@ export function Lobby({ onStartSession }: LobbyProps) {
   const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>([]);
   const [isJoined, setIsJoined] = useState(false);
   const [cameras, setCameras] = useState<CameraInfo[]>([]);
-  const firebaseService = getFirebaseService();
+  const [firebaseService] = useState(() => typeof window !== 'undefined' ? getFirebaseService() : null);
 
   // Get available cameras
   useEffect(() => {
@@ -50,7 +50,7 @@ export function Lobby({ onStartSession }: LobbyProps) {
 
   // Join session
   const handleJoinSession = () => {
-    if (!sessionId.trim()) return;
+    if (!sessionId.trim() || !firebaseService) return;
 
     firebaseService.joinSession(sessionId, cameras, selectedRole);
     setIsJoined(true);
@@ -63,7 +63,7 @@ export function Lobby({ onStartSession }: LobbyProps) {
 
   // Leave session
   const handleLeaveSession = () => {
-    if (!sessionId) return;
+    if (!sessionId || !firebaseService) return;
 
     firebaseService.leaveSession(sessionId);
     setIsJoined(false);
@@ -73,7 +73,7 @@ export function Lobby({ onStartSession }: LobbyProps) {
   // Change role
   const handleRoleChange = (role: DeviceRole) => {
     setSelectedRole(role);
-    if (isJoined) {
+    if (isJoined && firebaseService) {
       firebaseService.updateDeviceRole(sessionId, firebaseService.getClientId(), role);
     }
   };
@@ -186,7 +186,7 @@ export function Lobby({ onStartSession }: LobbyProps) {
                         <div>
                           <div className="font-mono text-sm">
                             {device.clientId.substring(0, 12)}
-                            {device.clientId === firebaseService.getClientId() && (
+                            {firebaseService && device.clientId === firebaseService.getClientId() && (
                               <span className="ml-2 text-xs">(You)</span>
                             )}
                           </div>

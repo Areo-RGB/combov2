@@ -26,7 +26,7 @@ export function SprintTiming({ sessionId, role, onReturnToLobby }: SprintTimingP
   });
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const firebaseService = getFirebaseService();
+  const [firebaseService] = useState(() => typeof window !== 'undefined' ? getFirebaseService() : null);
 
   // Calculate elapsed time
   useEffect(() => {
@@ -41,6 +41,8 @@ export function SprintTiming({ sessionId, role, onReturnToLobby }: SprintTimingP
 
   // Listen for messages from other devices
   useEffect(() => {
+    if (!firebaseService) return;
+
     const handleMessage = (message: SprintMessage) => {
       switch (message.type) {
         case MessageType.Start:
@@ -72,6 +74,8 @@ export function SprintTiming({ sessionId, role, onReturnToLobby }: SprintTimingP
 
   // Handle motion detection
   const handleMotionDetected = useCallback(() => {
+    if (!firebaseService) return;
+
     const now = Date.now();
 
     if (role === DeviceRole.Start && !isRunning && !timingData.startTime) {
@@ -99,11 +103,15 @@ export function SprintTiming({ sessionId, role, onReturnToLobby }: SprintTimingP
 
   const handleResetClick = () => {
     handleReset();
-    firebaseService.publishMessage(sessionId, MessageType.Reset);
+    if (firebaseService) {
+      firebaseService.publishMessage(sessionId, MessageType.Reset);
+    }
   };
 
   const handleReturnToLobby = () => {
-    firebaseService.publishMessage(sessionId, MessageType.ReturnToLobby);
+    if (firebaseService) {
+      firebaseService.publishMessage(sessionId, MessageType.ReturnToLobby);
+    }
     onReturnToLobby();
   };
 

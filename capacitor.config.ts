@@ -4,7 +4,6 @@ const config: CapacitorConfig = {
   appId: 'com.motionsignal.app',
   appName: 'Motion Signal Sprint',
   webDir: 'out',
-  bundledWebRuntime: false,
   server: {
     androidScheme: 'https',
   },

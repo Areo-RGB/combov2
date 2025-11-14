@@ -76,15 +76,18 @@ export interface SprintMessage {
 
 // Firebase Service Class
 export class FirebaseService {
-  private clientId: string;
+  private clientId: string | null = null;
   private currentSessionId: string | null = null;
 
   constructor() {
-    this.clientId = `sprint-client-${Math.random().toString(36).substring(2, 9)}`;
+    // Defer client ID generation until needed (client-side only)
   }
 
   getClientId(): string {
-    return this.clientId;
+    if (!this.clientId && typeof window !== 'undefined') {
+      this.clientId = `sprint-client-${Math.random().toString(36).substring(2, 9)}`;
+    }
+    return this.clientId || 'unknown';
   }
 
   // PRESENCE MANAGEMENT
@@ -92,10 +95,11 @@ export class FirebaseService {
     if (!db) return;
 
     this.currentSessionId = sessionId;
-    const presenceRef = ref(db, `sprint-sessions/${sessionId}/presence/${this.clientId}`);
+    const clientId = this.getClientId();
+    const presenceRef = ref(db, `sprint-sessions/${sessionId}/presence/${clientId}`);
 
     const deviceData: ConnectedDevice = {
-      clientId: this.clientId,
+      clientId,
       role,
       availableCameras: cameras,
       selectedCameraId: cameras.length > 0 ? cameras[0].deviceId : undefined,
@@ -111,7 +115,7 @@ export class FirebaseService {
     const heartbeatInterval = setInterval(() => {
       if (this.currentSessionId === sessionId) {
         set(
-          ref(db, `sprint-sessions/${sessionId}/presence/${this.clientId}/lastSeen`),
+          ref(db, `sprint-sessions/${sessionId}/presence/${this.getClientId()}/lastSeen`),
           Date.now()
         );
       } else {
@@ -155,7 +159,7 @@ export class FirebaseService {
 
   leaveSession(sessionId: string): void {
     if (!db) return;
-    const presenceRef = ref(db, `sprint-sessions/${sessionId}/presence/${this.clientId}`);
+    const presenceRef = ref(db, `sprint-sessions/${sessionId}/presence/${this.getClientId()}`);
     remove(presenceRef);
     this.currentSessionId = null;
   }
@@ -169,7 +173,7 @@ export class FirebaseService {
     const message: SprintMessage = {
       type,
       timestamp: Date.now(),
-      clientId: this.clientId,
+      clientId: this.getClientId(),
       data,
     };
 
@@ -179,12 +183,13 @@ export class FirebaseService {
   listenForMessages(sessionId: string, callback: (message: SprintMessage) => void): void {
     if (!db) return;
     const messagesRef = ref(db, `sprint-sessions/${sessionId}/messages`);
+    const currentClientId = this.getClientId();
 
     onValue(messagesRef, (snapshot) => {
       snapshot.forEach((childSnapshot) => {
         const message = childSnapshot.val() as SprintMessage;
         // Only process messages from other clients
-        if (message && message.clientId !== this.clientId) {
+        if (message && message.clientId !== currentClientId) {
           callback(message);
         }
       });
