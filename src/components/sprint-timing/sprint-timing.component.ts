@@ -10,10 +10,15 @@ import {
   Renderer2,
   OnInit,
   OnDestroy,
+  effect,
+  Injector,
+  runInInjectionContext,
 } from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
 import { HeaderComponent } from '../header/header.component';
 import { CommonModule, DOCUMENT } from '@angular/common';
+import { DetectionSettingsService } from '../../services/detection-settings.service';
+import { SettingsComponent } from '../../sprint-duels/components/settings/settings.component';
 
 type StartMode = 'manual' | 'flying';
 
@@ -27,7 +32,7 @@ type LapResult = {
   selector: 'app-sprint-timing',
   templateUrl: './sprint-timing.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DetectorComponent, HeaderComponent],
+  imports: [CommonModule, DetectorComponent, HeaderComponent, SettingsComponent],
 })
 export class SprintTimingComponent implements OnInit, OnDestroy {
   sessionId = input.required<string>();
@@ -58,12 +63,30 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
   private document: Document = inject(DOCUMENT);
   private renderer = inject(Renderer2);
   private fullscreenChangeListener!: () => void;
+  private detectionSettings = inject(DetectionSettingsService);
+  private injector = inject(Injector);
+  private effectCleanup?: () => void;
 
   ngOnInit(): void {
     this.fullscreenChangeListener = this.renderer.listen('document', 'fullscreenchange', () => {});
+    
+    // Initialize from global settings
+    this.minDetectionDelay.set(this.detectionSettings.motionCooldown());
+
+    // Sync with global settings changes
+    runInInjectionContext(this.injector, () => {
+      const syncEffect = effect(() => {
+        const globalCooldown = this.detectionSettings.motionCooldown();
+        if (globalCooldown !== this.minDetectionDelay()) {
+          this.minDetectionDelay.set(globalCooldown);
+        }
+      });
+      this.effectCleanup = () => syncEffect.destroy();
+    });
   }
 
   ngOnDestroy(): void {
+    this.effectCleanup?.();
     if (this.fullscreenChangeListener) {
       this.fullscreenChangeListener();
     }
@@ -285,7 +308,11 @@ export class SprintTimingComponent implements OnInit, OnDestroy {
 
   onMinDelayChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
-    this.minDetectionDelay.set(Number(value));
+    const newValue = Number(value);
+    this.minDetectionDelay.set(newValue);
+    // Sync back to global settings
+    this.detectionSettings.motionCooldown.set(newValue);
+    this.detectionSettings.saveSettings();
   }
 
   toggleBodypose() {

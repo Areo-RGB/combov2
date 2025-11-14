@@ -43,60 +43,30 @@
       <!-- Settings Overlay -->
       @if (showSettings()) {
         <div
-          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 max-w-sm bg-gray-800 bg-opacity-95 rounded-lg p-4 shadow-lg space-y-4 z-10 pointer-events-auto"
+          class="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 pointer-events-auto overflow-y-auto p-4"
         >
-          <h4 class="text-center font-bold text-lg">Sprint Timing Settings</h4>
-
-          <div>
-            <label for="min-delay" class="flex justify-between text-sm font-medium text-gray-300">
-              <span>Min. Detection Delay</span>
-              <span class="text-orange-400">{{ minDetectionDelay() }}ms</span>
-            </label>
-            <input
-              id="min-delay"
-              type="range"
-              min="500"
-              max="5000"
-              step="100"
-              [value]="minDetectionDelay()"
-              (input)="onMinDelayChange($event)"
-              class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-orange-500"
-            />
-          </div>
-
-          <div class="flex items-center justify-between">
-            <label for="bodypose-toggle" class="text-sm font-medium text-gray-300"
-              >Use Bodypose Detection</label
-            >
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                id="bodypose-toggle"
-                class="sr-only peer"
-                [checked]="useBodypose()"
-                (change)="toggleBodypose()"
-              />
-              <div
-                class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"
-              ></div>
-            </label>
-          </div>
-
-          @if (useBodypose()) {
-            <div class="p-3 bg-blue-900/50 rounded-lg border border-blue-500">
-              <p class="text-xs text-blue-200">
-                When enabled, the timer will start when large body movements are detected using pose landmarks
-                instead of general motion.
-              </p>
+          <div class="w-full max-w-2xl bg-gray-800 rounded-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+              <h4 class="text-xl font-bold text-orange-400">Detection Settings</h4>
+              <button
+                (click)="showSettings.set(false)"
+                class="text-gray-400 hover:text-white transition-colors"
+                aria-label="Close settings"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
-          }
-
-          <button
-            (click)="showSettings.set(false)"
-            class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition"
-          >
-            Close
-          </button>
+            <div class="p-6">
+              <app-settings></app-settings>
+            </div>
+          </div>
         </div>
       }
     </div>
@@ -206,237 +176,6 @@
       }
     </div>
   </div>
-
-  <!-- Detection Settings Card - Below Buttons -->
-  @if (detectorComponent().status() === 'ready' || detectorComponent().status() === 'detecting') {
-    <div class="px-4 pb-4">
-      <div class="w-full bg-gray-700/50 rounded-lg border border-gray-600 overflow-hidden">
-        <!-- Collapsible Header -->
-        <button
-          (click)="detectorComponent().toggleSettings()"
-          class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-600/50 transition-colors"
-        >
-          <h3 class="text-lg font-semibold text-gray-200">Detection Settings</h3>
-          <svg
-            class="w-5 h-5 text-gray-300 transition-transform duration-200"
-            [class.rotate-180]="detectorComponent().settingsExpanded()"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        <!-- Collapsible Content -->
-        @if (detectorComponent().settingsExpanded()) {
-          <div class="px-4 pb-4 space-y-6">
-            <!-- Detection Method Selector -->
-            <div>
-              <label class="block mb-2 text-sm font-medium text-gray-300">Detection Method</label>
-              <div class="flex flex-wrap gap-4">
-                <label class="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="detectionMethod"
-                    value="motion"
-                    [checked]="detectorComponent().detectionMethod() === 'motion'"
-                    (change)="detectorComponent().onDetectionMethodChange('motion')"
-                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-300">Motion Detection</span>
-                </label>
-                <label class="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    name="detectionMethod"
-                    value="pose"
-                    [checked]="detectorComponent().detectionMethod() === 'pose'"
-                    (change)="detectorComponent().onDetectionMethodChange('pose')"
-                    class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500"
-                  />
-                  <span class="ml-2 text-sm text-gray-300">Body Pose Detection</span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Pose Library Selector -->
-            @if (detectorComponent().detectionMethod() === 'pose') {
-              <div>
-                <label for="poseLibrary" class="block mb-2 text-sm font-medium text-gray-300"
-                  >Pose Detection Library</label
-                >
-                <select
-                  id="poseLibrary"
-                  [value]="detectorComponent().poseLibrary()"
-                  (change)="detectorComponent().onPoseLibraryChange($event)"
-                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
-                >
-                  <option value="mediapipe">MediaPipe</option>
-                  <option value="movenet">MoveNet (TensorFlow.js)</option>
-                </select>
-              </div>
-
-              <!-- MediaPipe Model Selector -->
-              @if (detectorComponent().poseLibrary() === 'mediapipe') {
-                <div>
-                  <label for="poseModel" class="block mb-2 text-sm font-medium text-gray-300">MediaPipe Model</label>
-                  <select
-                    id="poseModel"
-                    [value]="detectorComponent().poseModel()"
-                    (change)="detectorComponent().onPoseModelChange($event)"
-                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
-                  >
-                    <option value="lite">Lite (Fastest, least accurate)</option>
-                    <option value="full">Full (Balanced speed and accuracy)</option>
-                    <option value="heavy">Heavy (Slowest, most accurate)</option>
-                  </select>
-                </div>
-              }
-
-              <!-- MoveNet Model Selector -->
-              @if (detectorComponent().poseLibrary() === 'movenet') {
-                <div>
-                  <label for="moveNetModel" class="block mb-2 text-sm font-medium text-gray-300">MoveNet Model</label>
-                  <select
-                    id="moveNetModel"
-                    [value]="detectorComponent().moveNetModel()"
-                    (change)="detectorComponent().onMoveNetModelChange($event)"
-                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
-                  >
-                    <option value="lightning">SinglePose Lightning (Fastest)</option>
-                    <option value="thunder">SinglePose Thunder (Most accurate)</option>
-                    <option value="multipose">MultiPose Lightning (Multiple people)</option>
-                  </select>
-                </div>
-              }
-            }
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Sensitivity Slider -->
-              <div class="flex flex-col justify-center">
-                <label for="sensitivity" class="block mb-2 text-sm font-medium text-gray-300"
-                  >Sensitivity:
-                  <span class="font-bold text-cyan-300">{{ detectorComponent().sensitivity() }}</span></label
-                >
-                <input
-                  id="sensitivity"
-                  type="range"
-                  min="1"
-                  max="10"
-                  [value]="detectorComponent().sensitivity()"
-                  (input)="detectorComponent().onSensitivityChange($event)"
-                  class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                />
-              </div>
-              <!-- Detection Zone Controls -->
-              <div class="flex flex-col justify-center gap-4">
-                <div>
-                  <label for="zoneWidth" class="block mb-2 text-sm font-medium text-gray-300">
-                    Zone Width:
-                    <span class="font-bold text-cyan-300">
-                      @if (detectorComponent().useFullScreenDetection()) {
-                        Full Screen
-                      } @else if (detectorComponent().zoneWidthPercent() > 0) {
-                        {{ detectorComponent().zoneWidthPercent() }}%
-                      } @else {
-                        Off
-                      }
-                    </span>
-                  </label>
-                  <input
-                    id="zoneWidth"
-                    type="range"
-                    min="0"
-                    max="100"
-                    [value]="detectorComponent().zoneWidthPercent()"
-                    (input)="detectorComponent().onZoneWidthChange($event)"
-                    [disabled]="detectorComponent().useFullScreenDetection()"
-                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <label for="zonePosition" class="block mb-2 text-sm font-medium text-gray-300">Zone Position</label>
-                  <input
-                    id="zonePosition"
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
-                    [value]="detectorComponent().zonePositionPercent()"
-                    (input)="detectorComponent().onZonePositionChange($event)"
-                    [disabled]="detectorComponent().useFullScreenDetection()"
-                    class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div class="flex items-center gap-3">
-                  <label for="fullscreen-toggle" class="text-sm font-medium text-gray-300">Use Full Screen</label>
-                  <label class="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      id="fullscreen-toggle"
-                      class="sr-only peer"
-                      [checked]="detectorComponent().useFullScreenDetection()"
-                      (change)="detectorComponent().onFullScreenToggleChange($event)"
-                    />
-                    <div
-                      class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"
-                    ></div>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Camera Selection Dropdown -->
-              @if (detectorComponent().availableCameras().length > 1) {
-                <div class="flex flex-col justify-center md:col-span-2">
-                  <label for="camera" class="block mb-2 text-sm font-medium text-gray-300">Camera</label>
-                  <select
-                    id="camera"
-                    [value]="detectorComponent().selectedCameraId()"
-                    (change)="detectorComponent().onCameraChange($event)"
-                    class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
-                  >
-                    @for (camera of detectorComponent().availableCameras(); track camera.deviceId) {
-                      <option [value]="camera.deviceId">{{ camera.label || 'Camera ' + ($index + 1) }}</option>
-                    }
-                  </select>
-                </div>
-              }
-
-              <!-- Cooldown Input -->
-              <div class="flex flex-col justify-center">
-                <label for="cooldown" class="block mb-2 text-sm font-medium text-gray-300">Minimum Delay (ms)</label>
-                <input
-                  id="cooldown"
-                  type="number"
-                  min="0"
-                  step="50"
-                  [value]="detectorComponent().motionCooldown()"
-                  (input)="detectorComponent().onCooldownChange($event)"
-                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
-                />
-              </div>
-              <!-- Signal Cadence Input -->
-              <div class="flex flex-col justify-center">
-                <label for="signalCadence" class="block mb-2 text-sm font-medium text-gray-300"
-                  >Signal every Nth detection</label
-                >
-                <input
-                  id="signalCadence"
-                  type="number"
-                  min="1"
-                  step="1"
-                  [value]="detectorComponent().signalCadence()"
-                  (input)="detectorComponent().onSignalCadenceChange($event)"
-                  class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5"
-                />
-              </div>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  }
 
   <!-- Controls & Results (bottom 40%) -->
   <div class="bg-gray-800 p-4 flex flex-col flex-grow overflow-hidden">

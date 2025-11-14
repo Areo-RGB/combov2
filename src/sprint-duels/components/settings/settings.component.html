@@ -158,6 +158,34 @@
           </div>
         </div>
 
+        <!-- Camera Selection -->
+        @if (availableCameras().length > 0) {
+          <div class="bg-gray-800/50 p-4 rounded-md space-y-3">
+            <label class="block font-medium text-white">Camera Selection</label>
+            @if (isLoadingCameras()) {
+              <div class="flex items-center gap-2 text-gray-400">
+                <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-sm">Loading cameras...</span>
+              </div>
+            } @else {
+              <select
+                (change)="onCameraChange($event)"
+                class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+              >
+                @for (camera of availableCameras(); track camera.deviceId) {
+                  <option
+                    [value]="camera.deviceId"
+                    [selected]="camera.deviceId === detectionSettings.selectedCameraId()"
+                  >
+                    {{ getCameraLabel(camera) }}
+                  </option>
+                }
+              </select>
+              <p class="text-xs text-gray-400">Select the camera to use for motion and pose detection</p>
+            }
+          </div>
+        }
+
         <!-- Pose Detection Settings (only show when pose is selected) -->
         @if (detectionSettings.detectionMethod() === 'pose') {
           <div class="bg-gray-800/50 p-4 rounded-md space-y-3">
@@ -356,6 +384,62 @@
               />
             </div>
           }
+        </div>
+
+        <!-- Video Resolution -->
+        <div class="bg-gray-800/50 p-4 rounded-md space-y-2">
+          <label class="block font-medium text-white">Video Resolution</label>
+          <select
+            (change)="onVideoResolutionChange($event)"
+            class="w-full bg-gray-700 border border-gray-600 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none text-white"
+          >
+            <option
+              value="low"
+              [selected]="detectionSettings.videoResolution() === 'low'"
+            >
+              Low (320x240)
+            </option>
+            <option
+              value="medium"
+              [selected]="detectionSettings.videoResolution() === 'medium'"
+            >
+              Medium (640x480)
+            </option>
+            <option
+              value="high"
+              [selected]="detectionSettings.videoResolution() === 'high'"
+            >
+              High (1280x720)
+            </option>
+            <option
+              value="ultra"
+              [selected]="detectionSettings.videoResolution() === 'ultra'"
+            >
+              Ultra (1920x1080)
+            </option>
+          </select>
+          <p class="text-xs text-gray-400">Video input resolution for pose detection</p>
+        </div>
+
+        <!-- Target FPS -->
+        <div class="bg-gray-800/50 p-4 rounded-md space-y-2">
+          <label class="block font-medium text-white">
+            Target FPS: <span class="text-blue-300">{{ detectionSettings.targetFps() }}</span>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="60"
+            step="1"
+            [value]="detectionSettings.targetFps()"
+            (input)="onTargetFpsChange($event)"
+            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
+          <div class="flex justify-between text-xs text-gray-400">
+            <span>1 FPS</span>
+            <span>60 FPS</span>
+          </div>
+          <p class="text-xs text-gray-400">Target frames per second for pose detection processing</p>
         </div>
 
         <!-- Reset Detection Settings -->

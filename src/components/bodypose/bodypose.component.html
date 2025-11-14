@@ -234,6 +234,44 @@
       </div>
     }
 
+    <!-- Recording Controls -->
+    @if (analysisMode() === 'live' && isCameraOn() && !isLoading() && !errorMessage()) {
+      <div class="absolute bottom-2 right-2 flex flex-col gap-2 z-30">
+        <!-- Recording Status -->
+        @if (isRecording()) {
+          <div class="bg-red-600/90 text-white font-mono text-sm rounded-md px-3 py-2 flex items-center gap-2 animate-pulse border border-red-500/50">
+            <div class="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+            REC {{ (currentRecording()?.duration || 0).toFixed(1) }}s
+          </div>
+        }
+
+        <!-- Recording Controls -->
+        <div class="flex gap-2">
+          @if (!isRecording()) {
+            <button
+              (click)="startRecording()"
+              class="p-2 bg-red-600/90 hover:bg-red-500 text-white rounded-md transition-colors border border-red-500/50"
+              title="Start Recording Stickman"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8"/>
+              </svg>
+            </button>
+          } @else {
+            <button
+              (click)="stopRecording()"
+              class="p-2 bg-gray-700/90 hover:bg-gray-600 text-white rounded-md transition-colors border border-gray-500/50"
+              title="Stop Recording"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="8" y="8" width="8" height="8"/>
+              </svg>
+            </button>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Exercise Feedback Overlay -->
     <div
       class="absolute inset-0 bg-black/80 p-6 z-20 flex flex-col justify-center items-start text-white transition-opacity duration-300"
@@ -325,6 +363,25 @@
     }
   </div>
 
+  <!-- Show Stickman Only Toggle -->
+  <div class="mb-6 flex items-center justify-between bg-gray-700/50 rounded-lg border border-gray-600 p-4">
+    <div>
+      <span class="font-medium text-white">Show Stickman Only</span>
+      <p class="text-xs text-gray-400">Hide video feed, show only pose skeleton</p>
+    </div>
+    <label class="relative inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+        class="sr-only peer"
+        [checked]="showStickmanOnly()"
+        (change)="onShowStickmanOnlyChange($event)"
+      />
+      <div
+        class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"
+      ></div>
+    </label>
+  </div>
+
   <!-- Controls Section -->
   <div class="w-full flex flex-col gap-6">
     <!-- Rep Counter & Exercise Selection -->
@@ -400,7 +457,335 @@
         >
           {{ isPoseTimerRunning() ? 'Stop Timer' : 'Start Timer' }}
         </button>
+
+        <!-- Pose Match Timer Duration -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-300">
+            Timer Duration: <span class="font-bold text-purple-300">{{ poseMatchDuration() }}s</span>
+          </label>
+          <input
+            type="range"
+            min="5"
+            max="120"
+            step="5"
+            [value]="poseMatchDuration()"
+            (input)="onPoseMatchDurationChange($event)"
+            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-purple-500"
+          />
+          <div class="flex justify-between text-xs text-gray-400">
+            <span>5s</span>
+            <span>120s</span>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- Stickman Recordings -->
+    <div class="bg-gray-700/50 rounded-lg border border-gray-600 p-4">
+      <h3 class="text-lg font-bold text-pink-400 border-b border-pink-400/20 pb-2 mb-4">Stickman Recordings</h3>
+
+      @if (savedRecordings().length === 0) {
+        <div class="text-center text-gray-400 py-8">
+          <div class="w-16 h-16 mx-auto mb-4 text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25V9.528c0-.528.21-1.026.586-1.398l2.81-2.811c.387-.387.884-.586 1.398-.586H4.5" />
+            </svg>
+          </div>
+          <p class="text-sm">No recordings yet</p>
+          <p class="text-xs mt-2">Start recording to capture stickman movements</p>
+        </div>
+      } @else {
+        <div class="space-y-4 max-h-96 overflow-y-auto">
+          @for (recording of savedRecordings(); track recording.id) {
+            <div
+              id="recording-card-{{ recording.id }}"
+              class="bg-gray-800/50 rounded-lg border border-gray-600 hover:border-pink-500/50 transition-colors relative"
+              [class.in-fullscreen]="fullscreenRecordingId() === recording.id"
+            >
+              <!-- Recording Header -->
+              <div class="flex items-center justify-between p-3 border-b border-gray-700">
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-sm font-medium text-white truncate">{{ recording.name }}</h4>
+                  <div class="flex items-center gap-3 text-xs text-gray-400">
+                    <span>{{ recording.duration.toFixed(1) }}s</span>
+                    <span>{{ recording.frameCount }} frames</span>
+                    <span>{{ recording.targetFps }} FPS</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button
+                    (click)="toggleRecordingFullscreen(recording.id)"
+                    class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-600/50 rounded transition-colors"
+                    title="Toggle Fullscreen"
+                  >
+                    @if (fullscreenRecordingId() === recording.id) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                      </svg>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v-4.5m0 4.5L15 9m5.25 11.25h-4.5m4.5 0v4.5m0-4.5L15 15" />
+                      </svg>
+                    }
+                  </button>
+                  <button
+                    (click)="deleteRecording(recording.id)"
+                    class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                    title="Delete Recording"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inline Playback Canvas -->
+              <div class="p-3">
+                <div
+                  class="relative bg-black rounded-lg aspect-video mb-3 overflow-hidden"
+                  [class.h-screen]="fullscreenRecordingId() === recording.id"
+                >
+                  <canvas
+                    id="recording-canvas-{{ recording.id }}"
+                    class="absolute top-0 left-0 w-full h-full"
+                    [class.h-full]="fullscreenRecordingId() === recording.id"
+                    width="320"
+                    height="180"
+                  ></canvas>
+
+                  <!-- Initial frame indicator -->
+                  @if (!getRecordingPlaybackState(recording.id)) {
+                    <div class="absolute inset-0 flex items-center justify-center text-gray-500 text-sm">
+                      Click play to start
+                    </div>
+                  }
+
+                  <!-- Fullscreen Video Controls Overlay -->
+                  @if (fullscreenRecordingId() === recording.id) {
+                    <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+                      <!-- Video Controls (Fullscreen Mode) -->
+                      <div class="flex flex-col gap-3">
+                        <!-- Fullscreen Seeker Bar -->
+                        <div class="flex items-center gap-3 text-white text-sm font-mono">
+                          <span>{{ (getRecordingPlaybackState(recording.id)?.currentFrame || 0) }}</span>
+                          <input
+                            type="range"
+                            class="flex-1 h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-pink-400"
+                            [value]="getRecordingPlaybackState(recording.id)?.currentFrame || 0"
+                            [max]="recording.frameCount - 1"
+                            (input)="seekToRecordingFrame(recording, $any($event.target).valueAsNumber)"
+                          />
+                          <span>{{ recording.frameCount - 1 }}</span>
+                        </div>
+
+                        <!-- Fullscreen Control Buttons -->
+                        <div class="flex justify-center items-center gap-4">
+                          <!-- Play/Pause/Stop Controls -->
+                          @if (!getRecordingPlaybackState(recording.id) || getRecordingPlaybackState(recording.id)?.state === 'stopped') {
+                            <button
+                              (click)="startRecordingPlayback(recording)"
+                              class="p-3 bg-pink-600 hover:bg-pink-500 text-white rounded-full transition-colors"
+                              title="Play Recording"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 6v12l10-6z"/>
+                              </svg>
+                            </button>
+                          } @else if (getRecordingPlaybackState(recording.id)?.state === 'playing') {
+                            <button
+                              (click)="pauseRecordingPlayback(recording)"
+                              class="p-3 bg-yellow-600 hover:bg-yellow-500 text-white rounded-full transition-colors"
+                              title="Pause Playback"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 6h3v12H8zm5 0h3v12h-3z"/>
+                              </svg>
+                            </button>
+                            <button
+                              (click)="stopRecordingPlayback(recording)"
+                              class="p-3 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition-colors"
+                              title="Stop Playback"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                <rect x="8" y="8" width="8" height="8"/>
+                              </svg>
+                            </button>
+                          } @else if (getRecordingPlaybackState(recording.id)?.state === 'paused') {
+                            <button
+                              (click)="resumeRecordingPlayback(recording)"
+                              class="p-3 bg-green-600 hover:bg-green-500 text-white rounded-full transition-colors"
+                              title="Resume Playback"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 6v12l10-6z"/>
+                              </svg>
+                            </button>
+                            <button
+                              (click)="stopRecordingPlayback(recording)"
+                              class="p-3 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition-colors"
+                              title="Stop Playback"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                <rect x="8" y="8" width="8" height="8"/>
+                              </svg>
+                            </button>
+                          }
+
+                          <!-- Frame-by-frame controls (fullscreen) -->
+                          @if (getRecordingPlaybackState(recording.id)) {
+                            <div class="flex items-center gap-2 border-l border-gray-600 pl-4">
+                              <button
+                                (click)="stepBackwardFrame(recording)"
+                                [disabled]="(getRecordingPlaybackState(recording.id)?.currentFrame || 0) === 0"
+                                class="p-3 text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors rounded-full"
+                                title="Previous Frame"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                                </svg>
+                              </button>
+                              <button
+                                (click)="stepForwardFrame(recording)"
+                                [disabled]="(getRecordingPlaybackState(recording.id)?.currentFrame || 0) >= recording.frameCount - 1"
+                                class="p-3 text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors rounded-full"
+                                title="Next Frame"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                                </svg>
+                              </button>
+                            </div>
+                          }
+
+                          <!-- Exit Fullscreen -->
+                          <button
+                            (click)="toggleRecordingFullscreen(recording.id)"
+                            class="p-3 bg-gray-600 hover:bg-gray-500 text-white rounded-full transition-colors"
+                            title="Exit Fullscreen"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        <!-- Recording Info (fullscreen) -->
+                        <div class="text-center text-white">
+                          <h3 class="text-lg font-semibold">{{ recording.name }}</h3>
+                          <div class="flex items-center justify-center gap-4 text-sm text-gray-300 mt-2">
+                            <span>{{ recording.duration.toFixed(1) }}s</span>
+                            <span>{{ recording.frameCount }} frames</span>
+                            <span>{{ recording.targetFps }} FPS</span>
+                            <span>Frame {{ (getRecordingPlaybackState(recording.id)?.currentFrame || 0) + 1 }} / {{ recording.frameCount }}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- Playback Controls -->
+                <div class="space-y-2">
+                  <!-- Frame Seeker -->
+                  @if (getRecordingPlaybackState(recording.id)) {
+                    <div class="flex items-center gap-2 text-white text-xs font-mono">
+                      <span>{{ getRecordingPlaybackState(recording.id)?.currentFrame || 0 }}</span>
+                      <input
+                        type="range"
+                        class="flex-1 h-1.5 bg-gray-600 rounded-lg appearance-none cursor-pointer accent-pink-400"
+                        [value]="getRecordingPlaybackState(recording.id)?.currentFrame || 0"
+                        [max]="recording.frameCount - 1"
+                        (input)="seekToRecordingFrame(recording, $any($event.target).valueAsNumber)"
+                      />
+                      <span>{{ recording.frameCount - 1 }}</span>
+                    </div>
+                  }
+
+                  <!-- Control Buttons -->
+                  <div class="flex justify-center items-center gap-2">
+                    @if (!getRecordingPlaybackState(recording.id) || getRecordingPlaybackState(recording.id)?.state === 'stopped') {
+                      <button
+                        (click)="startRecordingPlayback(recording)"
+                        class="p-2 bg-pink-600 hover:bg-pink-500 text-white rounded transition-colors"
+                        title="Play Recording"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M7 6v12l10-6z"/>
+                        </svg>
+                      </button>
+                    } @else if (getRecordingPlaybackState(recording.id)?.state === 'playing') {
+                      <button
+                        (click)="pauseRecordingPlayback(recording)"
+                        class="p-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded transition-colors"
+                        title="Pause Playback"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 6h3v12H8zm5 0h3v12h-3z"/>
+                        </svg>
+                      </button>
+                      <button
+                        (click)="stopRecordingPlayback(recording)"
+                        class="p-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
+                        title="Stop Playback"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <rect x="8" y="8" width="8" height="8"/>
+                        </svg>
+                      </button>
+                    } @else if (getRecordingPlaybackState(recording.id)?.state === 'paused') {
+                      <button
+                        (click)="resumeRecordingPlayback(recording)"
+                        class="p-2 bg-green-600 hover:bg-green-500 text-white rounded transition-colors"
+                        title="Resume Playback"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M7 6v12l10-6z"/>
+                        </svg>
+                      </button>
+                      <button
+                        (click)="stopRecordingPlayback(recording)"
+                        class="p-2 bg-gray-600 hover:bg-gray-500 text-white rounded transition-colors"
+                        title="Stop Playback"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          <rect x="8" y="8" width="8" height="8"/>
+                        </svg>
+                      </button>
+                    }
+
+                    <!-- Frame-by-frame controls -->
+                    @if (getRecordingPlaybackState(recording.id)) {
+                      <div class="flex items-center gap-1 border-l border-gray-600 pl-2">
+                        <button
+                          (click)="stepBackwardFrame(recording)"
+                          [disabled]="(getRecordingPlaybackState(recording.id)?.currentFrame || 0) === 0"
+                          class="p-1.5 text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+                          title="Previous Frame"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                          </svg>
+                        </button>
+                        <button
+                          (click)="stepForwardFrame(recording)"
+                          [disabled]="(getRecordingPlaybackState(recording.id)?.currentFrame || 0) >= recording.frameCount - 1"
+                          class="p-1.5 text-gray-300 hover:text-white disabled:text-gray-600 disabled:cursor-not-allowed transition-colors"
+                          title="Next Frame"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
 
     <!-- Configuration -->
@@ -425,6 +810,7 @@
         <div class="p-4 border-t border-gray-700/50 grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- AI Model Configuration -->
           <div class="flex flex-col gap-4">
+            <h4 class="text-sm font-semibold text-gray-200 uppercase tracking-wider">AI Model Configuration</h4>
             <div>
               <label for="model-select" class="text-sm font-medium text-gray-300 mb-2 block">Base Model</label>
               <select
@@ -456,6 +842,7 @@
 
           <!-- Camera & Performance -->
           <div class="flex flex-col gap-4">
+            <h4 class="text-sm font-semibold text-gray-200 uppercase tracking-wider">Camera & Performance</h4>
             @if (analysisMode() === 'live' && availableCameras().length > 0) {
               <div class="flex items-center justify-between">
                 <span class="text-sm font-medium text-gray-300">Camera Power</span>
@@ -468,20 +855,24 @@
               </div>
             }
 
-            @if (analysisMode() === 'live' && isCameraOn() && availableCameras().length > 1) {
+            @if (analysisMode() === 'live' && availableCameras().length > 1) {
               <div>
                 <label for="camera-select" class="text-sm font-medium text-gray-300 mb-2 block">Select Camera</label>
                 <select
                   id="camera-select"
                   (change)="onCameraChange($event)"
                   class="w-full bg-gray-800 border border-gray-600 rounded-md p-2 focus:ring-2 focus:ring-pink-500 focus:outline-none text-white"
+                  [disabled]="!isCameraOn()"
                 >
                   @for (camera of availableCameras(); track camera.deviceId) {
                     <option [value]="camera.deviceId" [selected]="camera.deviceId === selectedCameraId()">
-                      {{ camera.label || 'Camera ' + ($index + 1) }}
+                      {{ getCameraLabel(camera) }}
                     </option>
                   }
                 </select>
+                @if (!isCameraOn()) {
+                  <p class="text-xs text-gray-500 mt-1">Turn camera on to switch cameras</p>
+                }
               </div>
             }
 
@@ -515,39 +906,12 @@
                 class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-pink-400"
               />
             </div>
-
-            <div>
-              <label for="timer-slider" class="text-sm font-medium text-gray-300 mb-2 block">
-                Pose Match Timer (s): <span class="font-bold text-white">{{ poseMatchDuration() }}</span>
-              </label>
-              <input
-                id="timer-slider"
-                type="range"
-                min="10"
-                max="120"
-                [value]="poseMatchDuration()"
-                (input)="onPoseMatchDurationChange($event)"
-                class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-400"
-              />
-            </div>
-
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium text-gray-300">Show Stickman Only</span>
-              <label class="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  class="sr-only peer"
-                  [checked]="showStickmanOnly()"
-                  (change)="onShowStickmanOnlyChange($event)"
-                />
-                <div
-                  class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-pink-600 transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full after:border-gray-300"
-                ></div>
-              </label>
-            </div>
           </div>
         </div>
       }
     </div>
   </div>
 </div>
+
+<!-- Toast notifications -->
+<app-toast></app-toast>

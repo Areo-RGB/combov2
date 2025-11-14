@@ -23,6 +23,12 @@ export interface DetectionSettings {
 
   // Camera settings
   selectedCameraId: string;
+
+  // Video and performance settings
+  targetFps: number; // Target frames per second (1-60)
+  videoResolution: 'low' | 'medium' | 'high' | 'ultra'; // Video resolution
+  showStickmanOnly: boolean; // Show only stickman overlay
+  poseMatchDuration: number; // Pose match timer duration in seconds
 }
 
 const DEFAULT_SETTINGS: DetectionSettings = {
@@ -39,6 +45,10 @@ const DEFAULT_SETTINGS: DetectionSettings = {
   zonePositionPercent: 50,
   useFullScreenDetection: false,
   selectedCameraId: '',
+  targetFps: 60,
+  videoResolution: 'high',
+  showStickmanOnly: false,
+  poseMatchDuration: 30,
 };
 
 @Injectable({
@@ -61,6 +71,10 @@ export class DetectionSettingsService {
   zonePositionPercent = signal<number>(DEFAULT_SETTINGS.zonePositionPercent);
   useFullScreenDetection = signal<boolean>(DEFAULT_SETTINGS.useFullScreenDetection);
   selectedCameraId = signal<string>(DEFAULT_SETTINGS.selectedCameraId);
+  targetFps = signal<number>(DEFAULT_SETTINGS.targetFps);
+  videoResolution = signal<'low' | 'medium' | 'high' | 'ultra'>(DEFAULT_SETTINGS.videoResolution);
+  showStickmanOnly = signal<boolean>(DEFAULT_SETTINGS.showStickmanOnly);
+  poseMatchDuration = signal<number>(DEFAULT_SETTINGS.poseMatchDuration);
 
   constructor() {
     this.loadSettings();
@@ -100,6 +114,10 @@ export class DetectionSettingsService {
         zonePositionPercent: this.zonePositionPercent(),
         useFullScreenDetection: this.useFullScreenDetection(),
         selectedCameraId: this.selectedCameraId(),
+        targetFps: this.targetFps(),
+        videoResolution: this.videoResolution(),
+        showStickmanOnly: this.showStickmanOnly(),
+        poseMatchDuration: this.poseMatchDuration(),
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(settings));
     } catch (error) {
@@ -124,6 +142,10 @@ export class DetectionSettingsService {
     this.zonePositionPercent.set(settings.zonePositionPercent);
     this.useFullScreenDetection.set(settings.useFullScreenDetection);
     this.selectedCameraId.set(settings.selectedCameraId);
+    this.targetFps.set(settings.targetFps ?? DEFAULT_SETTINGS.targetFps);
+    this.videoResolution.set(settings.videoResolution ?? DEFAULT_SETTINGS.videoResolution);
+    this.showStickmanOnly.set(settings.showStickmanOnly ?? DEFAULT_SETTINGS.showStickmanOnly);
+    this.poseMatchDuration.set(settings.poseMatchDuration ?? DEFAULT_SETTINGS.poseMatchDuration);
   }
 
   /**
@@ -152,6 +174,10 @@ export class DetectionSettingsService {
       zonePositionPercent: this.zonePositionPercent(),
       useFullScreenDetection: this.useFullScreenDetection(),
       selectedCameraId: this.selectedCameraId(),
+      targetFps: this.targetFps(),
+      videoResolution: this.videoResolution(),
+      showStickmanOnly: this.showStickmanOnly(),
+      poseMatchDuration: this.poseMatchDuration(),
     };
   }
 }

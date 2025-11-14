@@ -7,6 +7,9 @@ import {
   OnInit,
   OnDestroy,
   inject,
+  effect,
+  Injector,
+  runInInjectionContext,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -16,6 +19,7 @@ import {
   ConnectedDevice,
   CameraInfo,
 } from '../../services/sprint-timing.service';
+import { DetectionSettingsService } from '../../services/detection-settings.service';
 
 export interface MultiDeviceConfig {
   sessionId: string;
@@ -38,6 +42,9 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
   startSession = output<MultiDeviceConfig>();
 
   private sprintService = inject(SprintTimingService);
+  private detectionSettings = inject(DetectionSettingsService);
+  private injector = inject(Injector);
+  private effectCleanup?: () => void;
 
   sessionId = signal('');
   isHost = signal(false);
@@ -71,10 +78,30 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
       this.myRole.set(DeviceRole.Start); // Host is always Start
     }
 
+    // Initialize from global settings
+    this.minDetectionDelay.set(this.detectionSettings.motionCooldown());
+
+    // Sync with global settings changes (only for host)
+    runInInjectionContext(this.injector, () => {
+      const syncEffect = effect(() => {
+        // Only sync if host
+        if (!this.isHost()) return;
+        
+        const globalCooldown = this.detectionSettings.motionCooldown();
+        if (globalCooldown !== this.minDetectionDelay()) {
+          this.minDetectionDelay.set(globalCooldown);
+          // Broadcast to other devices
+          this.broadcastSetupState();
+        }
+      });
+      this.effectCleanup = () => syncEffect.destroy();
+    });
+
     this.initializeCamera();
   }
 
   ngOnDestroy(): void {
+    this.effectCleanup?.();
     const sid = this.sessionId();
     if (sid) {
       this.sprintService.cleanupSession(sid);
@@ -158,6 +185,29 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
   regenerateSessionId(): void {
     if (this.isHost()) {
       this.sessionId.set(this.generateSessionId());
+      // Rejoin with new session ID
+      const sid = this.sessionId();
+      if (sid) {
+        this.sprintService.cleanupSession(sid);
+        this.initializeCamera();
+      }
+    }
+  }
+
+  onSessionIdChange(event: Event): void {
+    if (this.isHost()) return; // Host can't change session ID manually
+    
+    const newSessionId = (event.target as HTMLInputElement).value.trim().toUpperCase();
+    if (newSessionId.length >= 6) {
+      // Cleanup old session
+      const oldSid = this.sessionId();
+      if (oldSid) {
+        this.sprintService.cleanupSession(oldSid);
+      }
+      
+      // Set new session ID and rejoin
+      this.sessionId.set(newSessionId);
+      this.initializeCamera();
     }
   }
 
@@ -173,7 +223,11 @@ export class SprintMultiSetupComponent implements OnInit, OnDestroy {
     if (!this.isHost()) return;
 
     const value = (event.target as HTMLInputElement).value;
-    this.minDetectionDelay.set(Number(value));
+    const newValue = Number(value);
+    this.minDetectionDelay.set(newValue);
+    // Sync back to global settings
+    this.detectionSettings.motionCooldown.set(newValue);
+    this.detectionSettings.saveSettings();
     this.broadcastSetupState();
   }
 

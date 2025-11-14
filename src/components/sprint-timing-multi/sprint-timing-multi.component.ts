@@ -10,6 +10,9 @@ import {
   Renderer2,
   OnInit,
   OnDestroy,
+  effect,
+  Injector,
+  runInInjectionContext,
 } from '@angular/core';
 import { DetectorComponent } from '../detector/detector.component';
 import { HeaderComponent } from '../header/header.component';
@@ -20,6 +23,8 @@ import {
   MessageType,
   LapData,
 } from '../../services/sprint-timing.service';
+import { DetectionSettingsService } from '../../services/detection-settings.service';
+import { SettingsComponent } from '../../sprint-duels/components/settings/settings.component';
 
 type StartMode = 'manual' | 'flying';
 
@@ -35,7 +40,7 @@ type LapResult = {
   selector: 'app-sprint-timing-multi',
   templateUrl: './sprint-timing-multi.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DetectorComponent, HeaderComponent],
+  imports: [CommonModule, DetectorComponent, HeaderComponent, SettingsComponent],
 })
 export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   sessionId = input.required<string>();
@@ -49,6 +54,9 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   private sprintService = inject(SprintTimingService);
   private document: Document = inject(DOCUMENT);
   private renderer = inject(Renderer2);
+  private detectionSettings = inject(DetectionSettingsService);
+  private injector = inject(Injector);
+  private effectCleanup?: () => void;
 
   // Timing state
   isTiming = signal(false);
@@ -74,7 +82,22 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.fullscreenChangeListener = this.renderer.listen('document', 'fullscreenchange', () => {});
-    this.minDetectionDelay.set(this.minDetectionDelayInput());
+    // Use input value if provided, otherwise use global setting
+    const inputValue = this.minDetectionDelayInput();
+    this.minDetectionDelay.set(inputValue > 0 ? inputValue : this.detectionSettings.motionCooldown());
+
+    // Sync with global settings changes (only if not in multi-device mode or if single device)
+    if (this.isSingleDevice()) {
+      runInInjectionContext(this.injector, () => {
+        const syncEffect = effect(() => {
+          const globalCooldown = this.detectionSettings.motionCooldown();
+          if (globalCooldown !== this.minDetectionDelay()) {
+            this.minDetectionDelay.set(globalCooldown);
+          }
+        });
+        this.effectCleanup = () => syncEffect.destroy();
+      });
+    }
 
     // Setup multi-device messaging if not single device mode
     if (!this.isSingleDevice()) {
@@ -85,6 +108,7 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.effectCleanup?.();
     if (this.fullscreenChangeListener) {
       this.fullscreenChangeListener();
     }
@@ -410,7 +434,13 @@ export class SprintTimingMultiComponent implements OnInit, OnDestroy {
 
   onMinDelayChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    this.minDetectionDelay.set(Number(value));
+    const newValue = Number(value);
+    this.minDetectionDelay.set(newValue);
+    // Sync back to global settings (only for single device mode)
+    if (this.isSingleDevice()) {
+      this.detectionSettings.motionCooldown.set(newValue);
+      this.detectionSettings.saveSettings();
+    }
   }
 
   canStart(): boolean {

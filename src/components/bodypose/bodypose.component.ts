@@ -8,10 +8,18 @@ import {
   computed,
   output,
   OnDestroy,
+  inject,
+  effect,
+  Injector,
+  runInInjectionContext,
 } from '@angular/core';
 import * as tf from '@tensorflow/tfjs';
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import type { Pose, Keypoint } from '@tensorflow-models/pose-detection';
+import { DetectionSettingsService } from '../../services/detection-settings.service';
+import { TfjsModelLoaderService } from '../../services/tfjs-model-loader.service';
+import { ToastService } from '../../sprint-duels/services/toast.service';
+import { ToastComponent } from '../../sprint-duels/components/toast/toast.component';
 
 type SupportedModel = 'MoveNet' | 'BlazePose';
 type MovenetModelType = 'SINGLEPOSE_LIGHTNING' | 'SINGLEPOSE_THUNDER';
@@ -39,10 +47,69 @@ interface FeedbackText {
   legs?: string;
 }
 
+interface RecordedFrame {
+  timestamp: number;
+  keypoints: Keypoint[];
+  confidence: number;
+}
+
+interface StickmanRecording {
+  id: string;
+  name: string;
+  duration: number;
+  frameCount: number;
+  frames: RecordedFrame[];
+  recordedAt: Date;
+  targetFps: number;
+}
+
+interface RecordingPlaybackState {
+  recordingId: string;
+  state: 'stopped' | 'playing' | 'paused';
+  currentFrame: number;
+  playbackStartTime: number;
+  playbackPausedAt: number;
+}
+
+type PlaybackState = 'stopped' | 'playing' | 'paused';
+
 @Component({
   selector: 'app-bodypose',
   templateUrl: './bodypose.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ToastComponent],
+  standalone: true,
+  styles: [
+    `
+      .in-fullscreen {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 9999 !important;
+        background: black !important;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .in-fullscreen .p-3 {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .in-fullscreen .aspect-video {
+        flex: 1;
+      }
+
+      /* Hide the original controls when in fullscreen */
+      .in-fullscreen .space-y-2 {
+        display: none;
+      }
+    `,
+  ],
 })
 export class BodyposeComponent implements AfterViewInit, OnDestroy {
   @ViewChild('videoEl') videoEl!: ElementRef<HTMLVideoElement>;
@@ -58,21 +125,28 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   availableCameras = signal<MediaDeviceInfo[]>([]);
   selectedCameraId = signal<string>('');
 
+  private detectionSettings = inject(DetectionSettingsService);
+  private injector = inject(Injector);
+  private tfjsModelLoader = inject(TfjsModelLoaderService);
+  private toastService = inject(ToastService);
+  private effectCleanup?: () => void;
+
   selectedModel = signal<SupportedModel>('BlazePose');
   selectedVariant = signal<ModelVariant>('lite');
 
   currentFps = signal<number>(0);
-  targetFps = signal<number>(60);
 
-  videoResolution = signal<'low' | 'medium' | 'high' | 'ultra'>('high');
+  // Expose global settings signals directly
+  targetFps = this.detectionSettings.targetFps;
+  videoResolution = this.detectionSettings.videoResolution;
+  showStickmanOnly = this.detectionSettings.showStickmanOnly;
+
   resolutionSettings = {
     low: { width: 320, height: 240 },
     medium: { width: 640, height: 480 },
     high: { width: 1280, height: 720 },
     ultra: { width: 1920, height: 1080 },
   };
-
-  showStickmanOnly = signal<boolean>(false);
 
   selectedExercise = signal<SupportedExercise>('None');
 
@@ -97,12 +171,27 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   lastDetectedPose = signal<Pose | null>(null);
   liveStickmanColor = signal<string>('#f87171');
   isPoseTimerRunning = signal<boolean>(false);
-  poseMatchDuration = signal<number>(30);
+
+  // Expose global settings signal directly
+  poseMatchDuration = this.detectionSettings.poseMatchDuration;
+
   poseMatchTimer = signal<number>(0);
 
   repCount = signal<number>(0);
   isCountingReps = signal<boolean>(false);
   exerciseState = signal<ExerciseState>('neutral');
+
+  // Recording and playback signals
+  isRecording = signal<boolean>(false);
+  recordingStartTime = signal<number>(0);
+  currentRecording = signal<StickmanRecording | null>(null);
+  savedRecordings = signal<StickmanRecording[]>([]);
+
+  // Playback signals - now supports multiple recordings
+  activePlaybackStates = signal<Map<string, RecordingPlaybackState>>(new Map());
+
+  // Fullscreen states for individual recordings
+  fullscreenRecordingId = signal<string | null>(null);
 
   exerciseStatusColor = computed(() => {
     const green = '#34d399';
@@ -136,6 +225,11 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   private frameCount = 0;
   private lastFpsUpdate = 0;
   private lastTimerTick = 0;
+
+  // Recording variables
+  private recordingFrameBuffer: RecordedFrame[] = [];
+  private recordingInterval: any = null;
+  private playbackAnimationIds = new Map<string, number>();
 
   private readonly G = '<span class="text-green-400 font-semibold">GRÜN:</span>';
   private readonly R = '<span class="text-red-500 font-semibold">ROT:</span>';
@@ -191,7 +285,101 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
 
   async ngAfterViewInit(): Promise<void> {
     try {
+      // Initialize variant from global settings
+      this.initializeFromGlobalSettings();
+
+      // Setup effect to sync with global settings changes
+      // Must use runInInjectionContext because ngAfterViewInit is not an injection context
+      runInInjectionContext(this.injector, () => {
+        // Sync video resolution changes
+        const resolutionEffect = effect(() => {
+          const resolution = this.videoResolution();
+          const settings = this.resolutionSettings[resolution];
+          this.videoWidth = settings.width;
+          this.videoHeight = settings.height;
+
+          // Reinitialize camera if in live mode and camera is on
+          if (this.analysisMode() === 'live' && this.isCameraOn() && this.detector) {
+            this.setupCamera(this.selectedCameraId()).catch((err) =>
+              console.error('Failed to update camera resolution:', err)
+            );
+          }
+        });
+
+        const syncEffect = effect(() => {
+          const globalPoseModel = this.detectionSettings.poseModel();
+          const globalPoseLibrary = this.detectionSettings.poseLibrary();
+          const globalMoveNetModel = this.detectionSettings.moveNetModel();
+
+          // Skip if detector not initialized yet
+          if (!this.detector) {
+            return;
+          }
+
+          // Update model if library changed
+          if (globalPoseLibrary === 'mediapipe' && this.selectedModel() !== 'BlazePose') {
+            this.selectedModel.set('BlazePose');
+            // Update variant to match global setting
+            if (globalPoseModel !== this.selectedVariant()) {
+              this.selectedVariant.set(globalPoseModel as BlazeposeModelType);
+              // Reload detector
+              this.loadPoseDetector().catch((err) =>
+                console.error('Failed to reload detector:', err)
+              );
+            }
+          } else if (globalPoseLibrary === 'movenet' && this.selectedModel() !== 'MoveNet') {
+            this.selectedModel.set('MoveNet');
+            // Update variant to match global setting
+            const expectedVariant =
+              globalMoveNetModel === 'thunder' ? 'SINGLEPOSE_THUNDER' : 'SINGLEPOSE_LIGHTNING';
+            if (expectedVariant !== this.selectedVariant()) {
+              this.selectedVariant.set(expectedVariant);
+              // Reload detector
+              this.loadPoseDetector().catch((err) =>
+                console.error('Failed to reload detector:', err)
+              );
+            }
+          } else if (
+            this.selectedModel() === 'BlazePose' &&
+            globalPoseModel !== this.selectedVariant()
+          ) {
+            // Variant changed for BlazePose
+            this.selectedVariant.set(globalPoseModel as BlazeposeModelType);
+            // Reload detector
+            this.loadPoseDetector().catch((err) =>
+              console.error('Failed to reload detector:', err)
+            );
+          } else if (this.selectedModel() === 'MoveNet') {
+            // Variant changed for MoveNet
+            const expectedVariant =
+              globalMoveNetModel === 'thunder' ? 'SINGLEPOSE_THUNDER' : 'SINGLEPOSE_LIGHTNING';
+            if (expectedVariant !== this.selectedVariant()) {
+              this.selectedVariant.set(expectedVariant);
+              // Reload detector
+              this.loadPoseDetector().catch((err) =>
+                console.error('Failed to reload detector:', err)
+              );
+            }
+          }
+        });
+
+        this.effectCleanup = () => {
+          syncEffect.destroy();
+          resolutionEffect.destroy();
+        };
+      });
+
+      // Initialize video resolution from global settings
+      const initialResolution = this.videoResolution();
+      const initialSettings = this.resolutionSettings[initialResolution];
+      this.videoWidth = initialSettings.width;
+      this.videoHeight = initialSettings.height;
+
       await this.setupEnvironment();
+
+      // After detector is initialized, sync with global settings if needed
+      this.syncWithGlobalSettings();
+
       if (this.analysisMode() === 'live') {
         this.isDetecting = true;
         this.detectPosesLoop();
@@ -220,8 +408,72 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private initializeFromGlobalSettings(): void {
+    const globalPoseLibrary = this.detectionSettings.poseLibrary();
+    const globalPoseModel = this.detectionSettings.poseModel();
+
+    // Set model based on global library setting
+    if (globalPoseLibrary === 'mediapipe') {
+      this.selectedModel.set('BlazePose');
+      this.selectedVariant.set(globalPoseModel as BlazeposeModelType);
+    } else if (globalPoseLibrary === 'movenet') {
+      this.selectedModel.set('MoveNet');
+      // Map movenet model to variant
+      const moveNetModel = this.detectionSettings.moveNetModel();
+      if (moveNetModel === 'lightning') {
+        this.selectedVariant.set('SINGLEPOSE_LIGHTNING');
+      } else if (moveNetModel === 'thunder') {
+        this.selectedVariant.set('SINGLEPOSE_THUNDER');
+      } else {
+        this.selectedVariant.set('SINGLEPOSE_LIGHTNING');
+      }
+    }
+  }
+
+  private syncWithGlobalSettings(): void {
+    if (!this.detector) return;
+
+    const globalPoseModel = this.detectionSettings.poseModel();
+    const globalPoseLibrary = this.detectionSettings.poseLibrary();
+    const globalMoveNetModel = this.detectionSettings.moveNetModel();
+
+    let needsReload = false;
+
+    // Check if model needs to change
+    if (globalPoseLibrary === 'mediapipe' && this.selectedModel() !== 'BlazePose') {
+      this.selectedModel.set('BlazePose');
+      needsReload = true;
+    } else if (globalPoseLibrary === 'movenet' && this.selectedModel() !== 'MoveNet') {
+      this.selectedModel.set('MoveNet');
+      needsReload = true;
+    }
+
+    // Check if variant needs to change
+    if (this.selectedModel() === 'BlazePose' && globalPoseModel !== this.selectedVariant()) {
+      this.selectedVariant.set(globalPoseModel as BlazeposeModelType);
+      needsReload = true;
+    } else if (this.selectedModel() === 'MoveNet') {
+      const expectedVariant =
+        globalMoveNetModel === 'thunder' ? 'SINGLEPOSE_THUNDER' : 'SINGLEPOSE_LIGHTNING';
+      if (expectedVariant !== this.selectedVariant()) {
+        this.selectedVariant.set(expectedVariant);
+        needsReload = true;
+      }
+    }
+
+    // Reload detector if settings changed
+    if (needsReload) {
+      this.loadPoseDetector().catch((err) =>
+        console.error('Failed to sync detector with global settings:', err)
+      );
+    }
+  }
+
   ngOnDestroy(): void {
+    this.effectCleanup?.();
     this.isDetecting = false;
+    this.stopRecording();
+    this.stopAllPlayback();
     this.stopStream();
     this.detector?.dispose();
     if (this.uploadedVideoUrl()) {
@@ -231,6 +483,381 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
 
   onGoBack(): void {
     this.goBack.emit();
+  }
+
+  // Recording and playback methods
+  startRecording(): void {
+    if (this.isRecording()) return;
+
+    this.recordingFrameBuffer = [];
+    this.recordingStartTime.set(Date.now());
+    this.isRecording.set(true);
+
+    const newRecording: StickmanRecording = {
+      id: `recording_${Date.now()}`,
+      name: `Recording ${new Date().toLocaleString()}`,
+      duration: 0,
+      frameCount: 0,
+      frames: [],
+      recordedAt: new Date(),
+      targetFps: this.targetFps(),
+    };
+
+    this.currentRecording.set(newRecording);
+  }
+
+  stopRecording(): void {
+    if (!this.isRecording()) return;
+
+    this.isRecording.set(false);
+
+    const currentRecording = this.currentRecording();
+    if (currentRecording) {
+      const endTime = Date.now();
+      const duration = (endTime - this.recordingStartTime()) / 1000;
+
+      const finalRecording: StickmanRecording = {
+        ...currentRecording,
+        duration,
+        frameCount: this.recordingFrameBuffer.length,
+        frames: [...this.recordingFrameBuffer],
+      };
+
+      this.savedRecordings.update((recordings) => [...recordings, finalRecording]);
+      this.currentRecording.set(null);
+      this.recordingFrameBuffer = [];
+    }
+  }
+
+  private captureFrame(keypoints: Keypoint[]): void {
+    if (!this.isRecording()) return;
+
+    const frame: RecordedFrame = {
+      timestamp: Date.now() - this.recordingStartTime(),
+      keypoints: keypoints.map((k) => ({ ...k })),
+      confidence: keypoints.reduce((sum, k) => sum + (k.score || 0), 0) / keypoints.length,
+    };
+
+    this.recordingFrameBuffer.push(frame);
+
+    // Update current recording duration
+    const currentRecording = this.currentRecording();
+    if (currentRecording) {
+      this.currentRecording.set({
+        ...currentRecording,
+        duration: frame.timestamp / 1000,
+        frameCount: this.recordingFrameBuffer.length,
+      });
+    }
+  }
+
+  deleteRecording(recordingId: string): void {
+    // Stop playback for this recording if it's active
+    this.stopRecordingPlayback({ id: recordingId } as StickmanRecording);
+
+    this.savedRecordings.update((recordings) => recordings.filter((r) => r.id !== recordingId));
+  }
+
+  // New playback methods for individual recordings
+  startRecordingPlayback(recording: StickmanRecording): void {
+    const existingState = this.activePlaybackStates().get(recording.id);
+    if (existingState?.state === 'playing') return;
+
+    const playbackState: RecordingPlaybackState = {
+      recordingId: recording.id,
+      state: 'playing',
+      currentFrame: 0,
+      playbackStartTime: Date.now(),
+      playbackPausedAt: 0,
+    };
+
+    this.activePlaybackStates.update((states) => new Map(states).set(recording.id, playbackState));
+
+    // Draw the first frame immediately
+    if (recording.frames.length > 0) {
+      this.drawRecordingFrame(recording, 0);
+    }
+
+    this.playbackLoop(recording);
+  }
+
+  pauseRecordingPlayback(recording: StickmanRecording): void {
+    const currentState = this.activePlaybackStates().get(recording.id);
+    if (!currentState || currentState.state !== 'playing') return;
+
+    const updatedState: RecordingPlaybackState = {
+      ...currentState,
+      state: 'paused',
+      playbackPausedAt: Date.now(),
+    };
+
+    this.activePlaybackStates.update((states) => new Map(states).set(recording.id, updatedState));
+
+    const animationId = this.playbackAnimationIds.get(recording.id);
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      this.playbackAnimationIds.delete(recording.id);
+    }
+  }
+
+  resumeRecordingPlayback(recording: StickmanRecording): void {
+    const currentState = this.activePlaybackStates().get(recording.id);
+    if (!currentState || currentState.state !== 'paused') return;
+
+    const pauseDuration = Date.now() - currentState.playbackPausedAt;
+    const updatedState: RecordingPlaybackState = {
+      ...currentState,
+      state: 'playing',
+      playbackStartTime: currentState.playbackStartTime + pauseDuration,
+    };
+
+    this.activePlaybackStates.update((states) => new Map(states).set(recording.id, updatedState));
+    this.playbackLoop(recording);
+  }
+
+  stopRecordingPlayback(recording: StickmanRecording): void {
+    this.activePlaybackStates.update((states) => {
+      const newStates = new Map(states);
+      newStates.delete(recording.id);
+      return newStates;
+    });
+
+    const animationId = this.playbackAnimationIds.get(recording.id);
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      this.playbackAnimationIds.delete(recording.id);
+    }
+  }
+
+  stepForwardFrame(recording: StickmanRecording): void {
+    const currentState = this.activePlaybackStates().get(recording.id);
+    const nextFrame = (currentState?.currentFrame || 0) + 1;
+
+    if (nextFrame >= recording.frames.length) return;
+
+    const updatedState: RecordingPlaybackState = {
+      recordingId: recording.id,
+      state: 'paused',
+      currentFrame: nextFrame,
+      playbackStartTime: Date.now(),
+      playbackPausedAt: Date.now(),
+    };
+
+    this.activePlaybackStates.update((states) => new Map(states).set(recording.id, updatedState));
+    this.drawRecordingFrame(recording, nextFrame);
+  }
+
+  stepBackwardFrame(recording: StickmanRecording): void {
+    const currentState = this.activePlaybackStates().get(recording.id);
+    const prevFrame = Math.max(0, (currentState?.currentFrame || 0) - 1);
+
+    const updatedState: RecordingPlaybackState = {
+      recordingId: recording.id,
+      state: 'paused',
+      currentFrame: prevFrame,
+      playbackStartTime: Date.now(),
+      playbackPausedAt: Date.now(),
+    };
+
+    this.activePlaybackStates.update((states) => new Map(states).set(recording.id, updatedState));
+    this.drawRecordingFrame(recording, prevFrame);
+  }
+
+  seekToRecordingFrame(recording: StickmanRecording, frameIndex: number): void {
+    if (frameIndex < 0 || frameIndex >= recording.frames.length) return;
+
+    const currentState = this.activePlaybackStates().get(recording.id);
+    const updatedState: RecordingPlaybackState = {
+      recordingId: recording.id,
+      state: currentState?.state || 'paused',
+      currentFrame: frameIndex,
+      playbackStartTime: currentState?.playbackStartTime || Date.now(),
+      playbackPausedAt: currentState?.playbackPausedAt || Date.now(),
+    };
+
+    this.activePlaybackStates.update((states) => new Map(states).set(recording.id, updatedState));
+    this.drawRecordingFrame(recording, frameIndex);
+  }
+
+  private playbackLoop(recording: StickmanRecording): void {
+    const currentState = this.activePlaybackStates().get(recording.id);
+    if (!currentState || currentState.state !== 'playing') return;
+
+    const elapsed = Date.now() - currentState.playbackStartTime;
+    const currentFrameIndex = Math.floor((elapsed / 1000) * recording.targetFps);
+
+    if (currentFrameIndex >= recording.frames.length) {
+      // Playback finished
+      this.stopRecordingPlayback(recording);
+      return;
+    }
+
+    if (currentFrameIndex !== currentState.currentFrame) {
+      const updatedState = { ...currentState, currentFrame: currentFrameIndex };
+      this.activePlaybackStates.update((states) => new Map(states).set(recording.id, updatedState));
+      console.log(`Drawing frame ${currentFrameIndex} for recording ${recording.id}`);
+      this.drawRecordingFrame(recording, currentFrameIndex);
+    }
+
+    const animationId = requestAnimationFrame(() => this.playbackLoop(recording));
+    this.playbackAnimationIds.set(recording.id, animationId);
+  }
+
+  private drawRecordingFrame(recording: StickmanRecording, frameIndex: number): void {
+    const frame = recording.frames[frameIndex];
+    if (frame) {
+      // This will be called from the recording card's canvas
+      this.drawRecordingCardFrame(recording.id, frame.keypoints, frame.confidence);
+    }
+  }
+
+  private drawRecordingCardFrame(
+    recordingId: string,
+    keypoints: Keypoint[],
+    confidence: number
+  ): void {
+    const canvas = document.querySelector(`#recording-canvas-${recordingId}`) as HTMLCanvasElement;
+    if (!canvas) {
+      console.log(`Canvas not found for recording: ${recordingId}`);
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Update canvas size if in fullscreen mode
+    const isFullscreen = this.fullscreenRecordingId() === recordingId;
+    if (isFullscreen) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    } else {
+      canvas.width = 320;
+      canvas.height = 180;
+    }
+
+    // Clear canvas and set background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (!keypoints || keypoints.length === 0) {
+      console.log(`No keypoints for recording: ${recordingId}`);
+      return;
+    }
+
+    // Scale and center the stickman to fit the canvas with padding
+    const padding = isFullscreen ? 40 : 20; // More padding in fullscreen
+    const availableWidth = canvas.width - padding * 2;
+    const availableHeight = canvas.height - padding * 2;
+
+    // Calculate pose bounding box
+    const xValues = keypoints.map((kp) => kp.x);
+    const yValues = keypoints.map((kp) => kp.y);
+    const minX = Math.min(...xValues);
+    const maxX = Math.max(...xValues);
+    const minY = Math.min(...yValues);
+    const maxY = Math.max(...yValues);
+
+    const poseWidth = maxX - minX || 1;
+    const poseHeight = maxY - minY || 1;
+
+    // Calculate scale to fit within available space, maintaining aspect ratio
+    const scale = Math.min(availableWidth / poseWidth, availableHeight / poseHeight) * 0.8;
+
+    // Center the pose in the canvas
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const poseCenterX = (minX + maxX) / 2;
+    const poseCenterY = (minY + maxY) / 2;
+
+    const offsetX = centerX - poseCenterX * scale;
+    const offsetY = centerY - poseCenterY * scale;
+
+    const scaledKeypoints = keypoints.map((kp) => ({
+      ...kp,
+      x: kp.x * scale + offsetX,
+      y: kp.y * scale + offsetY,
+    }));
+
+    this.drawSimplifiedStickman(ctx, scaledKeypoints, false, true);
+  }
+
+  private stopAllPlayback(): void {
+    this.activePlaybackStates().forEach((_, recordingId) => {
+      const animationId = this.playbackAnimationIds.get(recordingId);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    });
+    this.activePlaybackStates.set(new Map());
+    this.playbackAnimationIds.clear();
+  }
+
+  getRecordingPlaybackState(recordingId: string): RecordingPlaybackState | null {
+    return this.activePlaybackStates().get(recordingId) || null;
+  }
+
+  // Fullscreen methods for individual recordings
+  toggleRecordingFullscreen(recordingId: string): void {
+    if (this.fullscreenRecordingId() === recordingId) {
+      this.exitRecordingFullscreen();
+    } else {
+      this.enterRecordingFullscreen(recordingId);
+    }
+  }
+
+  private enterRecordingFullscreen(recordingId: string): void {
+    const recordingElement = document.querySelector(
+      `#recording-card-${recordingId}`
+    ) as HTMLElement;
+    if (!recordingElement) return;
+
+    this.fullscreenRecordingId.set(recordingId);
+
+    const handleFullscreenChange = () => {
+      const isFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+
+      if (!isFullscreen) {
+        this.fullscreenRecordingId.set(null);
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    // Enter fullscreen
+    if (recordingElement.requestFullscreen) {
+      recordingElement.requestFullscreen();
+    } else if ((recordingElement as any).webkitRequestFullscreen) {
+      (recordingElement as any).webkitRequestFullscreen();
+    } else if ((recordingElement as any).mozRequestFullScreen) {
+      (recordingElement as any).mozRequestFullScreen();
+    } else if ((recordingElement as any).msRequestFullscreen) {
+      (recordingElement as any).msRequestFullscreen();
+    }
+  }
+
+  private exitRecordingFullscreen(): void {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if ((document as any).webkitExitFullscreen) {
+      (document as any).webkitExitFullscreen();
+    } else if ((document as any).mozCancelFullScreen) {
+      (document as any).mozCancelFullScreen();
+    } else if ((document as any).msExitFullscreen) {
+      (document as any).msExitFullscreen();
+    }
   }
 
   onFullscreenChange(): void {
@@ -321,11 +948,15 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   onFpsChange(event: Event): void {
-    this.targetFps.set(Number((event.target as HTMLInputElement).value));
+    const value = Number((event.target as HTMLInputElement).value);
+    this.detectionSettings.targetFps.set(value);
+    this.detectionSettings.saveSettings();
   }
 
   onShowStickmanOnlyChange(event: Event): void {
-    this.showStickmanOnly.set((event.target as HTMLInputElement).checked);
+    const enabled = (event.target as HTMLInputElement).checked;
+    this.detectionSettings.showStickmanOnly.set(enabled);
+    this.detectionSettings.saveSettings();
   }
 
   onExerciseChange(event: Event): void {
@@ -527,7 +1158,26 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     this.isDetecting = false;
     this.isLoading.set(true);
     this.selectedModel.set(model);
-    this.selectedVariant.set(this.availableVariants()[0]);
+
+    // Update global settings when model changes
+    if (model === 'BlazePose') {
+      this.detectionSettings.poseLibrary.set('mediapipe');
+      // Use current global poseModel or default to 'lite'
+      const currentModel = this.detectionSettings.poseModel();
+      this.selectedVariant.set(currentModel as BlazeposeModelType);
+    } else if (model === 'MoveNet') {
+      this.detectionSettings.poseLibrary.set('movenet');
+      // Use current global moveNetModel or default to 'lightning'
+      const currentMoveNetModel = this.detectionSettings.moveNetModel();
+      if (currentMoveNetModel === 'lightning') {
+        this.selectedVariant.set('SINGLEPOSE_LIGHTNING');
+      } else if (currentMoveNetModel === 'thunder') {
+        this.selectedVariant.set('SINGLEPOSE_THUNDER');
+      } else {
+        this.selectedVariant.set('SINGLEPOSE_LIGHTNING');
+      }
+    }
+    this.detectionSettings.saveSettings();
 
     try {
       await this.loadPoseDetector();
@@ -549,6 +1199,19 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     this.isDetecting = false;
     this.isLoading.set(true);
     this.selectedVariant.set(variant);
+
+    // Update global settings when variant changes
+    if (this.selectedModel() === 'BlazePose' && ['lite', 'full', 'heavy'].includes(variant)) {
+      this.detectionSettings.poseModel.set(variant as 'lite' | 'full' | 'heavy');
+      this.detectionSettings.saveSettings();
+    } else if (this.selectedModel() === 'MoveNet') {
+      if (variant === 'SINGLEPOSE_LIGHTNING') {
+        this.detectionSettings.moveNetModel.set('lightning');
+      } else if (variant === 'SINGLEPOSE_THUNDER') {
+        this.detectionSettings.moveNetModel.set('thunder');
+      }
+      this.detectionSettings.saveSettings();
+    }
 
     try {
       await this.loadPoseDetector();
@@ -585,7 +1248,9 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
   }
 
   onPoseMatchDurationChange(event: Event): void {
-    this.poseMatchDuration.set(Number((event.target as HTMLInputElement).value));
+    const value = Number((event.target as HTMLInputElement).value);
+    this.detectionSettings.poseMatchDuration.set(value);
+    this.detectionSettings.saveSettings();
   }
 
   onResolutionChange(event: Event): void {
@@ -594,7 +1259,8 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
       | 'medium'
       | 'high'
       | 'ultra';
-    this.videoResolution.set(resolution);
+    this.detectionSettings.videoResolution.set(resolution);
+    this.detectionSettings.saveSettings();
     const settings = this.resolutionSettings[resolution];
     this.videoWidth = settings.width;
     this.videoHeight = settings.height;
@@ -628,6 +1294,35 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  // Helper method to get user-friendly camera labels
+  getCameraLabel(camera: MediaDeviceInfo): string {
+    if (camera.label) {
+      // Try to identify front vs rear camera from label
+      const labelLower = camera.label.toLowerCase();
+      if (
+        labelLower.includes('front') ||
+        labelLower.includes('user') ||
+        labelLower.includes('facing front')
+      ) {
+        return `Front Camera (${camera.label})`;
+      } else if (
+        labelLower.includes('back') ||
+        labelLower.includes('rear') ||
+        labelLower.includes('environment') ||
+        labelLower.includes('facing back')
+      ) {
+        return `Rear Camera (${camera.label})`;
+      }
+      return camera.label;
+    }
+    // Fallback when label is not available
+    const cameras = this.availableCameras();
+    const index = cameras.findIndex((c) => c.deviceId === camera.deviceId);
+    if (index === 0) return 'Front Camera (Default)';
+    if (index === cameras.length - 1) return 'Rear Camera';
+    return `Camera ${index + 1}`;
+  }
+
   private stopStream(): void {
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = null;
@@ -642,14 +1337,24 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     }
 
     const resolution = this.resolutionSettings[this.videoResolution()];
+
+    // Build video constraints - only use facingMode if no specific deviceId is provided
+    const videoConstraints: any = {
+      width: { ideal: resolution.width },
+      height: { ideal: resolution.height },
+      frameRate: { ideal: 60, max: 60 },
+    };
+
+    // If deviceId is specified, use it exclusively
+    if (deviceId) {
+      videoConstraints.deviceId = { exact: deviceId };
+    } else {
+      // Only use facingMode as fallback when no deviceId is specified
+      videoConstraints.facingMode = { ideal: 'user' }; // Prefer front camera as default
+    }
+
     const constraints: MediaStreamConstraints = {
-      video: {
-        width: { ideal: resolution.width },
-        height: { ideal: resolution.height },
-        deviceId: deviceId ? { exact: deviceId } : undefined,
-        facingMode: 'user',
-        frameRate: { ideal: 60, max: 60 },
-      },
+      video: videoConstraints,
     };
 
     this.stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -676,12 +1381,57 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
       this.selectedModel() === 'BlazePose'
         ? poseDetection.SupportedModels.BlazePose
         : poseDetection.SupportedModels.MoveNet;
-    const detectorConfig =
-      this.selectedModel() === 'BlazePose'
-        ? { runtime: 'tfjs' as const, modelType: this.selectedVariant() as BlazeposeModelType }
-        : {
-            modelType: poseDetection.movenet.modelType[this.selectedVariant() as MovenetModelType],
-          };
+
+    let detectorConfig: any;
+
+    if (this.selectedModel() === 'BlazePose') {
+      const variant = this.selectedVariant() as BlazeposeModelType;
+      const modelUrls = this.tfjsModelLoader.getBlazePoseModelUrls(variant);
+
+      // Check if local models exist
+      const detectorExists = await this.tfjsModelLoader.checkModelExists(
+        modelUrls.detectorModelUrl
+      );
+      const landmarkExists = await this.tfjsModelLoader.checkModelExists(
+        modelUrls.landmarkModelUrl
+      );
+      const useLocalModels = detectorExists && landmarkExists;
+
+      detectorConfig = {
+        runtime: 'tfjs' as const,
+        modelType: variant,
+        ...(useLocalModels && {
+          detectorModelUrl: modelUrls.detectorModelUrl,
+          landmarkModelUrl: modelUrls.landmarkModelUrl,
+        }),
+      };
+
+      if (useLocalModels) {
+        console.log(`Loading BlazePose ${variant} from local paths`);
+        this.toastService.show(`BlazePose ${variant} loaded from local assets`, 'success', 4000);
+      } else {
+        console.log(`Local BlazePose models not found, loading from CDN`);
+        this.toastService.show(`BlazePose ${variant} loaded from CDN`, 'info', 4000);
+      }
+    } else {
+      const variant = this.selectedVariant() as MovenetModelType;
+      const modelType = variant === 'SINGLEPOSE_LIGHTNING' ? 'lightning' : 'thunder';
+      const localModelUrl = this.tfjsModelLoader.getMoveNetModelUrl(modelType);
+      const useLocalModel = await this.tfjsModelLoader.checkModelExists(localModelUrl);
+
+      detectorConfig = {
+        modelType: poseDetection.movenet.modelType[variant],
+        ...(useLocalModel && { modelUrl: localModelUrl }),
+      };
+
+      if (useLocalModel) {
+        console.log(`Loading MoveNet ${modelType} from local path: ${localModelUrl}`);
+        this.toastService.show(`MoveNet ${modelType} loaded from local assets`, 'success', 4000);
+      } else {
+        console.log(`Local MoveNet model not found, loading from CDN`);
+        this.toastService.show(`MoveNet ${modelType} loaded from CDN`, 'info', 4000);
+      }
+    }
 
     this.detector = await poseDetection.createDetector(model, detectorConfig);
   }
@@ -797,6 +1547,11 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
           this.legsColor.set('#f87171');
         }
       }
+      // Capture frame for recording if needed
+      if (this.isRecording() && poses.length > 0) {
+        this.captureFrame(poses[0].keypoints);
+      }
+
       this.drawResults(poses);
     } catch (error: unknown) {
       console.error('Error during pose detection:', error);
@@ -812,16 +1567,18 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
 
     ctx.clearRect(0, 0, this.videoWidth, this.videoHeight);
 
-    this.referencePose() && this.drawSimplifiedStickman(ctx, this.referencePose()!, true);
+    // Normal mode: draw reference pose and detected poses
+    this.referencePose() && this.drawSimplifiedStickman(ctx, this.referencePose()!, true, false);
     poses.forEach(
-      (pose) => pose.score! > 0.3 && this.drawSimplifiedStickman(ctx, pose.keypoints, false)
+      (pose) => pose.score! > 0.3 && this.drawSimplifiedStickman(ctx, pose.keypoints, false, false)
     );
   }
 
   private drawSimplifiedStickman(
     ctx: CanvasRenderingContext2D,
     keypoints: Keypoint[],
-    isReference = false
+    isReference = false,
+    isPlayback = false
   ): void {
     const keypointsMap = new Map(keypoints.map((k) => [k.name!, k]));
 
@@ -859,6 +1616,13 @@ export class BodyposeComponent implements AfterViewInit, OnDestroy {
     if (isReference) {
       [torsoColor, neckColor, armColor, legColor] = Array(4).fill(referenceColor);
       jointColor = '#f0f9ff';
+    } else if (isPlayback) {
+      // Special coloring for playback mode
+      torsoColor = '#fbbf24';
+      neckColor = '#f59e0b';
+      armColor = '#3b82f6';
+      legColor = '#10b981';
+      jointColor = '#fef3c7';
     } else if (isPoseMatchingMode) {
       [torsoColor, neckColor, armColor, legColor] = Array(4).fill(this.liveStickmanColor());
       jointColor = '#f0f9ff';

@@ -23,11 +23,16 @@ import '@tensorflow/tfjs-backend-webgl';
 import { DiffyDetectionService } from '../../services/diffy-detection.service';
 import { SpeedyDetectionService } from '../../services/speedy-detection.service';
 import { DetectionSettingsService } from '../../services/detection-settings.service';
+import { TfjsModelLoaderService } from '../../services/tfjs-model-loader.service';
+import { ToastService } from '../../sprint-duels/services/toast.service';
+import { ToastComponent } from '../../sprint-duels/components/toast/toast.component';
 
 @Component({
   selector: 'app-detector',
   templateUrl: './detector.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [ToastComponent],
+  standalone: true,
 })
 export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   sessionId = input.required<string>();
@@ -107,6 +112,8 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
   private injector = inject(Injector);
   private diffyService = inject(DiffyDetectionService);
   private speedyService = inject(SpeedyDetectionService);
+  private tfjsModelLoader = inject(TfjsModelLoaderService);
+  private toastService = inject(ToastService);
   private zoneEffectCleanup?: () => void;
   private resizeObserver?: ResizeObserver;
   private ctx?: CanvasRenderingContext2D;
@@ -149,16 +156,28 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async initializeMediaPipe(): Promise<void> {
     try {
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
-      );
+      // Check if local WASM files exist
+      const wasmExists = await this.tfjsModelLoader.checkModelExists('/assets/mediapipe/wasm/vision_wasm_internal.wasm');
+      const wasmPath = wasmExists ? '/assets/mediapipe/wasm' : 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm';
+      
+      // Load WASM files from local assets directory or CDN fallback
+      const vision = await FilesetResolver.forVisionTasks(wasmPath);
 
       const modelName = this.poseModel();
-      const modelUrl = `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${modelName}/float16/1/pose_landmarker_${modelName}.task`;
+      // Check if local model exists
+      const modelUrl = `/assets/mediapipe/models/pose_landmarker_${modelName}.task`;
+      const modelExists = await this.tfjsModelLoader.checkModelExists(modelUrl);
+      const finalModelUrl = modelExists ? modelUrl : `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${modelName}/float16/1/pose_landmarker_${modelName}.task`;
+
+      if (wasmExists && modelExists) {
+        this.toastService.show(`MediaPipe ${modelName} loaded from local assets`, 'success', 4000);
+      } else {
+        this.toastService.show(`MediaPipe ${modelName} loaded from CDN`, 'info', 4000);
+      }
 
       this.poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: modelUrl,
+          modelAssetPath: finalModelUrl,
           delegate: 'GPU',
         },
         runningMode: 'VIDEO',
@@ -169,6 +188,7 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     } catch (error) {
       console.error('Failed to initialize MediaPipe:', error);
+      this.toastService.show('Failed to initialize MediaPipe pose detection', 'error', 5000);
       // Continue without pose detection, fall back to motion detection
     }
   }
@@ -179,12 +199,19 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
       let model: poseDetection.SupportedModels;
       let detectorConfig: poseDetection.MoveNetModelConfig;
 
+      // Get local model URL
+      const localModelUrl = this.tfjsModelLoader.getMoveNetModelUrl(modelType);
+      
+      // Check if local model exists, fallback to CDN if not
+      const useLocalModel = await this.tfjsModelLoader.checkModelExists(localModelUrl);
+
       if (modelType === 'multipose') {
         model = poseDetection.SupportedModels.MoveNet;
         detectorConfig = {
           modelType: poseDetection.movenet.modelType.MULTIPOSE_LIGHTNING,
           enableTracking: true,
           trackerType: poseDetection.TrackerType.BoundingBox,
+          ...(useLocalModel && { modelUrl: localModelUrl }),
         };
       } else {
         model = poseDetection.SupportedModels.MoveNet;
@@ -193,7 +220,16 @@ export class DetectorComponent implements OnInit, AfterViewInit, OnDestroy {
             modelType === 'lightning'
               ? poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
               : poseDetection.movenet.modelType.SINGLEPOSE_THUNDER,
+          ...(useLocalModel && { modelUrl: localModelUrl }),
         };
+      }
+
+      if (useLocalModel) {
+        console.log(`Loading MoveNet ${modelType} from local path: ${localModelUrl}`);
+        this.toastService.show(`MoveNet ${modelType} loaded from local assets`, 'success', 4000);
+      } else {
+        console.log(`Local model not found, loading MoveNet ${modelType} from CDN`);
+        this.toastService.show(`MoveNet ${modelType} loaded from CDN`, 'info', 4000);
       }
 
       this.moveNetDetector = await poseDetection.createDetector(model, detectorConfig);

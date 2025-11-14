@@ -658,12 +658,45 @@
                   </div>
                   <h2 class="text-2xl font-bold text-orange-300">Multi-Device</h2>
                 </div>
-                <p class="text-neutral-300 mb-6 flex-grow">Use multiple devices for start, split, and finish points.</p>
+                <p class="text-neutral-300 mb-4 flex-grow">Use multiple devices for start, split, and finish points.</p>
+                
+                <!-- Join Session Section -->
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-400 mb-2">Join Existing Session</label>
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      [value]="inputJoinSprintSessionId()"
+                      (input)="handleJoinSprintSessionIdInput($event)"
+                      (keyup.enter)="joinSprintMultiDevice()"
+                      placeholder="Enter Session ID"
+                      maxlength="6"
+                      class="flex-1 bg-gray-700 border border-gray-600 rounded-md shadow-sm p-2 focus:ring-orange-500 focus:border-orange-500 font-mono text-center tracking-widest uppercase"
+                    />
+                    <button
+                      (click)="joinSprintMultiDevice()"
+                      class="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      Join
+                    </button>
+                  </div>
+                  @if (errorMessage() && errorMessage().includes('session ID')) {
+                    <p class="text-red-400 text-xs mt-1">{{ errorMessage() }}</p>
+                  }
+                </div>
+
+                <!-- Divider -->
+                <div class="flex items-center mb-4">
+                  <div class="flex-1 border-t border-gray-600"></div>
+                  <span class="px-2 text-gray-500 text-sm">OR</span>
+                  <div class="flex-1 border-t border-gray-600"></div>
+                </div>
+
                 <button
                   (click)="startMultiDeviceSetup()"
                   class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 shadow-lg"
                 >
-                  Setup Multi-Device →
+                  Create New Session →
                 </button>
               </div>
             </div>

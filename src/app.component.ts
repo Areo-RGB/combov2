@@ -89,6 +89,7 @@ export class AppComponent implements OnDestroy, OnInit {
   lastPhotoDataUrl = signal<string | null>(null);
   multiDeviceConfig = signal<any>(null);
   joinSprintSessionId = signal<string | null>(null);
+  inputJoinSprintSessionId = signal('');
 
   // Math game state
   maxOperations = signal(5);
@@ -344,6 +345,21 @@ export class AppComponent implements OnDestroy, OnInit {
     this.mode.set('sprint-multi-setup');
   }
 
+  handleJoinSprintSessionIdInput(event: Event) {
+    const inputElement = event.target as HTMLInputElement;
+    this.inputJoinSprintSessionId.set(inputElement.value);
+  }
+
+  joinSprintMultiDevice() {
+    const sessionId = this.inputJoinSprintSessionId().trim().toUpperCase();
+    if (sessionId.length < 6) {
+      this.errorMessage.set('Please enter a valid 6-character session ID.');
+      return;
+    }
+    this.errorMessage.set('');
+    this.joinMultiDevice(sessionId);
+  }
+
   handleMultiDeviceStart(config: any) {
     this.multiDeviceConfig.set(config);
     this.sessionId.set(config.sessionId);
@@ -357,6 +373,9 @@ export class AppComponent implements OnDestroy, OnInit {
     this.mode.set('selection');
     this.sessionId.set('');
     this.inputSessionId.set('');
+    this.inputJoinSprintSessionId.set('');
+    this.joinSprintSessionId.set(null);
+    this.errorMessage.set('');
     this.motionSignal.set(null);
     this.resetDisplayState();
   }
