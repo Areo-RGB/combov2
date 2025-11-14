@@ -2,10 +2,16 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.motionsignal.app',
-  appName: 'QuoVadis',
-  webDir: 'dist',
+  appName: 'Motion Signal Sprint',
+  webDir: 'out',
   bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https',
+  },
   plugins: {
+    Camera: {
+      saveToGallery: false,
+    },
     BluetoothLe: {
       displayStrings: {
         scanning: 'Scanning...',
