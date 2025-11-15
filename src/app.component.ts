@@ -24,6 +24,7 @@ import { SettingsComponent } from './sprint-duels/components/settings/settings.c
 import { BodyposeComponent } from './components/bodypose/bodypose.component';
 import { LobbySetupComponent } from './components/lobby-setup/lobby-setup.component';
 import { AdvancedLobbySetupComponent } from './components/advanced-lobby-setup/advanced-lobby-setup.component';
+import { TimingServerLobbyComponent } from './components/timing-server-lobby/timing-server-lobby.component';
 import { RtcService } from './services/rtc.service';
 import { SignalingService } from './services/signaling.service';
 import { CameraService } from './services/camera.service';
@@ -56,6 +57,7 @@ type DisplaySignal =
     BodyposeComponent,
     LobbySetupComponent,
     AdvancedLobbySetupComponent,
+    TimingServerLobbyComponent,
   ],
 })
 export class AppComponent implements OnDestroy, OnInit {
@@ -79,6 +81,7 @@ export class AppComponent implements OnDestroy, OnInit {
     | 'bodypose'
     | 'lobby-setup'
     | 'advanced-lobby-setup'
+    | 'timing-server-lobby'
   >('selection');
   sessionId = signal('');
   inputSessionId = signal('');

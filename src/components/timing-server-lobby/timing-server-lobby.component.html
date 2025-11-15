@@ -1,0 +1,308 @@
+<div class="w-full max-w-4xl mx-auto bg-gray-800 border border-neutral-700 rounded-xl p-6 sm:p-8">
+  <!-- Header -->
+  <app-header [title]="'Timing Server Lobby'" (goBack)="handleGoBack()"></app-header>
+
+  <!-- Platform Warning -->
+  @if (!isAvailable) {
+    <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4 mb-6">
+      <p class="text-red-400 text-center">
+        <strong>Warning:</strong> Timing Server is only available on Android devices.
+      </p>
+    </div>
+  }
+
+  <!-- Role Selection -->
+  @if (role() === 'select') {
+    <div class="grid md:grid-cols-2 gap-6">
+      <!-- Host Card -->
+      <div
+        class="group bg-gradient-to-br from-amber-900/20 to-amber-800/10 border-2 border-amber-700/50 hover:border-amber-500 rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/20"
+      >
+        <div class="flex flex-col h-full">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-12 h-12 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center"
+            >
+              <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+                />
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-amber-300">Host Server</h2>
+          </div>
+          <p class="text-neutral-300 mb-6 flex-grow">
+            Run an HTTP server on this device to receive timing events from sensor phones over Wi-Fi.
+          </p>
+          <button
+            (click)="selectRole('host')"
+            [disabled]="!isAvailable"
+            class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Become Host →
+          </button>
+        </div>
+      </div>
+
+      <!-- Sensor Card -->
+      <div
+        class="group bg-gradient-to-br from-blue-900/20 to-blue-800/10 border-2 border-blue-700/50 hover:border-blue-500 rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+      >
+        <div class="flex flex-col h-full">
+          <div class="flex items-center gap-3 mb-4">
+            <div
+              class="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center"
+            >
+              <svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-blue-300">Sensor Device</h2>
+          </div>
+          <p class="text-neutral-300 mb-6 flex-grow">
+            Connect to a host server and send timing events (triggers) when motion is detected.
+          </p>
+          <button
+            (click)="selectRole('sensor')"
+            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg"
+          >
+            Become Sensor →
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Host Mode -->
+  @if (role() === 'host') {
+    <div class="space-y-6">
+      <!-- Back Button -->
+      <button
+        (click)="backToSelection()"
+        class="mb-4 text-neutral-400 hover:text-neutral-200 transition-colors flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Role Selection
+      </button>
+
+      <div class="bg-neutral-800/50 rounded-xl p-6 border border-neutral-700">
+        <h3 class="text-xl font-bold text-amber-300 mb-4">Server Control</h3>
+
+        <div class="space-y-4">
+          <!-- Server Status -->
+          <div class="flex items-center justify-between">
+            <span class="text-neutral-300">Status:</span>
+            <span
+              [class.text-green-400]="serverRunning()"
+              [class.text-neutral-500]="!serverRunning()"
+              class="font-semibold"
+            >
+              {{ serverRunning() ? 'Running on port ' + serverPort() : 'Stopped' }}
+            </span>
+          </div>
+
+          <!-- Start/Stop Button -->
+          @if (!serverRunning()) {
+            <button
+              (click)="startServer()"
+              class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 shadow-lg"
+            >
+              Start Server
+            </button>
+          } @else {
+            <button
+              (click)="stopServer()"
+              class="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 shadow-lg"
+            >
+              Stop Server
+            </button>
+          }
+
+          <!-- Error Message -->
+          @if (errorMessage()) {
+            <div
+              [class.bg-green-900/20]="errorMessage()?.includes('successful')"
+              [class.border-green-700/50]="errorMessage()?.includes('successful')"
+              [class.bg-red-900/20]="!errorMessage()?.includes('successful')"
+              [class.border-red-700/50]="!errorMessage()?.includes('successful')"
+              class="border rounded-lg p-3"
+            >
+              <p
+                [class.text-green-400]="errorMessage()?.includes('successful')"
+                [class.text-red-400]="!errorMessage()?.includes('successful')"
+                class="text-sm"
+              >
+                {{ errorMessage() }}
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Latest Event -->
+      @if (latestEvent()) {
+        <div class="bg-neutral-800/50 rounded-xl p-6 border border-neutral-700">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-amber-300">Latest Event</h3>
+            <button
+              (click)="clearEvents()"
+              class="text-sm text-neutral-400 hover:text-neutral-200 transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+          <div class="bg-neutral-900 rounded-lg p-4 font-mono text-sm">
+            <div class="grid grid-cols-2 gap-2 text-neutral-300">
+              <div>
+                <span class="text-neutral-500">Device:</span>
+                <span class="text-amber-400 ml-2">{{ latestEvent()!.deviceId }}</span>
+              </div>
+              <div>
+                <span class="text-neutral-500">Event:</span>
+                <span class="text-amber-400 ml-2">{{ latestEvent()!.eventType }}</span>
+              </div>
+              @if (latestEvent()!.eventId) {
+                <div>
+                  <span class="text-neutral-500">Event ID:</span>
+                  <span class="text-amber-400 ml-2">{{ latestEvent()!.eventId }}</span>
+                </div>
+              }
+              <div>
+                <span class="text-neutral-500">Received:</span>
+                <span class="text-amber-400 ml-2">{{ latestEvent()!.receivedAt }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Instructions -->
+      <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
+        <h4 class="text-blue-300 font-semibold mb-2">Instructions for Sensors</h4>
+        <ol class="text-neutral-300 text-sm space-y-1 list-decimal list-inside">
+          <li>Ensure all devices are connected to the same Wi-Fi network</li>
+          <li>Configure the host IP to this device's local IP (e.g., 192.168.0.10)</li>
+          <li>Configure the port to {{ serverPort() || 3000 }}</li>
+          <li>Test the connection before sending events</li>
+        </ol>
+      </div>
+    </div>
+  }
+
+  <!-- Sensor Mode -->
+  @if (role() === 'sensor') {
+    <div class="space-y-6">
+      <!-- Back Button -->
+      <button
+        (click)="backToSelection()"
+        class="mb-4 text-neutral-400 hover:text-neutral-200 transition-colors flex items-center gap-2"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back to Role Selection
+      </button>
+
+      <div class="bg-neutral-800/50 rounded-xl p-6 border border-neutral-700">
+        <h3 class="text-xl font-bold text-blue-300 mb-4">Sensor Configuration</h3>
+
+        <div class="space-y-4">
+          <!-- Host IP -->
+          <div>
+            <label class="block text-sm font-medium text-neutral-300 mb-2">Host IP Address</label>
+            <input
+              type="text"
+              [value]="hostIp()"
+              (input)="onHostIpChange($event)"
+              placeholder="192.168.0.10"
+              class="w-full bg-neutral-900 border border-neutral-700 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- Host Port -->
+          <div>
+            <label class="block text-sm font-medium text-neutral-300 mb-2">Host Port</label>
+            <input
+              type="number"
+              [value]="hostPort()"
+              (input)="onHostPortChange($event)"
+              placeholder="3000"
+              class="w-full bg-neutral-900 border border-neutral-700 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- Device ID -->
+          <div>
+            <label class="block text-sm font-medium text-neutral-300 mb-2">Device ID</label>
+            <input
+              type="text"
+              [value]="deviceId()"
+              (input)="onDeviceIdChange($event)"
+              placeholder="FINISH"
+              class="w-full bg-neutral-900 border border-neutral-700 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p class="text-xs text-neutral-500 mt-1">
+              e.g., START, FINISH, SPLIT_1, etc.
+            </p>
+          </div>
+
+          <!-- Test Connection -->
+          <button
+            (click)="testConnection()"
+            class="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-lg"
+          >
+            Test Connection
+          </button>
+
+          <!-- Send Trigger -->
+          <button
+            (click)="sendTrigger()"
+            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg"
+          >
+            Send Trigger Event
+          </button>
+
+          <!-- Status Message -->
+          @if (errorMessage()) {
+            <div
+              [class.bg-green-900/20]="errorMessage()?.includes('successful') || errorMessage()?.includes('sent')"
+              [class.border-green-700/50]="errorMessage()?.includes('successful') || errorMessage()?.includes('sent')"
+              [class.bg-red-900/20]="!errorMessage()?.includes('successful') && !errorMessage()?.includes('sent')"
+              [class.border-red-700/50]="!errorMessage()?.includes('successful') && !errorMessage()?.includes('sent')"
+              class="border rounded-lg p-3"
+            >
+              <p
+                [class.text-green-400]="errorMessage()?.includes('successful') || errorMessage()?.includes('sent')"
+                [class.text-red-400]="!errorMessage()?.includes('successful') && !errorMessage()?.includes('sent')"
+                class="text-sm"
+              >
+                {{ errorMessage() }}
+              </p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
+        <h4 class="text-blue-300 font-semibold mb-2">Setup Instructions</h4>
+        <ol class="text-neutral-300 text-sm space-y-1 list-decimal list-inside">
+          <li>Enter the host phone's local IP address (ask the host)</li>
+          <li>Verify the port matches the host's server port (default: 3000)</li>
+          <li>Set a unique device ID (e.g., FINISH, SPLIT_1)</li>
+          <li>Test the connection before sending timing events</li>
+        </ol>
+      </div>
+    </div>
+  }
+</div>

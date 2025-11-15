@@ -288,6 +288,38 @@
                 </button>
               </div>
             </div>
+
+            <!-- Timing Server Lobby Card -->
+            <div
+              class="group bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-neutral-700 hover:border-amber-500/50"
+            >
+              <div class="p-6">
+                <div class="flex items-center gap-3 mb-3">
+                  <div
+                    class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center"
+                  >
+                    <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
+                      />
+                    </svg>
+                  </div>
+                  <h2 class="text-xl font-bold text-gray-50">Timing Server</h2>
+                </div>
+                <p class="text-neutral-300 mb-4 text-sm leading-relaxed">
+                  Host phone runs HTTP server to receive timing events from sensors over Wi-Fi.
+                </p>
+                <button
+                  (click)="mode.set('timing-server-lobby')"
+                  class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-all transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-gray-900 shadow-md text-sm"
+                >
+                  Setup →
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -842,6 +874,9 @@
       }
       @case ('advanced-lobby-setup') {
         <app-advanced-lobby-setup (goBack)="goBackToSelection()"></app-advanced-lobby-setup>
+      }
+      @case ('timing-server-lobby') {
+        <app-timing-server-lobby (goBack)="goBackToSelection()"></app-timing-server-lobby>
       }
     }
   </main>
