@@ -2,12 +2,12 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useDiffyDetection } from '@/hooks/useDiffyDetection';
-import { useSpeedyDetection } from '@/hooks/useSpeedyDetection';
+import { useFrameDiffDetection } from '@/hooks/useFrameDiffDetection';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
-type DetectionMode = 'diffy' | 'speedy';
+type DetectionMode = 'diffy' | 'framediff';
 
 export interface DetectorProps {
   sessionId: string;
@@ -19,7 +19,7 @@ export interface DetectorProps {
 export function Detector({
   sessionId,
   onMotionDetected,
-  detectionMode = 'speedy',
+  detectionMode = 'framediff',
   sensitivityLevel = 5,
 }: DetectorProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -48,8 +48,8 @@ export function Detector({
     }
   );
 
-  const speedyDetection = useSpeedyDetection(
-    detectionMode === 'speedy' && isVideoReady ? videoRef.current : null,
+  const frameDiffDetection = useFrameDiffDetection(
+    detectionMode === 'framediff' && isVideoReady ? videoRef.current : null,
     detectionConfig,
     (result) => {
       if (result.detected) {
@@ -58,7 +58,7 @@ export function Detector({
     }
   );
 
-  const currentDetection = detectionMode === 'diffy' ? diffyDetection : speedyDetection;
+  const currentDetection = detectionMode === 'diffy' ? diffyDetection : frameDiffDetection;
 
   // Get available cameras
   useEffect(() => {
@@ -216,7 +216,7 @@ export function Detector({
             {isVideoReady && (
               <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
                 <div className="bg-black/70 text-white px-3 py-2 rounded-md text-sm space-y-1">
-                  <div>Mode: {detectionMode === 'speedy' ? 'Speedy Vision' : 'Diffy JS'}</div>
+                  <div>Mode: {detectionMode === 'framediff' ? 'Frame Difference' : 'Diffy JS'}</div>
                   <div>
                     Status: {currentDetection.isActive ? '🟢 Active' : '🔴 Inactive'}
                   </div>
@@ -224,9 +224,6 @@ export function Detector({
                     Detection: {currentDetection.detectionProgress.current}/
                     {currentDetection.detectionProgress.total}
                   </div>
-                  {detectionMode === 'speedy' && 'currentFPS' in speedyDetection && (
-                    <div>FPS: {speedyDetection.currentFPS}</div>
-                  )}
                 </div>
 
                 {/* Motion Indicator */}

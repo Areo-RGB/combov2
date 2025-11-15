@@ -179,7 +179,7 @@ export function SprintTiming({ sessionId, role, onReturnToLobby }: SprintTimingP
             <Detector
               sessionId={sessionId}
               onMotionDetected={handleMotionDetected}
-              detectionMode="speedy"
+              detectionMode="framediff"
               sensitivityLevel={5}
             />
           </div>
