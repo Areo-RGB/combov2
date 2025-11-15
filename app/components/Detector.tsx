@@ -81,11 +81,20 @@ export function Detector({
   useEffect(() => {
     if (!selectedCameraId) return;
 
+    // Reset video ready state immediately when camera changes
+    setIsVideoReady(false);
+
     async function startCamera() {
       try {
         // Stop existing stream
         if (streamRef.current) {
           streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+        }
+
+        // Clear video source
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
         }
 
         const constraints: MediaStreamConstraints = {
@@ -109,6 +118,7 @@ export function Detector({
       } catch (err) {
         console.error('Error accessing camera:', err);
         setError('Failed to access camera. Please check permissions.');
+        setIsVideoReady(false);
       }
     }
 
@@ -118,6 +128,9 @@ export function Detector({
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = null;
+      }
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
       }
       setIsVideoReady(false);
     };
