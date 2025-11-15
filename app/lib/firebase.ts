@@ -174,7 +174,7 @@ export class FirebaseService {
       type,
       timestamp: Date.now(),
       clientId: this.getClientId(),
-      data,
+      ...(data !== undefined && { data }),
     };
 
     set(messageRef, message);

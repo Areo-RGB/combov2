@@ -191,23 +191,15 @@ export function useSpeedyDetection(
         harris.quality = 0.1;
         harris.capacity = calculateFeatureCapacity(config.sensitivityLevel);
 
-        const lk = Speedy.Keypoint.Tracker.LK();
-        lk.windowSize = Speedy.Size(21, 21);
-        lk.levels = 5;
-        lk.discardThreshold = 0.0001;
-        lk.epsilon = 0.01;
-        lk.numberOfIterations = 30;
-
         const sink = Speedy.Keypoint.Sink();
 
         source.output().connectTo(greyscale.input());
         greyscale.output().connectTo(blur.input());
         blur.output().connectTo(nightvision.input());
         nightvision.output().connectTo(harris.input());
-        harris.output().connectTo(lk.input());
-        lk.output().connectTo(sink.input());
+        harris.output().connectTo(sink.input());
 
-        pipeline.init(source, greyscale, blur, nightvision, harris, lk, sink);
+        pipeline.init(source, greyscale, blur, nightvision, harris, sink);
         pipelineRef.current = pipeline;
         setIsActive(true);
 
