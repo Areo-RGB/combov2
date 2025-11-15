@@ -70,7 +70,9 @@ export function useSpeedyDetection(
     }
   }, []);
 
-  const analyzeOpticalFlow = useCallback(
+  const previousKeypointsRef = useRef<any[]>([]);
+
+  const analyzeKeypointMotion = useCallback(
     (keypoints: any[]): SpeedyMotionResult => {
       if (!config) {
         return {
@@ -83,11 +85,39 @@ export function useSpeedyDetection(
         };
       }
 
-      const movingKeypoints = keypoints.filter((kp) => {
-        return kp.flow && (Math.abs(kp.flow.x) > 0.1 || Math.abs(kp.flow.y) > 0.1);
-      });
+      // Use keypoint count changes as motion indicator
+      const previousKeypoints = previousKeypointsRef.current;
+      const keypointCountDelta = Math.abs(keypoints.length - previousKeypoints.length);
 
-      if (movingKeypoints.length === 0) {
+      // Calculate average position change for matching keypoints
+      let totalDx = 0;
+      let totalDy = 0;
+      let matchedCount = 0;
+
+      if (previousKeypoints.length > 0 && keypoints.length > 0) {
+        // Simple nearest-neighbor matching for motion estimation
+        const maxMatches = Math.min(keypoints.length, previousKeypoints.length, 50);
+        for (let i = 0; i < maxMatches; i++) {
+          if (keypoints[i] && previousKeypoints[i]) {
+            const dx = keypoints[i].x - previousKeypoints[i].x;
+            const dy = keypoints[i].y - previousKeypoints[i].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Only count if movement is significant
+            if (distance > 1.0) {
+              totalDx += dx;
+              totalDy += dy;
+              matchedCount++;
+            }
+          }
+        }
+      }
+
+      // Store current keypoints for next frame
+      previousKeypointsRef.current = keypoints;
+
+      // No motion if no keypoints or no significant changes
+      if (matchedCount === 0 && keypointCountDelta < 5) {
         return {
           detected: false,
           intensity: 0,
@@ -98,33 +128,24 @@ export function useSpeedyDetection(
         };
       }
 
-      let totalFlowX = 0;
-      let totalFlowY = 0;
-      let totalMagnitude = 0;
+      const avgDx = matchedCount > 0 ? totalDx / matchedCount : 0;
+      const avgDy = matchedCount > 0 ? totalDy / matchedCount : 0;
+      const avgVelocity = Math.sqrt(avgDx * avgDx + avgDy * avgDy);
 
-      for (const kp of movingKeypoints) {
-        const flowX = kp.flow.x;
-        const flowY = kp.flow.y;
-        const magnitude = Math.sqrt(flowX * flowX + flowY * flowY);
+      // Combine position change and keypoint count change
+      const combinedMotion = avgVelocity + (keypointCountDelta * 0.5);
 
-        totalFlowX += flowX;
-        totalFlowY += flowY;
-        totalMagnitude += magnitude;
-      }
-
-      const avgFlowX = totalFlowX / movingKeypoints.length;
-      const avgFlowY = totalFlowY / movingKeypoints.length;
-      const avgVelocity = totalMagnitude / movingKeypoints.length;
-      const confidence = Math.min(100, (movingKeypoints.length / keypoints.length) * 100);
-      const velocityThreshold = 11 - config.sensitivityLevel;
-      const detected = avgVelocity > velocityThreshold;
-      const intensity = Math.min(100, avgVelocity * 10);
+      // Adjust threshold based on sensitivity (1=high threshold, 10=low threshold)
+      const velocityThreshold = 12 - config.sensitivityLevel;
+      const detected = combinedMotion > velocityThreshold;
+      const intensity = Math.min(100, combinedMotion * 5);
+      const confidence = Math.min(100, (matchedCount / Math.max(keypoints.length, 1)) * 100);
 
       return {
         detected,
         intensity,
         velocity: avgVelocity,
-        direction: { x: avgFlowX, y: avgFlowY },
+        direction: { x: avgDx, y: avgDy },
         confidence,
         timestamp: Date.now(),
       };
@@ -213,7 +234,7 @@ export function useSpeedyDetection(
             updateFPS();
 
             if (keypoints && keypoints.length > 0) {
-              const motionData = analyzeOpticalFlow(keypoints);
+              const motionData = analyzeKeypointMotion(keypoints);
 
               if (motionData.detected) {
                 handleMotionDetected(motionData);
@@ -258,7 +279,7 @@ export function useSpeedyDetection(
     videoElement,
     config,
     webGLSupported,
-    analyzeOpticalFlow,
+    analyzeKeypointMotion,
     handleMotionDetected,
     updateFPS,
   ]);
