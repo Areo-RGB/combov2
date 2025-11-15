@@ -41,6 +41,9 @@ export class SettingsComponent {
   detectionSettingsExpanded = signal(true);
   dataManagementExpanded = signal(true);
 
+  // Detection settings tab
+  detectionTab = signal<'motion' | 'lobby'>('motion');
+
   // Camera selection properties
   availableCameras = signal<MediaDeviceInfo[]>([]);
   isLoadingCameras = signal<boolean>(false);
@@ -99,26 +102,6 @@ export class SettingsComponent {
   }
 
   // Detection Settings Methods
-  onDetectionMethodChange(method: 'motion' | 'pose'): void {
-    this.detectionSettings.detectionMethod.set(method);
-    this.detectionSettings.saveSettings();
-  }
-
-  onPoseLibraryChange(library: 'mediapipe' | 'movenet'): void {
-    this.detectionSettings.poseLibrary.set(library);
-    this.detectionSettings.saveSettings();
-  }
-
-  onPoseModelChange(model: 'lite' | 'full' | 'heavy'): void {
-    this.detectionSettings.poseModel.set(model);
-    this.detectionSettings.saveSettings();
-  }
-
-  onMoveNetModelChange(model: 'lightning' | 'thunder' | 'multipose'): void {
-    this.detectionSettings.moveNetModel.set(model);
-    this.detectionSettings.saveSettings();
-  }
-
   onSpeedyVisionToggle(event: Event): void {
     const enabled = (event.target as HTMLInputElement).checked;
     this.detectionSettings.useSpeedyVision.set(enabled);
@@ -243,15 +226,5 @@ export class SettingsComponent {
     this.detectionSettings.saveSettings();
   }
 
-  onShowStickmanOnlyToggle(event: Event): void {
-    const enabled = (event.target as HTMLInputElement).checked;
-    this.detectionSettings.showStickmanOnly.set(enabled);
-    this.detectionSettings.saveSettings();
-  }
 
-  onPoseMatchDurationChange(event: Event): void {
-    const value = Number((event.target as HTMLInputElement).value);
-    this.detectionSettings.poseMatchDuration.set(value);
-    this.detectionSettings.saveSettings();
-  }
 }

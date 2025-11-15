@@ -147,13 +147,6 @@ else
     echo "❌ local-lobby.service.ts not found"
     ERRORS=$((ERRORS + 1))
 fi
-
-if [ -f "src/components/lobby-setup/lobby-setup.component.ts" ]; then
-    echo "✅ lobby-setup.component.ts exists"
-else
-    echo "❌ lobby-setup.component.ts not found"
-    ERRORS=$((ERRORS + 1))
-fi
 echo ""
 
 # Check 6: Build tools

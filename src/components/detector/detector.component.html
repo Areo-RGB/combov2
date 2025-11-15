@@ -100,27 +100,7 @@
       <!-- Collapsible Content -->
       @if (settingsExpanded()) {
       <div class="px-4 pb-4 space-y-6">
-        <!-- Detection Method Selector -->
-        <div>
-          <label class="block mb-2 text-sm font-medium text-gray-300">Detection Method</label>
-          <div class="flex flex-wrap gap-4">
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" name="detectionMethod" value="motion" [checked]="detectionMethod() === 'motion'"
-                (change)="onDetectionMethodChange('motion')"
-                class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500" />
-              <span class="ml-2 text-sm text-gray-300">Motion Detection</span>
-            </label>
-            <label class="flex items-center cursor-pointer">
-              <input type="radio" name="detectionMethod" value="pose" [checked]="detectionMethod() === 'pose'"
-                (change)="onDetectionMethodChange('pose')"
-                class="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 focus:ring-cyan-500" />
-              <span class="ml-2 text-sm text-gray-300">Body Pose Detection</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- GPU-Accelerated Detection Options (only visible when motion detection is selected) -->
-        @if (detectionMethod() === 'motion') {
+        <!-- GPU-Accelerated Detection Options -->
         <div class="space-y-3">
           <!-- Speedy-Vision Toggle -->
           <div class="bg-purple-900/20 border border-purple-700/50 rounded-lg p-4">
@@ -169,45 +149,6 @@
             with GPU acceleration.
           </p>
         </div>
-        }
-
-        <!-- Pose Library Selector (only visible when pose detection is selected) -->
-        @if (detectionMethod() === 'pose') {
-        <div>
-          <label for="poseLibrary" class="block mb-2 text-sm font-medium text-gray-300">Pose Detection Library</label>
-          <select id="poseLibrary" [value]="poseLibrary()" (change)="onPoseLibraryChange($event)"
-            class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-            <option value="mediapipe">MediaPipe</option>
-            <option value="movenet">MoveNet (TensorFlow.js)</option>
-          </select>
-        </div>
-
-        <!-- MediaPipe Model Selector -->
-        @if (poseLibrary() === 'mediapipe') {
-        <div>
-          <label for="poseModel" class="block mb-2 text-sm font-medium text-gray-300">MediaPipe Model</label>
-          <select id="poseModel" [value]="poseModel()" (change)="onPoseModelChange($event)"
-            class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-            <option value="lite">Lite (Fastest, least accurate)</option>
-            <option value="full">Full (Balanced speed and accuracy)</option>
-            <option value="heavy">Heavy (Slowest, most accurate)</option>
-          </select>
-        </div>
-        }
-
-        <!-- MoveNet Model Selector -->
-        @if (poseLibrary() === 'movenet') {
-        <div>
-          <label for="moveNetModel" class="block mb-2 text-sm font-medium text-gray-300">MoveNet Model</label>
-          <select id="moveNetModel" [value]="moveNetModel()" (change)="onMoveNetModelChange($event)"
-            class="w-full bg-gray-600 border border-gray-500 text-white text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block p-2.5">
-            <option value="lightning">SinglePose Lightning (Fastest)</option>
-            <option value="thunder">SinglePose Thunder (Most accurate)</option>
-            <option value="multipose">MultiPose Lightning (Multiple people)</option>
-          </select>
-        </div>
-        }
-        }
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Sensitivity Slider -->

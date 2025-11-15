@@ -92,29 +92,31 @@
     </button>
     @if (detectionSettingsExpanded()) {
       <div class="px-4 pb-4 space-y-6">
-        <!-- Detection Method -->
-        <div class="bg-gray-800/50 p-4 rounded-md space-y-3">
-          <label class="block font-medium text-white">Detection Method</label>
+        <!-- Tab Selector -->
+        <div class="bg-gray-800/50 p-1 rounded-md">
           <div class="flex rounded-lg bg-gray-700 p-1 gap-1">
             <button
-              (click)="onDetectionMethodChange('motion')"
-              [class.bg-blue-500]="detectionSettings.detectionMethod() === 'motion'"
-              [class.bg-gray-600]="detectionSettings.detectionMethod() !== 'motion'"
+              (click)="detectionTab.set('motion')"
+              [class.bg-blue-500]="detectionTab() === 'motion'"
+              [class.bg-gray-600]="detectionTab() !== 'motion'"
               class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
             >
               Motion
             </button>
             <button
-              (click)="onDetectionMethodChange('pose')"
-              [class.bg-blue-500]="detectionSettings.detectionMethod() === 'pose'"
-              [class.bg-gray-600]="detectionSettings.detectionMethod() !== 'pose'"
+              (click)="detectionTab.set('lobby')"
+              [class.bg-blue-500]="detectionTab() === 'lobby'"
+              [class.bg-gray-600]="detectionTab() !== 'lobby'"
               class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
             >
-              Pose
+              Lobby
             </button>
           </div>
         </div>
 
+        <!-- Motion Tab Content -->
+        @if (detectionTab() === 'motion') {
+        <div class="space-y-6">
         <!-- GPU Acceleration Options -->
         <div class="bg-gray-800/50 p-4 rounded-md space-y-3">
           <label class="block font-medium text-white">GPU Acceleration</label>
@@ -181,101 +183,11 @@
                   </option>
                 }
               </select>
-              <p class="text-xs text-gray-400">Select the camera to use for motion and pose detection</p>
+              <p class="text-xs text-gray-400">Select the camera to use for motion detection</p>
             }
           </div>
         }
 
-        <!-- Pose Detection Settings (only show when pose is selected) -->
-        @if (detectionSettings.detectionMethod() === 'pose') {
-          <div class="bg-gray-800/50 p-4 rounded-md space-y-3">
-            <label class="block font-medium text-white">Pose Detection Library</label>
-            <div class="flex rounded-lg bg-gray-700 p-1 gap-1">
-              <button
-                (click)="onPoseLibraryChange('mediapipe')"
-                [class.bg-blue-500]="detectionSettings.poseLibrary() === 'mediapipe'"
-                [class.bg-gray-600]="detectionSettings.poseLibrary() !== 'mediapipe'"
-                class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
-              >
-                MediaPipe
-              </button>
-              <button
-                (click)="onPoseLibraryChange('movenet')"
-                [class.bg-blue-500]="detectionSettings.poseLibrary() === 'movenet'"
-                [class.bg-gray-600]="detectionSettings.poseLibrary() !== 'movenet'"
-                class="flex-1 font-semibold py-2 rounded-md transition-colors text-white"
-              >
-                MoveNet
-              </button>
-            </div>
-
-            <!-- MediaPipe Model Selection -->
-            @if (detectionSettings.poseLibrary() === 'mediapipe') {
-              <div class="mt-3">
-                <label class="block mb-2 text-sm font-medium text-gray-300">MediaPipe Model</label>
-                <div class="flex rounded-lg bg-gray-700 p-1 gap-1">
-                  <button
-                    (click)="onPoseModelChange('lite')"
-                    [class.bg-blue-500]="detectionSettings.poseModel() === 'lite'"
-                    [class.bg-gray-600]="detectionSettings.poseModel() !== 'lite'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
-                  >
-                    Lite
-                  </button>
-                  <button
-                    (click)="onPoseModelChange('full')"
-                    [class.bg-blue-500]="detectionSettings.poseModel() === 'full'"
-                    [class.bg-gray-600]="detectionSettings.poseModel() !== 'full'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
-                  >
-                    Full
-                  </button>
-                  <button
-                    (click)="onPoseModelChange('heavy')"
-                    [class.bg-blue-500]="detectionSettings.poseModel() === 'heavy'"
-                    [class.bg-gray-600]="detectionSettings.poseModel() !== 'heavy'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
-                  >
-                    Heavy
-                  </button>
-                </div>
-              </div>
-            }
-
-            <!-- MoveNet Model Selection -->
-            @if (detectionSettings.poseLibrary() === 'movenet') {
-              <div class="mt-3">
-                <label class="block mb-2 text-sm font-medium text-gray-300">MoveNet Model</label>
-                <div class="flex rounded-lg bg-gray-700 p-1 gap-1">
-                  <button
-                    (click)="onMoveNetModelChange('lightning')"
-                    [class.bg-blue-500]="detectionSettings.moveNetModel() === 'lightning'"
-                    [class.bg-gray-600]="detectionSettings.moveNetModel() !== 'lightning'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
-                  >
-                    Lightning
-                  </button>
-                  <button
-                    (click)="onMoveNetModelChange('thunder')"
-                    [class.bg-blue-500]="detectionSettings.moveNetModel() === 'thunder'"
-                    [class.bg-gray-600]="detectionSettings.moveNetModel() !== 'thunder'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
-                  >
-                    Thunder
-                  </button>
-                  <button
-                    (click)="onMoveNetModelChange('multipose')"
-                    [class.bg-blue-500]="detectionSettings.moveNetModel() === 'multipose'"
-                    [class.bg-gray-600]="detectionSettings.moveNetModel() !== 'multipose'"
-                    class="flex-1 text-sm font-semibold py-2 rounded-md transition-colors text-white"
-                  >
-                    Multipose
-                  </button>
-                </div>
-              </div>
-            }
-          </div>
-        }
 
         <!-- Sensitivity -->
         <div class="bg-gray-800/50 p-4 rounded-md space-y-2">
@@ -418,7 +330,7 @@
               Ultra (1920x1080)
             </option>
           </select>
-          <p class="text-xs text-gray-400">Video input resolution for pose detection</p>
+          <p class="text-xs text-gray-400">Video input resolution for motion detection</p>
         </div>
 
         <!-- Target FPS -->
@@ -439,7 +351,7 @@
             <span>1 FPS</span>
             <span>60 FPS</span>
           </div>
-          <p class="text-xs text-gray-400">Target frames per second for pose detection processing</p>
+          <p class="text-xs text-gray-400">Target frames per second for motion detection processing</p>
         </div>
 
         <!-- Reset Detection Settings -->
@@ -455,6 +367,15 @@
             Reset
           </button>
         </div>
+        </div>
+        }
+
+        <!-- Lobby Tab Content -->
+        @if (detectionTab() === 'lobby') {
+        <div class="space-y-6">
+          <!-- Empty Lobby tab -->
+        </div>
+        }
       </div>
     }
   </div>

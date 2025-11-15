@@ -21,9 +21,6 @@ import { FirebaseService } from './services/firebase.service';
 import { SprintDuelsComponent } from './sprint-duels/sprint-duels.component';
 import { TeamDuelsComponent } from './team-duels/team-duels.component';
 import { SettingsComponent } from './sprint-duels/components/settings/settings.component';
-import { BodyposeComponent } from './components/bodypose/bodypose.component';
-import { LobbySetupComponent } from './components/lobby-setup/lobby-setup.component';
-import { AdvancedLobbySetupComponent } from './components/advanced-lobby-setup/advanced-lobby-setup.component';
 import { TimingServerLobbyComponent } from './components/timing-server-lobby/timing-server-lobby.component';
 import { RtcService } from './services/rtc.service';
 import { SignalingService } from './services/signaling.service';
@@ -54,9 +51,6 @@ type DisplaySignal =
     TeamDuelsComponent,
     HeaderComponent,
     SettingsComponent,
-    BodyposeComponent,
-    LobbySetupComponent,
-    AdvancedLobbySetupComponent,
     TimingServerLobbyComponent,
   ],
 })
@@ -78,9 +72,6 @@ export class AppComponent implements OnDestroy, OnInit {
     | 'sprint-duels'
     | 'team-duels'
     | 'detection-settings'
-    | 'bodypose'
-    | 'lobby-setup'
-    | 'advanced-lobby-setup'
     | 'timing-server-lobby'
   >('selection');
   sessionId = signal('');
@@ -199,8 +190,8 @@ export class AppComponent implements OnDestroy, OnInit {
       const isHost = this.localLobby.role() === 'host';
       const setupComplete = this.localLobby.isSetupComplete();
 
-      // If host with completed setup changes mode (except to lobby-setup or selection), broadcast it
-      if (isHost && setupComplete && mode !== 'lobby-setup' && mode !== 'selection') {
+      // If host with completed setup changes mode (except to selection), broadcast it
+      if (isHost && setupComplete && mode !== 'selection') {
         this.localLobby.selectModeForAll(mode).catch((err) => {
           console.error('Failed to broadcast mode change:', err);
         });
