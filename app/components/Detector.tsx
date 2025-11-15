@@ -25,6 +25,7 @@ export function Detector({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isVideoReady, setIsVideoReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string>('');
@@ -83,6 +84,7 @@ export function Detector({
 
     // Reset video ready state immediately when camera changes
     setIsVideoReady(false);
+    setIsLoading(true);
 
     async function startCamera() {
       try {
@@ -106,19 +108,47 @@ export function Detector({
           audio: false,
         };
 
+        console.log('Requesting camera access...', constraints);
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        console.log('Camera stream obtained:', stream.getVideoTracks()[0]?.getSettings());
         streamRef.current = stream;
 
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
+          const video = videoRef.current;
+          video.srcObject = stream;
+
+          // Wait for metadata to load
+          console.log('Waiting for video metadata...');
+          await new Promise<void>((resolve, reject) => {
+            const onLoadedMetadata = () => {
+              console.log('Video metadata loaded:', video.videoWidth, 'x', video.videoHeight);
+              video.removeEventListener('loadedmetadata', onLoadedMetadata);
+              video.removeEventListener('error', onError);
+              resolve();
+            };
+            const onError = (e: Event) => {
+              console.error('Video error event:', e);
+              video.removeEventListener('loadedmetadata', onLoadedMetadata);
+              video.removeEventListener('error', onError);
+              reject(new Error('Video failed to load'));
+            };
+            video.addEventListener('loadedmetadata', onLoadedMetadata);
+            video.addEventListener('error', onError);
+          });
+
+          // Play the video
+          console.log('Playing video...');
+          await video.play();
+          console.log('Video playing successfully');
           setIsVideoReady(true);
+          setIsLoading(false);
           setError(null);
         }
       } catch (err) {
         console.error('Error accessing camera:', err);
-        setError('Failed to access camera. Please check permissions.');
+        setError(`Failed to access camera: ${err instanceof Error ? err.message : 'Unknown error'}`);
         setIsVideoReady(false);
+        setIsLoading(false);
       }
     }
 
@@ -171,6 +201,16 @@ export function Detector({
               muted
               autoPlay
             />
+
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                <div className="text-white text-center space-y-2">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+                  <div>Loading camera...</div>
+                </div>
+              </div>
+            )}
 
             {/* Detection Status Overlay */}
             {isVideoReady && (
